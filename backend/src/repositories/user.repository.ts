@@ -21,7 +21,7 @@ export default class UserRepository {
   }
 
   async updateStatus(userId: string, isActive: boolean, isAvailable?: boolean): Promise<IUser | null> {
-    const update = { is_active: isActive };
+    const update:Partial<IUser> = { is_active: isActive };
     if (isAvailable !== undefined) update['is_available'] = isAvailable;
     return User.findByIdAndUpdate(userId, update, { new: true });
   }

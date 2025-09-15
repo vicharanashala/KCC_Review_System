@@ -25,8 +25,16 @@ export default class PeerValidationService {
 
     const answer = await answerRepo.findByAnswerId(peerData.answer_id);
     if (!answer || !answer.is_current) throw new Error('Answer not found');
+    let questionId: string;
 
-    const question = await questionRepo.findById(answer.question_id.toString());
+if (typeof answer.question_id === 'object' && answer.question_id._id) {
+  questionId = answer.question_id._id.toString();
+} else {
+  questionId = answer.question_id.toString();
+}
+
+const question = await questionRepo.findById(questionId);
+    // const question = await questionRepo.findById(answer.question_id.toString());
     if(!question){
       throw new Error("No question found")
     }

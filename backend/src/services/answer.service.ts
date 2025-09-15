@@ -13,6 +13,7 @@ const questionRepo = new QuestionRepository();
 export default class AnswerService {
   async create(answerData: AnswerCreateDto, currentUserId: string): Promise<any> {
     const question = await questionRepo.findByQuestionId(answerData.question_id);
+    console.log("question answer service",question)
     if (!question) throw new Error('Question not found');
     if (question.status === QuestionStatus.ASSIGNED_TO_SPECIALIST) {
       if (question.assigned_specialist_id!.toString() !== currentUserId) throw new Error('You are not assigned to this question');

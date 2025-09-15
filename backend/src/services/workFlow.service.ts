@@ -62,8 +62,8 @@ export default class WorkflowService {
   static async assignToPeerReviewer(answerId: string): Promise<boolean> {
     const answer = await answerRepo.findByAnswerId(answerId);
     if (!answer) return false;
-
-    const question = await questionRepo.findById(answer.question_id.toString());
+    const questionId = answer.question_id?._id ? answer.question_id._id : answer.question_id
+    const question = await questionRepo.findById(questionId.toString());
     if(!question){
       throw new Error("Question not found")
     }

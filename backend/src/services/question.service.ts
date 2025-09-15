@@ -24,12 +24,17 @@ export default class QuestionService {
   }
 
   async getByQuestionId(questionId: string): Promise<any> {
+    console.log("question id from service",questionId)
     const question = await questionRepo.findByQuestionId(questionId);
+    console.log("Question recieved",question)
     if (!question) throw new Error('Question not found');
     return question;
   }
 
   async getAssignedToUser(userId: string): Promise<any[]> {
-    return questionRepo.findAssignedToUser(userId, [QuestionStatus.ASSIGNED_TO_SPECIALIST, QuestionStatus.NEEDS_REVISION, QuestionStatus.READY_FOR_GOLDEN_FAQ]);
+    console.log("userId question assigned",userId)
+    const data = questionRepo.findAssignedToUser(userId, [QuestionStatus.ASSIGNED_TO_SPECIALIST, QuestionStatus.NEEDS_REVISION, QuestionStatus.READY_FOR_GOLDEN_FAQ]);
+    console.log("Assigned ",data)
+    return data
   }
 }

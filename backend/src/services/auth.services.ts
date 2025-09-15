@@ -11,8 +11,8 @@ export default class AuthService {
   async register(userData: UserCreateDto) {
     const existingUser = await userRepo.findByEmail(userData.email);
     if (existingUser) throw new Error('Email already registered');
-    const hashedPassword = bcryptUtil.hashSync(userData.password);
-    const user = await userRepo.create({ ...userData, hashed_password: hashedPassword });
+    // const hashedPassword = bcryptUtil.hashSync(userData.password);
+    const user = await userRepo.create({ ...userData, hashed_password: userData.password });
     logger.info(`New user registered: ${userData.name} (${userData.role})`);
     const { hashed_password, ...userResponse } = user.toObject();
     return userResponse as any;
@@ -20,6 +20,9 @@ export default class AuthService {
 
   async login(loginData: LoginDto) {
     const user = await userRepo.findByEmail(loginData.username);
+    console.log("from auth service",user)
+    console.log("from auth service",loginData.password)
+    console.log("from auth passwor",user!.comparePassword(loginData.password))
     if (!user || !user.comparePassword(loginData.password)) {
       throw new Error('Incorrect email or password');
     }

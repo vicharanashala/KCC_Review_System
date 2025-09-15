@@ -9,13 +9,13 @@ export default class NotificationRepository {
   }
 
   async findByUserId(userId: string, skip: number = 0, limit: number = 50): Promise<INotification[]> {
-    return Notification.find({ user_id: userId }).sort({ created_at: -1 }).skip(skip).limit(limit).populate('user');
+    return Notification.find({ user_id: userId }).sort({ created_at: -1 }).skip(skip).limit(limit).populate('user_id');
   }
 
   async findUnreadByUserId(userId: string, type?: NotificationType): Promise<INotification[]> {
     let query:FilterQuery<INotification> = { user_id: userId, is_read: false };
     if (type) query.type = type;
-    return Notification.find(query).populate('user');
+    return Notification.find(query).populate('user_id');
   }
 
   async markRead(notificationId: string, userId: string): Promise<INotification | null> {
@@ -23,7 +23,7 @@ export default class NotificationRepository {
       { notification_id: notificationId, user_id: userId },
       { is_read: true },
       { new: true }
-    ).populate('user');
+    ).populate('user_id');
   }
 
   async countUnreadByUserId(userId: string): Promise<number> {
