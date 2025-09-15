@@ -38,6 +38,7 @@ export default class DashboardService {
       user_stats: {
         role: currentUser?.role,
         workload_count: currentUser?.workload_count || 0,
+        incentive_points: currentUser?.incentive_points || 0,
         notifications_unread: unreadNotifications,
       },
     };

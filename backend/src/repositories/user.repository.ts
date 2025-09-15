@@ -37,4 +37,8 @@ export default class UserRepository {
   async updateWorkload(userId: string, increment: number): Promise<void> {
     await User.findByIdAndUpdate(userId, { $inc: { workload_count: increment } });
   }
+
+  async updateIncentive(userId:string,increment:number):Promise<void>{
+    await User.findByIdAndUpdate(userId,{$inc:{incentive_points:increment}})
+  }
 }

@@ -13,8 +13,8 @@ export interface IUser extends Document {
   is_active: boolean;
   is_available: boolean;
   workload_count: number;
+  incentive_points:number;
   created_at: Date;
   updated_at: Date;
-
   comparePassword(password: string): boolean;
 }

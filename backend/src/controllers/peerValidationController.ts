@@ -11,8 +11,24 @@ const peerValidationService = new PeerValidationService();
 const createSchema = Joi.object({
   answer_id: Joi.string().required(),
   status: Joi.string().valid('approved', 'revised').required(),
-  comments: Joi.string().optional(),
-  revised_answer_text: Joi.string().optional(),
+  // comments: Joi.string().optional(),
+  comments: Joi.string().when('status', {
+    is: 'revised',
+    then: Joi.string().required().messages({
+      'string.empty': 'Comments are required when status is revised',
+      'any.required': 'Comments are required when status is revised',
+    }),
+    otherwise: Joi.string().optional().allow('').default(''),
+  }),
+  // revised_answer_text: Joi.string().optional(),
+  revised_answer_text: Joi.string().when('status', {
+    is: 'revised',
+    then: Joi.string().required().messages({
+      'string.empty': 'Revised answer text is required when status is revised',
+      'any.required': 'Revised answer text is required when status is revised',
+    }),
+    otherwise: Joi.string().optional().allow('').default(''),
+  }),
 });
 
 export const peerValidate = [

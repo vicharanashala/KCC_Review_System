@@ -12,7 +12,6 @@ export interface IValidation extends Document {
   comments?: string;
   validation_sequence: number;
   created_at: Date;
-
   answer: IAnswer;
   moderator: IUser;
 }

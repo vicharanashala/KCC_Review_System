@@ -13,7 +13,6 @@ export interface IAnswer extends Document {
   is_current: boolean;
   created_at: Date;
   updated_at: Date;
-
   question: IQuestion;
   specialist: IUser;
 }

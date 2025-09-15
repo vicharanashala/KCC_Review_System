@@ -48,8 +48,9 @@ export default class PeerValidationService {
     let reviewedBy = question!.reviewed_by_specialists || [];
     if (!reviewedBy.includes(userObjectId)) reviewedBy.push(userObjectId);
     question.reviewed_by_specialists = reviewedBy;
-
+    const originalSpecialistId =answer.specialist_id.toString()
     if (peerData.status === PeerStatus.APPROVED) {
+      await userRepo.updateIncentive(originalSpecialistId,1)
       const lastPeer = await peerValidationRepo.findLastByAnswerId(answer._id.toString());
       if (lastPeer && lastPeer.status === PeerStatus.APPROVED) {
         question.consecutive_peer_approvals += 1;
@@ -68,11 +69,22 @@ export default class PeerValidationService {
         logger.info(`Peer approved answer ${answer.answer_id}, consecutive: ${question.consecutive_peer_approvals}`);
       }
     } else {
+      await userRepo.updateIncentive(originalSpecialistId,-1)
+      logger.info(`Incentive -1 applied to specialist ${originalSpecialistId} for revised peer review`);
+      const revisionMessage =peerData.comments ? `Peer review requires changes to your answer for question ${question.question_id}. Suggested changes: ${peerData.comments}` : `Peer review requires changes to your answer for question ${question.question_id}. Please revise based on feedback.`;
+      await notificationRepo.create({
+        user_id: answer.specialist_id, 
+        type: NotificationType.REVISION_NEEDED,
+        title: 'Peer Review Revision Needed',
+        message: revisionMessage,
+        related_entity_type: 'answer',
+        related_entity_id: answer.answer_id, 
+      });
+      logger.info(`Revision notification sent to original specialist for answer ${answer.answer_id}`);
       question.consecutive_peer_approvals = 0;
       if (peerData.revised_answer_text) {
         answer.is_current = false;
         await answer.save();
-
         const newAnswer = await answerRepo.create({
           question_id: question._id,
           specialist_id: userObjectId,

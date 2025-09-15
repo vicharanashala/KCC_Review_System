@@ -1,12 +1,12 @@
-import dotenv from 'dotenv';
+  import dotenv from 'dotenv';
 
-dotenv.config();
-if (!process.env.JWT_SECRET) {
-  throw new Error('JWT_SECRET is not defined in environment variables');
-}
-export const config = {
-  mongoUri: process.env.MONGO_URI || 'mongodb://localhost:27017/kcc_review_system',
-  jwtSecret: process.env.JWT_SECRET as string ,
-  jwtExpire: process.env.JWT_EXPIRE as string | number,
-  port: parseInt(process.env.PORT || '8000', 10),
-};
+  dotenv.config();
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET is not defined in environment variables');
+  }
+  export const config = {
+    mongoUri: process.env.MONGO_URI || 'mongodb://localhost:27017/kcc_review_system',
+    jwtSecret: process.env.JWT_SECRET as string ,
+    jwtExpire: process.env.JWT_EXPIRE as string | number,
+    port: parseInt(process.env.PORT || '8000', 10),
+  };

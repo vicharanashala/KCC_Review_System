@@ -11,7 +11,6 @@ export interface IPeerValidation extends Document {
   status: PeerStatus;
   comments?: string;
   created_at: Date;
-
   answer: IAnswer;
   reviewer: IUser;
 }
