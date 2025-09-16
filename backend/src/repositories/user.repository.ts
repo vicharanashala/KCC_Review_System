@@ -26,6 +26,8 @@ export default class UserRepository {
     return User.findByIdAndUpdate(userId, update, { new: true });
   }
 
+  
+
   async getAvailableSpecialists(): Promise<IUser[]> {
     return User.find({ role: UserRole.AGRI_SPECIALIST, is_active: true, is_available: true }).sort({ workload_count: 1 });
   }

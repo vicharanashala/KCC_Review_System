@@ -4,7 +4,7 @@ import { submitQuestion, getQuestionDetails, getMyQuestions } from '../controlle
 const router = Router();
 
 router.post('/', submitQuestion);
-router.get('/:question_id', getQuestionDetails);
+router.get('/id/:question_id', getQuestionDetails);
 router.get('/my-questions', getMyQuestions);
 
 export default router;

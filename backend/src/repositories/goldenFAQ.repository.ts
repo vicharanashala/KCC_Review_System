@@ -20,7 +20,7 @@ export default class GoldenFAQRepository {
     if (category) query.category = category;
     if (crop) query.crop = crop;
 
-    return GoldenFAQ.find(query).sort({ created_at: -1 }).skip(skip).limit(limit).populate('question final_answer created_by_user');
+    return GoldenFAQ.find(query).sort({ created_at: -1 }).skip(skip).limit(limit).populate('question_id final_answer_id created_by');
   }
 
   async count(): Promise<number> {

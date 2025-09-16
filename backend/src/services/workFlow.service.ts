@@ -128,32 +128,18 @@ export default class WorkflowService {
   static async processValidation(validationId: string): Promise<boolean> {
     const validation = await validationRepo.findByValidationId(validationId);
     if (!validation) return false;
-    const answer: any = validation.answer_id;
-    // const answer = await answerRepo.findById(validation.answer_id.toString());
+    // const answer: any = validation.answer_id;
+    const answer = await answerRepo.findById(validation.answer_id._id.toString());
     if(!answer){
       throw new Error("answer not found")
     }
-    const question = await questionRepo.findById(answer.question_id.toString());
+    const question = await questionRepo.findById(answer.question_id._id.toString());
     if(!question){
       throw new Error("Question not found")
     }
-    if (validation.validation_status === ValidationStatus.VALID) {
-      question.status = QuestionStatus.READY_FOR_GOLDEN_FAQ;
-      question.valid_count = 1;
-      await question.save();
-
-      await notificationRepo.create({
-        user_id: answer.specialist_id,
-        type: NotificationType.READY_FOR_GOLDEN_FAQ,
-        title: 'Ready for Golden FAQ Creation',
-        message: `Your answer for question ${question.question_id} has been validated. Please create the Golden FAQ.`,
-        related_entity_type: 'question',
-        related_entity_id: question.question_id,
-      });
-
-      logger.info(`Question ${question.question_id} ready for Golden FAQ creation`);
-    } else {
-      question.status = QuestionStatus.NEEDS_REVISION;
+      // question.status = QuestionStatus.NEEDS_REVISION;
+      question.status = QuestionStatus.PENDING_PEER_REVIEW;
+      question.consecutive_peer_approvals=0
       question.valid_count = 0;
       await question.save();
 
@@ -167,7 +153,8 @@ export default class WorkflowService {
       });
 
       logger.info(`Question ${question.question_id} sent back for revision`);
-    }
+      setImmediate(() => this.assignToPeerReviewer(answer.answer_id))
+    // }
 
     return true;
   }

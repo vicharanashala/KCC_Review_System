@@ -69,11 +69,6 @@ export default class ValidationService {
       return { message: 'Validation rejected, revision needed', validation_id: newValidation.validation_id };
     }
 
-    // Decrement workload
-    // await userRepo.updateWorkload(currentUserId, -1);
-
-    // logger.info(`Validation submitted: ${newValidation.validation_id}`);
-    // return { message: 'Validation submitted successfully', validation_id: newValidation.validation_id };
   }
 
   async getHistoryByAnswerId(answerId: string): Promise<any[]> {
