@@ -56,9 +56,14 @@ const question = await questionRepo.findById(questionId);
     let reviewedBy = question!.reviewed_by_specialists || [];
     if (!reviewedBy.includes(userObjectId)) reviewedBy.push(userObjectId);
     question.reviewed_by_specialists = reviewedBy;
-    const originalSpecialistId =answer.specialist_id.toString()
+    // const originalSpecialistId =answer.specialist_id.toString()
     if (peerData.status === PeerStatus.APPROVED) {
-      await userRepo.updateIncentive(originalSpecialistId,1)
+      const originalSpecialistId =
+  typeof answer.specialist_id === 'object' && '_id' in answer.specialist_id
+    ? answer.specialist_id._id.toString()
+    : answer.specialist_id;
+      const updateIncentive=await userRepo.updateIncentive(originalSpecialistId,1)
+      console.log("Update incentive ",updateIncentive)
       const lastPeer = await peerValidationRepo.findLastByAnswerId(answer._id.toString());
       if (lastPeer && lastPeer.status === PeerStatus.APPROVED) {
         question.consecutive_peer_approvals += 1;
@@ -77,6 +82,10 @@ const question = await questionRepo.findById(questionId);
         logger.info(`Peer approved answer ${answer.answer_id}, consecutive: ${question.consecutive_peer_approvals}`);
       }
     } else {
+      const originalSpecialistId =
+    typeof answer.specialist_id === 'object' && '_id' in answer.specialist_id
+      ? answer.specialist_id._id.toString()
+      : answer.specialist_id;
       await userRepo.updateIncentive(originalSpecialistId,-1)
       logger.info(`Incentive -1 applied to specialist ${originalSpecialistId} for revised peer review`);
       const revisionMessage =peerData.comments ? `Peer review requires changes to your answer for question ${question.question_id}. Suggested changes: ${peerData.comments}` : `Peer review requires changes to your answer for question ${question.question_id}. Please revise based on feedback.`;

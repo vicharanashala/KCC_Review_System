@@ -128,8 +128,8 @@ export default class WorkflowService {
   static async processValidation(validationId: string): Promise<boolean> {
     const validation = await validationRepo.findByValidationId(validationId);
     if (!validation) return false;
-
-    const answer = await answerRepo.findById(validation.answer_id.toString());
+    const answer: any = validation.answer_id;
+    // const answer = await answerRepo.findById(validation.answer_id.toString());
     if(!answer){
       throw new Error("answer not found")
     }

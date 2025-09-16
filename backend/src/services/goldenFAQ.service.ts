@@ -19,8 +19,10 @@ export default class GoldenFAQService {
     if(!currentUser){
       throw new Error('User not found');
     }
-    if (currentUser.role !== UserRole.AGRI_SPECIALIST) throw new Error('Only Agri Specialists can create Golden FAQs');
-
+    // if (currentUser.role !== UserRole.AGRI_SPECIALIST) throw new Error('Only Agri Specialists can create Golden FAQs');
+    if (![UserRole.AGRI_SPECIALIST, UserRole.MODERATOR].includes(currentUser.role as UserRole)) {
+      throw new Error('Only Agri Specialists and Moderators can create Golden FAQs');
+    }
     const question = await questionRepo.findByQuestionId(goldenFAQData.question_id);
     if (!question) throw new Error('Question not found');
 
@@ -52,6 +54,42 @@ export default class GoldenFAQService {
 
     logger.info(`Golden FAQ created: ${newGoldenFAQ.faq_id} for question ${question.question_id}`);
     return { message: 'Golden FAQ created successfully', faq_id: newGoldenFAQ.faq_id };
+  }
+
+  async createGoldenFAQFromValidation(currentAnswer: any, moderatorUserId: string): Promise<any> {
+    const moderator = await userRepo.findById(moderatorUserId);
+    if (!moderator) throw new Error('Moderator not found');
+    if (moderator.role !== UserRole.MODERATOR) throw new Error('Only Moderators can create Golden FAQ from validation');
+    const questionId =
+  currentAnswer.question_id._id 
+    ? currentAnswer.question_id._id
+    : currentAnswer.question_id;
+    const question = await questionRepo.findById(questionId.toString());
+    if (!question) throw new Error('Question not found');
+
+    if (question.status !== QuestionStatus.PENDING_MODERATION) {
+      throw new Error('Question must be pending moderation to create Golden FAQ');
+    }
+
+    const userObjectId = new Types.ObjectId(moderatorUserId);
+    const finalAnswerId = currentAnswer._id
+    const newGoldenFAQ = await goldenFAQRepo.create({
+      question_id: questionId,
+      final_answer_id: finalAnswerId,
+      question_text: question.original_query_text,
+      final_answer_text: currentAnswer.answer_text, // NEW: Use current answer text directly
+      category: question.sector || '', // Fallback to question metadata if no category
+      crop: question.crop || '',
+      sources: currentAnswer.sources || [],
+      tags: [], 
+      created_by: userObjectId,
+      faq_id: `FAQ_${uuidv4().slice(0, 8).toUpperCase()}`,
+    });
+
+    question.status = QuestionStatus.GOLDEN_FAQ_CREATED;
+    await question.save();
+    logger.info(`Golden FAQ created by moderator: ${newGoldenFAQ.faq_id} for question ${question.question_id}`);
+    return { faq_id: newGoldenFAQ.faq_id };
   }
 
   async getAll(skip: number = 0, limit: number = 50, search?: string, category?: string, crop?: string): Promise<any[]> {

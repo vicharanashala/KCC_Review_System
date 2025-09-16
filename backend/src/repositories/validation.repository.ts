@@ -8,7 +8,7 @@ export default class ValidationRepository {
   }
 
   async findByValidationId(validationId: string): Promise<IValidation | null> {
-    return Validation.findOne({ validation_id: validationId }).populate('answer moderator');
+    return Validation.findOne({ validation_id: validationId }).populate('answer_id moderator_id');
   }
 
   // async findByAnswerId(answerId: string): Promise<IValidation[]> {
@@ -26,7 +26,7 @@ export default class ValidationRepository {
     }
 
     return Validation.find({ answer_id: answerObjectId })
-      .populate('answer moderator')
+      .populate('answer_id moderator_id')
       .sort({ created_at: -1 });
   }
 
@@ -35,6 +35,6 @@ export default class ValidationRepository {
   }
 
   async findByAnswerAndModerator(answerId: string, moderatorId: string): Promise<IValidation | null> {
-    return Validation.findOne({ answer_id: answerId, moderator_id: moderatorId }).populate('answer moderator');
+    return Validation.findOne({ answer_id: answerId, moderator_id: moderatorId }).populate('answer_id moderator_id');
   }
 }

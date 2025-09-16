@@ -17,7 +17,7 @@ const createSchema = Joi.object({
 
 export const createGoldenFAQ = [
   authenticateToken,
-  restrictTo(UserRole.AGRI_SPECIALIST),
+  restrictTo(UserRole.AGRI_SPECIALIST,UserRole.MODERATOR),
   async (req: AuthRequest, res: Response): Promise<void> => {
     try {
       const { error } = createSchema.validate(req.body);
