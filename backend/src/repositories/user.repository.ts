@@ -37,6 +37,7 @@ export default class UserRepository {
   }
 
   async updateWorkload(userId: string, increment: number): Promise<void> {
+    console.log("update workload called",userId,increment)
     await User.findByIdAndUpdate(userId, { $inc: { workload_count: increment } });
   }
 

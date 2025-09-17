@@ -4,6 +4,8 @@ import GoldenFAQRepository from '../repositories/goldenFAQ.repository';
 import NotificationRepository from '../repositories/notification.repository';
 import { NotificationType, QuestionStatus, UserRole } from '../interfaces/enums';
 import AnswerRepository from '../repositories/answer.repository';
+import { IQuestion } from '../interfaces/question.interface';
+import { Types } from 'mongoose';
 
 const userRepo = new UserRepository();
 const questionRepo = new QuestionRepository();
@@ -89,19 +91,46 @@ export default class DashboardService {
         }
       }
     } else if (currentRole === UserRole.MODERATOR) {
+      console.log("here moderator")
       const validationNotifications = await notificationRepo.findUnreadByUserId(currentUserId, NotificationType.VALIDATION_REQUEST);
       for (const notification of validationNotifications) {
+        // const answer = await answerRepo.findByAnswerId(notification.related_entity_id as string);
+        // console.log("Answer ",answer)
+        // if (answer && answer.question_id&& answer.question_id.status === QuestionStatus.PENDING_MODERATION) {
+        //   tasks.push({
+        //     type: 'validate_answer',
+        //     answer_id: answer.answer_id,
+        //     question_id: answer.question.question_id,
+        //     question_text: answer.question.original_query_text.length > 100 ? answer.question.original_query_text.slice(0, 100) + '...' : answer.question.original_query_text,
+        //     answer_preview: answer.answer_text.length > 200 ? answer.answer_text.slice(0, 200) + '...' : answer.answer_text,
+        //     current_valid_count: answer.question.valid_count,
+        //     created_at: notification.created_at,
+        //   });
+        // }
+
         const answer = await answerRepo.findByAnswerId(notification.related_entity_id as string);
-        if (answer && answer.question.status === QuestionStatus.PENDING_MODERATION) {
-          tasks.push({
-            type: 'validate_answer',
-            answer_id: answer.answer_id,
-            question_id: answer.question.question_id,
-            question_text: answer.question.original_query_text.length > 100 ? answer.question.original_query_text.slice(0, 100) + '...' : answer.question.original_query_text,
-            answer_preview: answer.answer_text.length > 200 ? answer.answer_text.slice(0, 200) + '...' : answer.answer_text,
-            current_valid_count: answer.question.valid_count,
-            created_at: notification.created_at,
-          });
+        console.log("Answer ", answer);
+
+        if (answer && answer.question_id && !(answer.question_id instanceof Types.ObjectId)) {
+          const q = answer.question_id as IQuestion;
+
+          if (q.status === QuestionStatus.PENDING_MODERATION) {
+            tasks.push({
+              type: "validate_answer",
+              answer_id: answer.answer_id,
+              question_id: q.question_id,
+              question_text:
+                q.original_query_text.length > 100
+                  ? q.original_query_text.slice(0, 100) + "..."
+                  : q.original_query_text,
+              answer_preview:
+                answer.answer_text.length > 200
+                  ? answer.answer_text.slice(0, 200) + "..."
+                  : answer.answer_text,
+              current_valid_count: q.valid_count,
+              created_at: notification.created_at,
+            });
+          }
         }
       }
     }

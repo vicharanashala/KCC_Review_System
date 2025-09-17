@@ -123,7 +123,8 @@ const question = await questionRepo.findById(questionId);
     }
 
     // Decrement workload
-    await userRepo.updateWorkload(currentUserId, -1);
+    const workload=await userRepo.updateWorkload(currentUserId, -1);
+    console.log("Workload decreased ",workload)
 
     return { message: 'Peer validation submitted successfully', peer_validation_id: newPeerVal.peer_validation_id };
   }

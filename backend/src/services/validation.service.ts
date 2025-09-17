@@ -47,7 +47,8 @@ export default class ValidationService {
         logger.info(`Validation submitted: ${newValidation.validation_id}`);
         const result = await goldenFAQService.createGoldenFAQFromValidation(answer, currentUserId);
         // Update question status (handled in GoldenFAQService)
-        await userRepo.updateWorkload(answer.specialist_id._id.toString(), -1); // Decrement specialist's workload
+        // await userRepo.updateWorkload(answer.specialist_id._id.toString(), -1); 
+        await userRepo.updateWorkload(currentUserId, -1); 
         logger.info(`Validation approved and Golden FAQ created: ${result.faq_id} for answer ${answer.answer_id}`);
         // await userRepo.updateWorkload(currentUserId, -1);
 
@@ -65,7 +66,8 @@ export default class ValidationService {
       setImmediate(() => WorkflowService.processValidation(newValidation.validation_id));
       logger.info(`Validation rejected: ${newValidation.validation_id}, sent for revision`);
       // await userRepo.updateWorkload(currentUserId, -1);
-      await userRepo.updateWorkload(answer.specialist_id._id.toString(), -1);
+      // await userRepo.updateWorkload(answer.specialist_id._id.toString(), -1);
+      await userRepo.updateWorkload(currentUserId, -1);
       return { message: 'Validation rejected, revision needed', validation_id: newValidation.validation_id };
     }
 

@@ -9,7 +9,7 @@ import { Types } from 'mongoose';
 
 const answerRepo = new AnswerRepository();
 const questionRepo = new QuestionRepository();
-
+const userRepo = new UserRepository()
 export default class AnswerService {
   async create(answerData: AnswerCreateDto, currentUserId: string): Promise<any> {
     const question = await questionRepo.findByQuestionId(answerData.question_id);
@@ -45,7 +45,7 @@ export default class AnswerService {
     question.consecutive_peer_approvals = 0;
     question.status = QuestionStatus.PENDING_PEER_REVIEW;
     await question.save();
-
+    await userRepo.updateWorkload(currentUserId,-1)
     setImmediate(() => WorkflowService.assignToPeerReviewer(newAnswer.answer_id));
 
     logger.info(`Answer created: ${newAnswer.answer_id}, version: ${newAnswer.version}`);

@@ -15,7 +15,6 @@ export default class AnswerRepository {
   // check if answerId is custom string ID or ObjectId
   let answer = await Answer.findOne({ answer_id: answerId }).populate('question_id specialist_id');
   if(!answer){
-    // fallback to ObjectId search
     if(/^[0-9a-fA-F]{24}$/.test(answerId)){
       answer = await Answer.findById(answerId).populate('question_id specialist_id');
     }
