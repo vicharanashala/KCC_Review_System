@@ -68,7 +68,9 @@ export default class WorkflowService {
       throw new Error("Question not found")
     }
     const excludedIds = [answer.specialist_id.toString(), ...question.reviewed_by_specialists.map((id: any) => id.toString())];
-
+    if(question.assigned_specialist_id){
+      excludedIds.push(question.assigned_specialist_id.toString())
+    }
     const specialists = await userRepo.getAvailableSpecialists();
     const available = specialists.filter((s: any) => !excludedIds.includes(s._id.toString()));
 
