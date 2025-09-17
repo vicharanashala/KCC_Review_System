@@ -54,13 +54,16 @@ export default class DashboardService {
         QuestionStatus.NEEDS_REVISION,
         QuestionStatus.READY_FOR_GOLDEN_FAQ,
       ]);
+      console.log("Assifned question ",assignedQuestions)
       for (const question of assignedQuestions) {
+        console.log("question from loop ",question)
         let taskType = 'create_answer';
         if (question.status === QuestionStatus.READY_FOR_GOLDEN_FAQ) {
           const currentAns = await answerRepo.findCurrentByQuestionId(question._id.toString());
           if (currentAns && currentAns.specialist_id.toString() === currentUserId) taskType = 'create_golden_faq';
         } else if (question.status === QuestionStatus.NEEDS_REVISION) {
           const currentAns = await answerRepo.findCurrentByQuestionId(question._id.toString());
+          console.log("Curent ANswrr",currentAns)
           if (currentAns && currentAns.specialist_id.toString() === currentUserId) taskType = 'revise_answer';
           else continue;
         }
@@ -76,38 +79,49 @@ export default class DashboardService {
       }
 
       const peerNotifications = await notificationRepo.findUnreadByUserId(currentUserId, NotificationType.PEER_REVIEW_REQUEST);
+      console.log("Peer notification ",peerNotifications)
+      // for (const notification of peerNotifications) {
+      //   const peerAnswer = await answerRepo.findByAnswerId(notification.related_entity_id as string);
+      //   if (peerAnswer) {
+      //     tasks.push({
+      //       type: 'peer_review',
+      //       answer_id: peerAnswer.answer_id,
+      //       question_id: peerAnswer.question_id,
+      //       question_text: peerAnswer.question.original_query_text.length > 100 ? peerAnswer.question.original_query_text.slice(0, 100) + '...' : peerAnswer.question.original_query_text,
+      //       answer_preview: peerAnswer.answer_text.length > 200 ? peerAnswer.answer_text.slice(0, 200) + '...' : peerAnswer.answer_text,
+      //       consecutive_approvals: peerAnswer.question.consecutive_peer_approvals,
+      //       created_at: notification.created_at,
+      //     });
+      //   }
+      // }
       for (const notification of peerNotifications) {
-        const peerAnswer = await answerRepo.findByAnswerId(notification.related_entity_id as string);
-        if (peerAnswer) {
-          tasks.push({
-            type: 'peer_review',
-            answer_id: peerAnswer.answer_id,
-            question_id: peerAnswer.question.question_id,
-            question_text: peerAnswer.question.original_query_text.length > 100 ? peerAnswer.question.original_query_text.slice(0, 100) + '...' : peerAnswer.question.original_query_text,
-            answer_preview: peerAnswer.answer_text.length > 200 ? peerAnswer.answer_text.slice(0, 200) + '...' : peerAnswer.answer_text,
-            consecutive_approvals: peerAnswer.question.consecutive_peer_approvals,
-            created_at: notification.created_at,
-          });
-        }
-      }
+  const peerAnswer = await answerRepo.findByAnswerId(notification.related_entity_id as string);
+  console.log("Peer Answer full object", peerAnswer);
+
+  if (peerAnswer && peerAnswer.question_id && !(peerAnswer.question_id instanceof Types.ObjectId)) {
+    const q = peerAnswer.question_id as IQuestion;
+
+    tasks.push({
+      type: 'peer_review',
+      answer_id: peerAnswer.answer_id,
+      question_id: q.question_id,
+      question_text:
+        q.original_query_text.length > 100
+          ? q.original_query_text.slice(0, 100) + "..."
+          : q.original_query_text,
+      answer_preview:
+        peerAnswer.answer_text.length > 200
+          ? peerAnswer.answer_text.slice(0, 200) + "..."
+          : peerAnswer.answer_text,
+      consecutive_approvals: q.consecutive_peer_approvals,
+      created_at: notification.created_at,
+    });
+  }
+}
     } else if (currentRole === UserRole.MODERATOR) {
       console.log("here moderator")
       const validationNotifications = await notificationRepo.findUnreadByUserId(currentUserId, NotificationType.VALIDATION_REQUEST);
       for (const notification of validationNotifications) {
-        // const answer = await answerRepo.findByAnswerId(notification.related_entity_id as string);
-        // console.log("Answer ",answer)
-        // if (answer && answer.question_id&& answer.question_id.status === QuestionStatus.PENDING_MODERATION) {
-        //   tasks.push({
-        //     type: 'validate_answer',
-        //     answer_id: answer.answer_id,
-        //     question_id: answer.question.question_id,
-        //     question_text: answer.question.original_query_text.length > 100 ? answer.question.original_query_text.slice(0, 100) + '...' : answer.question.original_query_text,
-        //     answer_preview: answer.answer_text.length > 200 ? answer.answer_text.slice(0, 200) + '...' : answer.answer_text,
-        //     current_valid_count: answer.question.valid_count,
-        //     created_at: notification.created_at,
-        //   });
-        // }
-
         const answer = await answerRepo.findByAnswerId(notification.related_entity_id as string);
         console.log("Answer ", answer);
 
@@ -134,7 +148,6 @@ export default class DashboardService {
         }
       }
     }
-
     return { tasks };
   }
 }
