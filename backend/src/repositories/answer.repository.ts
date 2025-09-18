@@ -7,12 +7,7 @@ export default class AnswerRepository {
     return Answer.create(answerData);
   }
 
-  // async findByAnswerId(answerId: string): Promise<IAnswer | null> {
-  //   return Answer.findOne({ answer_id: answerId }).populate('question_id specialist_id');
-  // }
-
   async findByAnswerId(answerId: string): Promise<IAnswer | null> {
-  // check if answerId is custom string ID or ObjectId
   let answer = await Answer.findOne({ answer_id: answerId }).populate('question_id specialist_id');
   if(!answer){
     if(/^[0-9a-fA-F]{24}$/.test(answerId)){
@@ -40,11 +35,6 @@ export default class AnswerRepository {
     return Answer.findOne({ question_id: questionObjectId, is_current: true })
       .populate('question_id specialist_id');
   }
-
-  // async findCurrentByQuestionId(questionId: string): Promise<IAnswer | null> {
-  //   return Answer.findOne({ question_id: questionId, is_current: true }).populate('question_id specialist_id');
-  // }
-  
 
   async markPreviousNotCurrent(questionId: string): Promise<void> {
     await Answer.updateMany({ question_id: questionId }, { is_current: false });

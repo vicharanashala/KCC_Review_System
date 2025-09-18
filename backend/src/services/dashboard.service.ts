@@ -49,6 +49,7 @@ export default class DashboardService {
   async getMyTasks(currentUserId: string, currentRole: string): Promise<any> {
     const tasks = [];
     if (currentRole === UserRole.AGRI_SPECIALIST) {
+      console.log("Here")
       const assignedQuestions = await questionRepo.findAssignedToUser(currentUserId, [
         QuestionStatus.ASSIGNED_TO_SPECIALIST,
         QuestionStatus.NEEDS_REVISION,
@@ -80,20 +81,6 @@ export default class DashboardService {
 
       const peerNotifications = await notificationRepo.findUnreadByUserId(currentUserId, NotificationType.PEER_REVIEW_REQUEST);
       console.log("Peer notification ",peerNotifications)
-      // for (const notification of peerNotifications) {
-      //   const peerAnswer = await answerRepo.findByAnswerId(notification.related_entity_id as string);
-      //   if (peerAnswer) {
-      //     tasks.push({
-      //       type: 'peer_review',
-      //       answer_id: peerAnswer.answer_id,
-      //       question_id: peerAnswer.question_id,
-      //       question_text: peerAnswer.question.original_query_text.length > 100 ? peerAnswer.question.original_query_text.slice(0, 100) + '...' : peerAnswer.question.original_query_text,
-      //       answer_preview: peerAnswer.answer_text.length > 200 ? peerAnswer.answer_text.slice(0, 200) + '...' : peerAnswer.answer_text,
-      //       consecutive_approvals: peerAnswer.question.consecutive_peer_approvals,
-      //       created_at: notification.created_at,
-      //     });
-      //   }
-      // }
       for (const notification of peerNotifications) {
   const peerAnswer = await answerRepo.findByAnswerId(notification.related_entity_id as string);
   console.log("Peer Answer full object", peerAnswer);
