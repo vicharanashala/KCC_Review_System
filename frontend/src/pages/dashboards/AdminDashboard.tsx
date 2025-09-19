@@ -1,13 +1,13 @@
-import { useState } from 'react';
-import { Box, Typography, Tabs, Tab, Paper, Container } from '@mui/material';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
-import { SubmitQuestionForm } from '../../components/admin/SubmitQuestionForm';
-import { QuestionList } from '../../components/admin/QuestionList';
-import type { Question } from '../../types/index';
-import UserManagement from '../../components/admin/UserManagement';
+import { useState } from "react";
+import { Box, Typography, Tabs, Tab, Paper, Container } from "@mui/material";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
+import type { Question } from "../../types/index";
+import UserManagement from "../../components/admin/UserManagement";
+import WorkflowPerformance from "../../components/admin/WorkflowPerformance";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -26,11 +26,7 @@ function TabPanel(props: TabPanelProps) {
       aria-labelledby={`admin-tab-${index}`}
       {...other}
     >
-      {value === index && (
-        <Box sx={{ p: 3 }}>
-          {children}
-        </Box>
-      )}
+      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
     </div>
   );
 }
@@ -50,12 +46,17 @@ const AdminDashboard = () => {
 
   // Submit question mutation
   const submitQuestion = useMutation({
-    mutationFn: async (questionData: Omit<Question, 'id' | 'status' | 'createdAt' | 'updatedAt'>) => {
-      const { data } = await axios.post(`${API_BASE_URL}/questions/`, questionData);
+    mutationFn: async (
+      questionData: Omit<Question, "id" | "status" | "createdAt" | "updatedAt">
+    ) => {
+      const { data } = await axios.post(
+        `${API_BASE_URL}/questions/`,
+        questionData
+      );
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['questions'] });
+      queryClient.invalidateQueries({ queryKey: ["questions"] });
     },
   });
 
@@ -68,8 +69,8 @@ const AdminDashboard = () => {
       await submitQuestion.mutateAsync(data);
       return { success: true };
     } catch (error) {
-      console.error('Error submitting question:', error);
-      return { success: false, error: 'Failed to submit question' };
+      console.error("Error submitting question:", error);
+      return { success: false, error: "Failed to submit question" };
     }
   };
 
@@ -78,8 +79,8 @@ const AdminDashboard = () => {
       <Typography variant="h4" component="h1" gutterBottom>
         Admin Dashboard
       </Typography>
-      
-      <Paper sx={{ width: '100%', mb: 2 }}>
+
+      <Paper sx={{ width: "100%", mb: 2 }}>
         <Tabs
           value={tabValue}
           onChange={handleTabChange}
@@ -87,28 +88,30 @@ const AdminDashboard = () => {
           variant="scrollable"
           scrollButtons="auto"
         >
-          <Tab label="Submit Question" />
-          <Tab label="Manage Questions" />
+          {/* <Tab label="Submit Question" /> */}
+
+          <Tab label="Analytics" />
           <Tab label="User Management" />
-          <Tab label="System Settings" />
+          {/* <Tab label="Manage Questions" /> */}
+          {/* <Tab label="System Settings" /> */}
         </Tabs>
 
-        <TabPanel value={tabValue} index={0}>
+        {/* <TabPanel value={tabValue} index={0}>
           <SubmitQuestionForm onSubmit={handleSubmitQuestion} />
+        </TabPanel> */}
+
+        <TabPanel value={tabValue} index={0}>
+          {/* <QuestionList questions={questions} loading={isLoading} /> */}
+          <WorkflowPerformance />
         </TabPanel>
 
         <TabPanel value={tabValue} index={1}>
-          {/* <QuestionList questions={questions} loading={isLoading} /> */}
+          <UserManagement />
         </TabPanel>
 
-        <TabPanel value={tabValue} index={2}>
-          {/* <Typography>User management content goes here</Typography> */}
-          <UserManagement/>
-        </TabPanel>
-
-        <TabPanel value={tabValue} index={3}>
+        {/* <TabPanel value={tabValue} index={3}>
           <Typography>System settings content goes here</Typography>
-        </TabPanel>
+        </TabPanel> */}
       </Paper>
     </Container>
   );
