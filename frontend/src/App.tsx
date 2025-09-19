@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ToastProvider, useToast } from './contexts/ToastContext';
 import { setToastFunctions } from './api/auth';
 import { setToastFunctions as setApiToastFunctions } from './utils/apiWithToast';
+import { setToastFunctions as setPeerValidationToastFunctions } from './api/peerValidation';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -56,6 +57,7 @@ const ToastInitializer = ({ children }: { children: React.ReactNode }) => {
   React.useMemo(() => {
     setToastFunctions(showSuccess, showError);
     setApiToastFunctions(showSuccess, showError);
+    setPeerValidationToastFunctions(showSuccess, showError);
   }, [showSuccess, showError]);
 
   return <>{children}</>;

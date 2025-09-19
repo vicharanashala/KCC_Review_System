@@ -1,9 +1,10 @@
-import { Box, Typography, Paper, Button, TextField, CircularProgress } from "@mui/material";
+import { Box, Typography, Paper, Button, TextField, CircularProgress, Chip } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../../contexts/ToastContext";
+import { peerValidationApi } from "../../api/peerValidation";
 
 interface Source {
     name: string;
@@ -14,6 +15,29 @@ interface AnswerData {
     question_id: string;
     answer_text: string;
     sources?: Source[];
+}
+
+interface VersionHistory {
+    version: string;
+    status: 'current' | 'approved' | 'revision_requested' | 'initial_draft';
+    timestamp: string;
+    statusLabel?: string;
+    statusColor?: string;
+    timeAgo?: string;
+    reviewer?: string;
+    feedback?: string;
+    changes?: string;
+    issues?: string;
+    description?: string;
+}
+
+interface ReviewerInsights {
+    approvals: number;
+    revisions: number;
+}
+
+interface KeyImprovement {
+    text: string;
 }
 
 export const ReviewQueue = () => {
@@ -31,7 +55,21 @@ export const ReviewQueue = () => {
     const [selectedStatus, setSelectedStatus] = useState<'approved' | 'revised' | null>(null);
     const [comments, setComments] = useState('');
     const [revisedAnswer, setRevisedAnswer] = useState(task?.answer_preview || '');
+    // const [peerValidationHistory, setPeerValidationHistory] = useState<PeerValidationHistory[]>([]);
+    // const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
+    // const [isLoadingHistory, setIsLoadingHistory] = useState(false);
     const { showSuccess, showError } = useToast();
+
+    const [versionHistory, setVersionHistory] = useState<VersionHistory[]>([]);
+    const [reviewerInsights, setReviewerInsights] = useState<ReviewerInsights>({ approvals: 0, revisions: 0 });
+    // const [keyImprovements, setKeyImprovements] = useState<KeyImprovement[]>([]);
+    const [isLoadingVersionHistory, setIsLoadingVersionHistory] = useState(false);
+    const keyImprovements: KeyImprovement[] = [
+        { text: "Added monsoon-specific timing guidelines" },
+        { text: "Included variety-specific NPK ratios" },
+        { text: "Enhanced regional adaptation notes" },
+        { text: "Improved technical accuracy" }
+    ];
     useEffect(() => {
         if (!task) {
             setError('No task data available');
@@ -39,7 +77,98 @@ export const ReviewQueue = () => {
             return;
         }
         setLoading(false);
+
+        if (task?.type !== 'create_answer') {
+            fetchVersionHistory();
+        }
     }, [task]);
+
+    // const fetchPeerValidationHistory = async () => {
+    //     if (!task?.answer_id) {
+    //         showError('Answer ID is missing');
+    //         return;
+    //     }
+
+    //     setIsLoadingHistory(true);
+    //     try {
+    //         const response = await peerValidationApi.getPeerValidationHistory(task.answer_id);
+    //         setPeerValidationHistory(response.peer_validation_history || []);
+    //         setIsReviewDialogOpen(true);
+    //     } catch (err) {
+    //         console.error('Error fetching peer validation history:', err);
+    //         showError(err instanceof Error ? err.message : 'Failed to fetch peer validation history');
+    //     } finally {
+    //         setIsLoadingHistory(false);
+    //     }
+    // };
+
+    const fetchVersionHistory = async () => {
+        if (!task?.answer_id || task?.type === 'create_answer') {
+            return;
+        }
+
+        setIsLoadingVersionHistory(true);
+        try {
+            const response = await peerValidationApi.getPeerValidationHistory(task.answer_id);
+            const history = response.peer_validation_history || [];
+
+            const transformedHistory: VersionHistory[] = [];
+
+            transformedHistory.push({
+                version: "v1 (Current)",
+                status: "current",
+                timestamp: `Awaiting your review • ${task.consecutive_approvals || 0} consecutive approvals`
+            });
+
+            history.forEach((validation, index) => {
+                console.log(validation,"validationvalidationvalidation")
+                const versionNumber = validation.answer_id.version;
+                const createdAt = new Date(validation.created_at);
+                const diffMs = Date.now() - createdAt.getTime();
+                const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                const timeAgo = diffDays === 0
+                    ? "Today"
+                    : diffDays === 1
+                        ? "1 day ago"
+                        : `${diffDays} days ago`;
+
+                const statusLabel = validation.status === 'approved' ? 'Approved' : 'Revision Requested';
+                const statusColor = validation.status === 'approved' ? '#00A63E' : '#D08700';
+
+                transformedHistory.push({
+                    version: `v${versionNumber}`,
+                    status: validation.status === 'approved' ? 'approved' : 'revision_requested',
+                    timestamp: `${statusLabel} ${timeAgo}`,
+                    statusLabel: statusLabel,
+                    statusColor: statusColor,
+                    timeAgo: timeAgo,
+                    reviewer: `${validation.reviewer_id.name} (R${index + 1})`,
+                    feedback: validation.answer_id.answer_text,
+                    changes: validation.status === 'approved' ? 'Peer review completed' : validation.comments
+                });
+            });
+
+            setVersionHistory(transformedHistory);
+
+            const approvals = history.filter(v => v.status === 'approved').length;
+            const revisions = history.filter(v => v.status !== 'approved').length;
+            setReviewerInsights({ approvals, revisions });
+
+            // Generate key improvements based on feedback
+            // const improvements: KeyImprovement[] = [];
+            // history.forEach(validation => {
+            //     if (validation.comments) {
+            //         improvements.push({ text: validation.comments });
+            //     }
+            // });
+            // setKeyImprovements(improvements);
+
+        } catch (err) {
+            console.error('Error fetching version history:', err);
+        } finally {
+            setIsLoadingVersionHistory(false);
+        }
+    };
 
 
     const handleSubmitAnswer = async () => {
@@ -121,14 +250,14 @@ export const ReviewQueue = () => {
         setIsSubmitting(true);
         try {
             const token = localStorage.getItem('access_token');
-            
+
             let apiUrl, validationData;
-            
+
             if (user?.role === 'moderator') {
                 apiUrl = `${import.meta.env.VITE_API_BASE_URL}/validate`;
                 validationData = {
                     answer_id: task.answer_id,
-                    validation_status:  selectedStatus == 'approved' ? 'valid' : 'invalid',
+                    validation_status: selectedStatus == 'approved' ? 'valid' : 'invalid',
                     comments: comments.trim() || undefined
                 };
             } else {
@@ -170,6 +299,249 @@ export const ReviewQueue = () => {
         }
     };
 
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case 'current':
+                return '#2B7FFF';
+            case 'approved':
+                return '#00C950';
+            case 'revision_requested':
+                return '#F0B100';
+            case 'initial_draft':
+                return '#99A1AF';
+            default:
+                return '#99A1AF';
+        }
+    };
+
+
+    const getFeedbackBgColor = (status: string) => {
+        switch (status) {
+            case 'approved':
+                return '#e8f5e8';
+            case 'revision_requested':
+                return '#fff8e1';
+            default:
+                return '#f5f5f5';
+        }
+    };
+
+    const VersionHistoryComponent = () => (
+        <Paper
+            sx={{
+                p: 3,
+                borderRadius: 2,
+                boxShadow: "0px 2px 6px rgba(0,0,0,0.05)",
+                border: "1px solid #ddd",
+                height: 'fit-content',
+                position: 'sticky',
+                top: 20,
+                backgroundColor: '#fafafa'
+            }}
+        >
+            <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: '#333', fontSize: '15px' }}>
+                Version History
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#717182', mb: 3, fontSize: '14px' }}>
+                Complete evolution and reviewer feedback trail
+            </Typography>
+
+            {isLoadingVersionHistory ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                    <CircularProgress size={24} />
+                </Box>
+            ) : versionHistory.length === 0 ? (
+                <Typography variant="body2" sx={{ color: '#666', textAlign: 'center', py: 2 }}>
+                    No version history available
+                </Typography>
+            ) : (
+                <Box sx={{ position: 'relative' }}>
+                    {versionHistory.map((version, index) => (
+                        <Box key={version.version} sx={{ position: 'relative', mb: 4 }}>
+                            <Box
+                                sx={{
+                                    position: 'absolute',
+                                    left: 0,
+                                    top: 0,
+                                    width: '4px',
+                                    height: index === versionHistory.length - 1 ? '80px' : '100%',
+                                    backgroundColor: getStatusColor(version.status),
+                                }}
+                            />
+
+                            <Box sx={{ ml: 3 }}>
+                                <Box sx={{}}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+                                        <Chip
+                                            label={version.version}
+                                            size="small"
+                                            sx={{
+                                                backgroundColor: version.status === 'current' ? '#333' : '#e0e0e0',
+                                                color: version.status === 'current' ? '#fff' : '#333',
+                                                fontWeight: 500,
+                                                fontSize: '12px',
+                                                height: '26px',
+                                                borderRadius: '13px',
+                                                px: 1.5
+                                            }}
+                                        />
+                                        {version.status === 'current' && (
+                                            <Typography variant="caption" sx={{ color: '#666', fontSize: '12px' }}>
+                                                Active
+                                            </Typography>
+                                        )}
+                                    </Box>
+
+                                     <Typography variant="body2" sx={{ color: '#333', mb: 1.5, fontSize: '14px' }}>
+                                         {version.statusLabel && version.statusColor ? (
+                                             <>
+                                                 <span style={{ color: version.statusColor }}>
+                                                     {version.statusLabel}
+                                                 </span>
+                                                 {version.timeAgo && ` ${version.timeAgo}`}
+                                             </>
+                                         ) : (
+                                             version.timestamp
+                                         )}
+                                     </Typography>
+                                </Box>
+
+                                {version.reviewer && (
+                                    <Typography variant="body2" sx={{ fontWeight: 400, color: '#0A0A0A', mb: 1.5, fontSize: '14px' }}>
+                                        Reviewer: {version.reviewer}
+                                    </Typography>
+                                )}
+
+                                {version.feedback && (
+                                    <Box
+                                        sx={{
+                                            p: 1.5,
+                                            backgroundColor: getFeedbackBgColor(version.status),
+                                            borderRadius: 1.5,
+                                            mb: 1.5,
+                                            border: `1px solid ${getStatusColor(version.status)}30`
+                                        }}
+                                    >
+                                        <Typography variant="body2" sx={{ color: '#333', lineHeight: 1.6, fontSize: '14px' }}>
+                                            {version.feedback}
+                                        </Typography>
+                                    </Box>
+                                )}
+
+                                {version.changes && (
+                                    <Typography variant="body2" sx={{ color: '#666', mb: 1, fontSize: '14px' }}>
+                                        Changes: {version.changes}
+                                    </Typography>
+                                )}
+
+                                {version.issues && (
+                                    <Typography variant="body2" sx={{ color: '#666', mb: 1, fontSize: '14px' }}>
+                                        Issues: {version.issues}
+                                    </Typography>
+                                )}
+
+                                {version.description && (
+                                    <>
+                                        <Typography variant="body2" sx={{ fontWeight: 600, color: '#333', mb: 1, fontSize: '14px' }}>
+                                            Original Submission
+                                        </Typography>
+                                        <Typography variant="body2" sx={{ color: '#666', fontSize: '14px' }}>
+                                            {version.description}
+                                        </Typography>
+                                    </>
+                                )}
+                            </Box>
+                        </Box>
+                    ))}
+                </Box>
+            )}
+
+            {!isLoadingVersionHistory && (
+                <Box sx={{ mt: 5, mb: 4 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: '#333', fontSize: '16px' }}>
+                        Reviewer Insights
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                        <Box
+                            sx={{
+                                p: 2,
+                                backgroundColor: '#e8f5e8',
+                                borderRadius: 1.5,
+                                textAlign: 'center',
+                                minWidth: '80px'
+                            }}
+                        >
+                            <Typography variant="h6" sx={{ color: '#00C950', fontWeight: 700, fontSize: '20px', mb: 0.5 }}>
+                                {reviewerInsights.approvals}
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: '#00C950', fontSize: '12px', fontWeight: 500 }}>
+                                Approvals
+                            </Typography>
+                        </Box>
+                        <Box
+                            sx={{
+                                p: 2,
+                                backgroundColor: '#fff3e0',
+                                borderRadius: 1.5,
+                                textAlign: 'center',
+                                minWidth: '80px'
+                            }}
+                        >
+                            <Typography variant="h6" sx={{ color: '#F0B100', fontWeight: 700, fontSize: '20px', mb: 0.5 }}>
+                                {reviewerInsights.revisions}
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: '#F0B100', fontSize: '12px', fontWeight: 500 }}>
+                                Revision
+                            </Typography>
+                        </Box>
+                    </Box>
+                </Box>
+            )}
+
+            {/* {!isLoadingVersionHistory && keyImprovements.length > 0 && ( */}
+                <Box>
+                    
+                    <Box
+                        sx={{
+                            p: 2.5,
+                            backgroundColor: '#f5f5f5',
+                            borderRadius: 1.5,
+                            border: '1px solid #e0e0e0'
+                        }}
+                    >
+                        <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: '#333', fontSize: '16px' }}>
+                        Key Improvements Made
+                    </Typography>
+                        {keyImprovements.map((improvement, index) => (
+                            <Typography
+                                key={index}
+                                variant="body2"
+                                sx={{
+                                    color: '#333',
+                                    mb: index < keyImprovements.length - 1 ? 1.5 : 0,
+                                    position: 'relative',
+                                    pl: 2.5,
+                                    fontSize: '14px',
+                                    lineHeight: 1.5,
+                                    '&::before': {
+                                        content: '"•"',
+                                        position: 'absolute',
+                                        left: 0,
+                                        color: '#333',
+                                        fontSize: '16px',
+                                        fontWeight: 'bold'
+                                    }
+                                }}
+                            >
+                                {improvement.text}
+                            </Typography>
+                        ))}
+                    </Box>
+                </Box>
+            {/* )} */}
+        </Paper>
+    );
+
     if (loading) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
@@ -208,7 +580,11 @@ export const ReviewQueue = () => {
     }
 
     return (
-        <Box sx={{ p: 3, maxWidth: 800, mx: "auto" }}>
+        <Box sx={{
+            p: 3,
+            maxWidth: task?.type === 'create_answer' ? 800 : 1400,
+            mx: "auto"
+        }}>
             <Button
                 startIcon={<ArrowBackIcon />}
                 onClick={() => navigate(user?.role === 'moderator' ? "/moderator/dashboard" : "/agri-specialist/dashboard")}
@@ -228,292 +604,306 @@ export const ReviewQueue = () => {
                 Back to Dashboard
             </Button>
 
-            <Paper
-                sx={{
-                    p: 3,
-                    mb: 3,
-                    borderRadius: 2,
-                    boxShadow: "0px 2px 6px rgba(0,0,0,0.05)",
-                    border: "1px solid #ddd",
-                }}
-            >
-                <Typography
-                    variant="h6"
-                    fontWeight="500"
-                    sx={{ display: "flex", alignItems: "center", mb: 1 }}
-                >
-                    📄 {task.question_text || 'No title available'}
-                </Typography>
+            <Box sx={{ display: 'flex', gap: 3, alignItems: 'flex-start', justifyContent: 'center' }}>
+                <Box sx={{
+                    flex: 1,
+                    maxWidth: 800
+                }}>
 
-                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 2 }}>
-                    <Typography variant="body2" sx={{ color: "#6d6d6d" }}>
-                        Type:{' '}
-                        <span style={{ color: "#1976d2", fontWeight: 500 }}>
-                            {task.type?.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) || 'N/A'}
-                        </span>
-                    </Typography>
-
-                    <Typography variant="body2" sx={{ color: "#6d6d6d" }}>
-                        • Consecutive Approvals: <span style={{
-                            color: task.consecutive_approvals > 0 ? '#2e7d32' : '#d32f2f',
-                            fontWeight: 500
-                        }}>
-                            {task.consecutive_approvals || 0}
-                        </span>
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: "#6d6d6d" }}>
-                        • ID: <span style={{ fontFamily: 'monospace' }}>{task.question_id || 'N/A'}</span>
-                    </Typography>
-                </Box>
-
-                {task.answer_preview && (
-                    <Box sx={{ mt: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
-                        <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-                            Answer Preview:
-                        </Typography>
-                        <Typography variant="body1" sx={{ lineHeight: 1.6 }}>
-                            {task.answer_preview}
-                        </Typography>
-                    </Box>
-                )}
-            </Paper>
-
-            {task?.type === 'create_answer' ? (
-                <Paper
-                    sx={{
-                        p: 3,
-                        mb: 3,
-                        borderRadius: 2,
-                        boxShadow: "0px 2px 6px rgba(0,0,0,0.05)",
-                        border: "1px solid #ddd",
-                    }}
-                >
-                    <Typography
-                        variant="subtitle1"
-                        fontWeight="500"
-                        sx={{ mb: 2 }}
-                    >
-                        Write Your Answer
-                    </Typography>
-
-                    <TextField
-                        placeholder="Write a detailed, accurate answer to this agricultural question. Include relevant information, best practices, and any important considerations..."
-                        multiline
-                        rows={5}
-                        fullWidth
-                        variant="outlined"
-                        value={answerText}
-                        onChange={(e) => setAnswerText(e.target.value)}
+                    <Paper
                         sx={{
-                            "& .MuiOutlinedInput-root": {
-                                bgcolor: "#fff8f0",
-                                borderRadius: "8px",
-                                "& fieldset": { border: "1px solid #f0e0d0" },
-                                "&:hover fieldset": { borderColor: "#e0c0a0" },
-                            },
+                            p: 3,
+                            mb: 3,
+                            borderRadius: 2,
+                            boxShadow: "0px 2px 6px rgba(0,0,0,0.05)",
+                            border: "1px solid #ddd",
                         }}
-                    />
+                    >
+                        <Typography
+                            variant="h6"
+                            fontWeight="500"
+                            sx={{ display: "flex", alignItems: "center", mb: 1 }}
+                        >
+                            📄 {task.question_text || 'No title available'}
+                        </Typography>
 
-                    <Box sx={{ display: 'flex', gap: 2, my: 2 }}>
-                        <TextField
-                            placeholder="Source name"
-                            value={sourceName}
-                            onChange={(e) => setSourceName(e.target.value)}
-                            fullWidth
-                            variant="outlined"
-                            size="small"
-                            sx={{
-                                "& .MuiOutlinedInput-root": {
-                                    bgcolor: "#fff8f0",
-                                    borderRadius: "8px",
-                                    "& fieldset": { border: "1px solid #f0e0d0" },
-                                    "&:hover fieldset": { borderColor: "#e0c0a0" },
-                                },
-                            }}
-                        />
-                        <TextField
-                            placeholder="Source URL"
-                            value={sourceLink}
-                            onChange={(e) => setSourceLink(e.target.value)}
-                            fullWidth
-                            variant="outlined"
-                            size="small"
-                            sx={{
-                                "& .MuiOutlinedInput-root": {
-                                    bgcolor: "#fff8f0",
-                                    borderRadius: "8px",
-                                    "& fieldset": { border: "1px solid #f0e0d0" },
-                                    "&:hover fieldset": { borderColor: "#e0c0a0" },
-                                },
-                            }}
-                        />
-                    </Box>
+                        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 2 }}>
+                            <Typography variant="body2" sx={{ color: "#6d6d6d" }}>
+                                Type:{' '}
+                                <span style={{ color: "#2B7FFF", fontWeight: 500 }}>
+                                    {task.type?.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) || 'N/A'}
+                                </span>
+                            </Typography>
 
-                    <Box sx={{ display: "flex", justifyContent: "center" }}>
-                        <Button
-                            variant="contained"
-                            onClick={handleSubmitAnswer}
-                            disabled={isSubmitting}
+                            <Typography variant="body2" sx={{ color: "#6d6d6d" }}>
+                                • Consecutive Approvals: <span style={{
+                                    color: task.consecutive_approvals > 0 ? '#00C950' : '#d32f2f',
+                                    fontWeight: 500
+                                }}>
+                                    {task.consecutive_approvals || 0}
+                                </span>
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: "#6d6d6d" }}>
+                                • ID: <span style={{ fontFamily: 'monospace' }}>{task.question_id || 'N/A'}</span>
+                            </Typography>
+                        </Box>
+
+                        {task.answer_preview && (
+                            <Box sx={{ mt: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
+                                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
+                                    Answer Preview:
+                                </Typography>
+                                <Typography variant="body1" sx={{ lineHeight: 1.6 }}>
+                                    {task.answer_preview}
+                                </Typography>
+                            </Box>
+                        )}
+                    </Paper>
+
+                    {task?.type === 'create_answer' ? (
+                        <Paper
                             sx={{
-                                mt: 2,
-                                px: 4,
-                                textTransform: "none",
-                                borderRadius: "8px",
-                                backgroundColor: "#00A63E",
-                                "&:hover": { backgroundColor: "#008c35" },
-                                "&.Mui-disabled": {
-                                    backgroundColor: "#f5f5f5",
-                                    color: "#9e9e9e"
-                                }
+                                p: 3,
+                                mb: 3,
+                                borderRadius: 2,
+                                boxShadow: "0px 2px 6px rgba(0,0,0,0.05)",
+                                border: "1px solid #ddd",
                             }}
                         >
-                            {isSubmitting ? <CircularProgress size={24} color="inherit" /> : 'Submit Answer'}
-                        </Button>
-                    </Box>
-                </Paper>
-            ) : (
-                <Paper
-                    sx={{
-                        p: 3,
-                        mb: 3,
-                        borderRadius: 2,
-                        boxShadow: "0px 2px 6px rgba(0,0,0,0.05)",
-                        border: "1px solid #ddd",
-                    }}
-                >
-                    <Typography sx={{ my: 2 }}>Answer</Typography>
-                        <Box>
+                            <Typography
+                                variant="subtitle1"
+                                fontWeight="500"
+                                sx={{ mb: 2 }}
+                            >
+                                Write Your Answer
+                            </Typography>
+
                             <TextField
-                                placeholder={!selectedStatus ? "Select a status first" : selectedStatus === 'approved' ? "No changes needed for approval" : user?.role === 'moderator' ? "Answer text (read-only for moderators)" : "Edit the answer if needed (only for revisions)"}
+                                placeholder="Write a detailed, accurate answer to this agricultural question. Include relevant information, best practices, and any important considerations..."
                                 multiline
-                                rows={2}
+                                rows={5}
                                 fullWidth
                                 variant="outlined"
-                                value={revisedAnswer}
-                                onChange={(e) => setRevisedAnswer(e.target.value)}
-                                disabled={!selectedStatus || selectedStatus === 'approved' || user?.role === 'moderator'}
+                                value={answerText}
+                                onChange={(e) => setAnswerText(e.target.value)}
                                 sx={{
                                     "& .MuiOutlinedInput-root": {
-                                        bgcolor: selectedStatus === 'approved' || user?.role === 'moderator' ? "#f5f5f5" : "#fff8f0",
+                                        bgcolor: "#fff8f0",
                                         borderRadius: "8px",
-                                        "& fieldset": {
-                                            border: "1px solid #f0e0d0",
-                                        },
-                                        "&:hover fieldset": {
-                                            borderColor: selectedStatus === 'approved' || user?.role === 'moderator' ? "#f0e0d0" : "#e0c0a0"
-                                        },
+                                        "& fieldset": { border: "1px solid #f0e0d0" },
+                                        "&:hover fieldset": { borderColor: "#e0c0a0" },
                                     },
                                 }}
                             />
-                        </Box>
-                    <Box sx={{ my: 2 }}>
-                        <Typography sx={{ my: 2 }}>Add comments</Typography>
-                        <TextField
-                            placeholder={!selectedStatus ? "Select a status first" : selectedStatus === 'approved' ? "Comments (optional)" : "Please provide comments for rejection"}
-                            multiline
-                            rows={2}
-                            fullWidth
-                            variant="outlined"
-                            value={comments}
-                            onChange={(e) => setComments(e.target.value)}
-                            disabled={!selectedStatus || selectedStatus === 'approved'}
-                            required={selectedStatus === 'revised'}
+
+                            <Box sx={{ display: 'flex', gap: 2, my: 2 }}>
+                                <TextField
+                                    placeholder="Source name"
+                                    value={sourceName}
+                                    onChange={(e) => setSourceName(e.target.value)}
+                                    fullWidth
+                                    variant="outlined"
+                                    size="small"
+                                    sx={{
+                                        "& .MuiOutlinedInput-root": {
+                                            bgcolor: "#fff8f0",
+                                            borderRadius: "8px",
+                                            "& fieldset": { border: "1px solid #f0e0d0" },
+                                            "&:hover fieldset": { borderColor: "#e0c0a0" },
+                                        },
+                                    }}
+                                />
+                                <TextField
+                                    placeholder="Source URL"
+                                    value={sourceLink}
+                                    onChange={(e) => setSourceLink(e.target.value)}
+                                    fullWidth
+                                    variant="outlined"
+                                    size="small"
+                                    sx={{
+                                        "& .MuiOutlinedInput-root": {
+                                            bgcolor: "#fff8f0",
+                                            borderRadius: "8px",
+                                            "& fieldset": { border: "1px solid #f0e0d0" },
+                                            "&:hover fieldset": { borderColor: "#e0c0a0" },
+                                        },
+                                    }}
+                                />
+                            </Box>
+
+                            <Box sx={{ display: "flex", justifyContent: "center" }}>
+                                <Button
+                                    variant="contained"
+                                    onClick={handleSubmitAnswer}
+                                    disabled={isSubmitting}
+                                    sx={{
+                                        mt: 2,
+                                        px: 4,
+                                        textTransform: "none",
+                                        borderRadius: "8px",
+                                        backgroundColor: "#00A63E",
+                                        "&:hover": { backgroundColor: "#008c35" },
+                                        "&.Mui-disabled": {
+                                            backgroundColor: "#f5f5f5",
+                                            color: "#9e9e9e"
+                                        }
+                                    }}
+                                >
+                                    {isSubmitting ? <CircularProgress size={24} color="inherit" /> : 'Submit Answer'}
+                                </Button>
+                            </Box>
+                        </Paper>
+                    ) : (
+                        <Paper
                             sx={{
-                                "& .MuiOutlinedInput-root": {
-                                    bgcolor: selectedStatus === 'approved' ? "#f5f5f5" : "#fff8f0",
-                                    borderRadius: "8px",
-                                    "& fieldset": {
-                                        border: "1px solid #f0e0d0",
-                                    },
-                                    "&:hover fieldset": {
-                                        borderColor: selectedStatus === 'approved' ? "#f0e0d0" : "#e0c0a0"
-                                    },
-                                },
-                            }}
-                        />
-                    </Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 3 }}>
-                        <Button
-                            variant="contained"
-                            onClick={() => handlePeerValidation('revised')}
-                            disabled={isSubmitting}
-                            sx={{
-                                color: '#ffffff',
-                                borderColor: '#d32f2f',
-                                textTransform: 'none',
-                                px: 3,
-                                py: 1,
-                                borderRadius: '4px',
-                                background: '#D4183D',
-                                width: '100%',
-                                '&:hover': {
-                                    backgroundColor: '#b2102f',
-                                    borderColor: '#b2102f',
-                                },
-                                '&.Mui-disabled': {
-                                    backgroundColor: '#f5f5f5',
-                                    color: '#9e9e9e'
-                                }
-                            }}
-                        >
-                            {isSubmitting ? <CircularProgress size={24} color="inherit" /> : 'Reject'}
-                        </Button>
-                        <Button
-                            variant={selectedStatus === 'approved' ? 'contained' : 'outlined'}
-                            onClick={() => handleStatusSelect('approved')}
-                            sx={{
-                                color: selectedStatus === 'approved' ? '#ffffff' : '#4caf50',
-                                borderColor: '#4caf50',
-                                backgroundColor: selectedStatus === 'approved' ? '#4caf50' : 'transparent',
-                                '&:hover': {
-                                    backgroundColor: selectedStatus === 'approved' ? '#388e3c' : 'rgba(76, 175, 80, 0.1)',
-                                    borderColor: '#388e3c',
-                                },
-                                '&.Mui-disabled': {
-                                    backgroundColor: '#f5f5f5',
-                                    color: '#9e9e9e',
-                                    borderColor: '#e0e0e0'
-                                },
-                                textTransform: 'none',
-                                px: 3,
-                                py: 1,
-                                borderRadius: '4px',
-                                width: '100%',
-                            }}
-                            disabled={isSubmitting}
-                        >
-                            {isSubmitting ? <CircularProgress size={24} color="inherit" /> : 'Approve'}
-                        </Button>
-                    </Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 3 }}>
-                        <Button
-                            variant="contained"
-                            onClick={handleSubmit}
-                            disabled={isSubmitting || !selectedStatus || (user?.role !== 'moderator' && selectedStatus === 'revised' && !revisedAnswer.trim())}
-                            sx={{
-                                mt: 2,
-                                px: 4,
-                                textTransform: "none",
-                                borderRadius: "8px",
-                                backgroundColor: "#00A63E",
-                                "&:hover": { backgroundColor: "#008c35" },
-                                "&.Mui-disabled": {
-                                    backgroundColor: "#f5f5f5",
-                                    color: "#9e9e9e"
-                                }
+                                p: 3,
+                                mb: 3,
+                                borderRadius: 2,
+                                boxShadow: "0px 2px 6px rgba(0,0,0,0.05)",
+                                border: "1px solid #ddd",
                             }}
                         >
-                            {isSubmitting ? (
-                                <CircularProgress size={24} color="inherit" />
-                            ) : selectedStatus === 'approved' ? (
-                                'Submit Approval'
-                            ) : (
-                                'Submit Revision'
-                            )}
-                        </Button>
+                            <Typography sx={{ my: 2 }}>Answer</Typography>
+                            <Box>
+                                <TextField
+                                    placeholder={!selectedStatus ? "Select a status first" : selectedStatus === 'approved' ? "No changes needed for approval" : user?.role === 'moderator' ? "Answer text (read-only for moderators)" : "Edit the answer if needed (only for revisions)"}
+                                    multiline
+                                    rows={2}
+                                    fullWidth
+                                    variant="outlined"
+                                    value={revisedAnswer}
+                                    onChange={(e) => setRevisedAnswer(e.target.value)}
+                                    disabled={!selectedStatus || selectedStatus === 'approved' || user?.role === 'moderator'}
+                                    sx={{
+                                        "& .MuiOutlinedInput-root": {
+                                            bgcolor: selectedStatus === 'approved' || user?.role === 'moderator' ? "#f5f5f5" : "#fff8f0",
+                                            borderRadius: "8px",
+                                            "& fieldset": {
+                                                border: "1px solid #f0e0d0",
+                                            },
+                                            "&:hover fieldset": {
+                                                borderColor: selectedStatus === 'approved' || user?.role === 'moderator' ? "#f0e0d0" : "#e0c0a0"
+                                            },
+                                        },
+                                    }}
+                                />
+                            </Box>
+                            <Box sx={{ my: 2 }}>
+                                <Typography sx={{ my: 2 }}>Add comments</Typography>
+                                <TextField
+                                    placeholder={!selectedStatus ? "Select a status first" : selectedStatus === 'approved' ? "Comments (optional)" : "Please provide comments for rejection"}
+                                    multiline
+                                    rows={2}
+                                    fullWidth
+                                    variant="outlined"
+                                    value={comments}
+                                    onChange={(e) => setComments(e.target.value)}
+                                    disabled={!selectedStatus || selectedStatus === 'approved'}
+                                    required={selectedStatus === 'revised'}
+                                    sx={{
+                                        "& .MuiOutlinedInput-root": {
+                                            bgcolor: selectedStatus === 'approved' ? "#f5f5f5" : "#fff8f0",
+                                            borderRadius: "8px",
+                                            "& fieldset": {
+                                                border: "1px solid #f0e0d0",
+                                            },
+                                            "&:hover fieldset": {
+                                                borderColor: selectedStatus === 'approved' ? "#f0e0d0" : "#e0c0a0"
+                                            },
+                                        },
+                                    }}
+                                />
+                            </Box>
+                            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 3 }}>
+                                <Button
+                                    variant="contained"
+                                    onClick={() => handlePeerValidation('revised')}
+                                    disabled={isSubmitting}
+                                    sx={{
+                                        color: '#ffffff',
+                                        borderColor: '#d32f2f',
+                                        textTransform: 'none',
+                                        px: 3,
+                                        py: 1,
+                                        borderRadius: '4px',
+                                        background: '#D4183D',
+                                        width: '100%',
+                                        '&:hover': {
+                                            backgroundColor: '#b2102f',
+                                            borderColor: '#b2102f',
+                                        },
+                                        '&.Mui-disabled': {
+                                            backgroundColor: '#f5f5f5',
+                                            color: '#9e9e9e'
+                                        }
+                                    }}
+                                >
+                                    {isSubmitting ? <CircularProgress size={24} color="inherit" /> : 'Reject'}
+                                </Button>
+                                <Button
+                                    variant={selectedStatus === 'approved' ? 'contained' : 'outlined'}
+                                    onClick={() => handleStatusSelect('approved')}
+                                    sx={{
+                                        color: selectedStatus === 'approved' ? '#ffffff' : '#4caf50',
+                                        borderColor: '#4caf50',
+                                        backgroundColor: selectedStatus === 'approved' ? '#4caf50' : 'transparent',
+                                        '&:hover': {
+                                            backgroundColor: selectedStatus === 'approved' ? '#388e3c' : 'rgba(76, 175, 80, 0.1)',
+                                            borderColor: '#388e3c',
+                                        },
+                                        '&.Mui-disabled': {
+                                            backgroundColor: '#f5f5f5',
+                                            color: '#9e9e9e',
+                                            borderColor: '#e0e0e0'
+                                        },
+                                        textTransform: 'none',
+                                        px: 3,
+                                        py: 1,
+                                        borderRadius: '4px',
+                                        width: '100%',
+                                    }}
+                                    disabled={isSubmitting}
+                                >
+                                    {isSubmitting ? <CircularProgress size={24} color="inherit" /> : 'Approve'}
+                                </Button>
+                            </Box>
+                            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 3 }}>
+                                <Button
+                                    variant="contained"
+                                    onClick={handleSubmit}
+                                    disabled={isSubmitting || !selectedStatus || (user?.role !== 'moderator' && selectedStatus === 'revised' && !revisedAnswer.trim())}
+                                    sx={{
+                                        mt: 2,
+                                        px: 4,
+                                        textTransform: "none",
+                                        borderRadius: "8px",
+                                        backgroundColor: "#00A63E",
+                                        "&:hover": { backgroundColor: "#008c35" },
+                                        "&.Mui-disabled": {
+                                            backgroundColor: "#f5f5f5",
+                                            color: "#9e9e9e"
+                                        }
+                                    }}
+                                >
+                                    {isSubmitting ? (
+                                        <CircularProgress size={24} color="inherit" />
+                                    ) : selectedStatus === 'approved' ? (
+                                        'Submit Approval'
+                                    ) : (
+                                        'Submit Revision'
+                                    )}
+                                </Button>
+                            </Box>
+                        </Paper>
+                    )}
+                </Box>
+
+                {task?.type !== 'create_answer' && user?.role === 'moderator' && (
+                    <Box sx={{ width: 400, flexShrink: 0 }}>
+                        <VersionHistoryComponent />
                     </Box>
-                </Paper>
-            )}
+                )}
+            </Box>
         </Box>
     );
 };
