@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Box, Typography, Tabs, Tab, Paper, Container } from "@mui/material";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
-import type { Question } from "../../types/index";
+// import { useMutation, useQueryClient } from "@tanstack/react-query";
+// import axios from "axios";
+// import type { Question } from "../../types/index";
 import UserManagement from "../../components/admin/UserManagement";
 import WorkflowPerformance from "../../components/admin/WorkflowPerformance";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+// const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -32,7 +32,7 @@ function TabPanel(props: TabPanelProps) {
 
 const AdminDashboard = () => {
   const [tabValue, setTabValue] = useState(0);
-  const queryClient = useQueryClient();
+  // const queryClient = useQueryClient();
 
   // Fetch questions
   // const { data: questions = [], isLoading } = useQuery<Question[]>({
@@ -43,34 +43,34 @@ const AdminDashboard = () => {
   //   },
   // });
 
-  const submitQuestion = useMutation({
-    mutationFn: async (
-      questionData: Omit<Question, "id" | "status" | "createdAt" | "updatedAt">
-    ) => {
-      const { data } = await axios.post(
-        `${API_BASE_URL}/questions/`,
-        questionData
-      );
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["questions"] });
-    },
-  });
+  // const submitQuestion = useMutation({
+  //   mutationFn: async (
+  //     questionData: Omit<Question, "id" | "status" | "createdAt" | "updatedAt">
+  //   ) => {
+  //     const { data } = await axios.post(
+  //       `${API_BASE_URL}/questions/`,
+  //       questionData
+  //     );
+  //     return data;
+  //   },
+  //   onSuccess: () => {
+  //     queryClient.invalidateQueries({ queryKey: ["questions"] });
+  //   },
+  // });
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
-  const handleSubmitQuestion = async (data: any) => {
-    try {
-      await submitQuestion.mutateAsync(data);
-      return { success: true };
-    } catch (error) {
-      console.error("Error submitting question:", error);
-      return { success: false, error: "Failed to submit question" };
-    }
-  };
+  // const handleSubmitQuestion = async (data: any) => {
+  //   try {
+  //     await submitQuestion.mutateAsync(data);
+  //     return { success: true };
+  //   } catch (error) {
+  //     console.error("Error submitting question:", error);
+  //     return { success: false, error: "Failed to submit question" };
+  //   }
+  // };
 
   return (
     <Container maxWidth={false} sx={{ mt: 4, mb: 4 }}>

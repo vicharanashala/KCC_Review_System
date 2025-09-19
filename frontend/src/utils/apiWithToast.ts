@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { AxiosResponse, AxiosError } from 'axios';
+import type { AxiosResponse} from 'axios';
 
 // Toast utility functions - these will be set by the app
 let toastSuccess: ((message: string) => void) | null = null;
