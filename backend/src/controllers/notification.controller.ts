@@ -1,8 +1,8 @@
-import { Request, Response } from 'express';
-import NotificationService from '../services/notification.service';
-import Joi from 'joi';
-import logger from '../utils/logger.utils';
-import { authenticateToken, AuthRequest } from '../middleware/auth.middleware';
+import { Request, Response } from "express";
+import NotificationService from "../services/notification.service";
+import Joi from "joi";
+import logger from "../utils/logger.utils";
+import { authenticateToken, AuthRequest } from "../middleware/auth.middleware";
 
 const notificationService = new NotificationService();
 
@@ -22,7 +22,11 @@ export const getNotifications = [
       }
       const { skip = 0, limit = 50 } = req.query;
       const userId = (req as any).user._id.toString();
-      const notifications = await notificationService.getByUserId(userId, parseInt(skip as string), parseInt(limit as string));
+      const notifications = await notificationService.getByUserId(
+        userId,
+        parseInt(skip as string),
+        parseInt(limit as string)
+      );
       res.json({ notifications });
     } catch (error: any) {
       logger.error(error);
@@ -37,8 +41,24 @@ export const markNotificationRead = [
     try {
       const { notification_id } = req.params;
       const userId = (req as any).user._id.toString();
-      const notification = await notificationService.markRead(notification_id as string, userId);
-      res.json({ message: 'Notification marked as read' });
+      const notification = await notificationService.markRead(
+        notification_id as string,
+        userId
+      );
+      res.json({ message: "Notification marked as read" });
+    } catch (error: any) {
+      logger.error(error);
+      res.status(404).json({ detail: error.message });
+    }
+  },
+];
+export const markAllAsRead = [
+  authenticateToken,
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const userId = (req as any).user._id.toString();
+      await notificationService.markAllAsRead(userId);
+      res.json({ message: "Notifications marked as read" });
     } catch (error: any) {
       logger.error(error);
       res.status(404).json({ detail: error.message });
