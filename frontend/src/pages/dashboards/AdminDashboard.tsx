@@ -5,6 +5,7 @@ import axios from 'axios';
 import { SubmitQuestionForm } from '../../components/admin/SubmitQuestionForm';
 import { QuestionList } from '../../components/admin/QuestionList';
 import type { Question } from '../../types/index';
+import UserManagement from '../../components/admin/UserManagement';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 
@@ -39,13 +40,13 @@ const AdminDashboard = () => {
   const queryClient = useQueryClient();
 
   // Fetch questions
-  const { data: questions = [], isLoading } = useQuery<Question[]>({
-    queryKey: ['questions'],
-    queryFn: async () => {
-      const { data } = await axios.get(`${API_BASE_URL}/questions/`);
-      return data;
-    },
-  });
+  // const { data: questions = [], isLoading } = useQuery<Question[]>({
+  //   queryKey: ['questions'],
+  //   queryFn: async () => {
+  //     const { data } = await axios.get(`${API_BASE_URL}/questions/`);
+  //     return data;
+  //   },
+  // });
 
   // Submit question mutation
   const submitQuestion = useMutation({
@@ -97,11 +98,12 @@ const AdminDashboard = () => {
         </TabPanel>
 
         <TabPanel value={tabValue} index={1}>
-          <QuestionList questions={questions} loading={isLoading} />
+          {/* <QuestionList questions={questions} loading={isLoading} /> */}
         </TabPanel>
 
         <TabPanel value={tabValue} index={2}>
-          <Typography>User management content goes here</Typography>
+          {/* <Typography>User management content goes here</Typography> */}
+          <UserManagement/>
         </TabPanel>
 
         <TabPanel value={tabValue} index={3}>
