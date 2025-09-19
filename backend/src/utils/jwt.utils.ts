@@ -14,9 +14,10 @@
 import jwt from 'jsonwebtoken';
 import { config } from '../config/env';
 import { SignOptions } from 'jsonwebtoken';
+import type { StringValue } from 'ms';
 
 export const generateToken = (payload: object): string => {
-  const options: SignOptions = { expiresIn: config.jwtExpire };
+  const options: SignOptions = { expiresIn: config.jwtExpire as StringValue};
   return jwt.sign(payload, config.jwtSecret, options);
 };
 
