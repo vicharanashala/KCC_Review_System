@@ -13,15 +13,17 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 
 export const Performance = () => {
     const navigate = useNavigate();
+    const { user } = useAuth();
     return (
         <Box sx={{ p: 3, maxWidth: 1200, mx: "auto" }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 4 }}>
                 <Button
                     startIcon={<ArrowBackIcon />}
-                    onClick={() => navigate("/agri-specialist/dashboard")}
+                   onClick={() => navigate(user?.role === 'moderator' ? "/moderator/dashboard" : "/agri-specialist/dashboard")}
                     sx={{
                         mb: 2,
                         textTransform: "none",
