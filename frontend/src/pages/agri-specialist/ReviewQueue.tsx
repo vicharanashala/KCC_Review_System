@@ -1,7 +1,9 @@
-import { Box, Typography, Paper, Button, TextField, CircularProgress, Snackbar, Alert } from "@mui/material";
+import { Box, Typography, Paper, Button, TextField, CircularProgress } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { useAuth } from "../../contexts/AuthContext";
+import { useToast } from "../../contexts/ToastContext";
 
 interface Source {
     name: string;
@@ -14,12 +16,11 @@ interface AnswerData {
     sources?: Source[];
 }
 
-console.log(import.meta.env.VITE_API_BASE_URL, "import.meta.env.VITE_API_BASE_URL");
 export const ReviewQueue = () => {
     const navigate = useNavigate();
     const location = useLocation();
+    const { user } = useAuth();
     const task = location.state?.task;
-    console.log(task, "tasktasktask---------");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [answerText, setAnswerText] = useState('');
@@ -28,9 +29,9 @@ export const ReviewQueue = () => {
     const [sourceLink, setSourceLink] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedStatus, setSelectedStatus] = useState<'approved' | 'revised' | null>(null);
-    const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({ open: false, message: '', severity: 'success' });
     const [comments, setComments] = useState('');
     const [revisedAnswer, setRevisedAnswer] = useState(task?.answer_preview || '');
+    const { showSuccess, showError } = useToast();
     useEffect(() => {
         if (!task) {
             setError('No task data available');
@@ -43,12 +44,12 @@ export const ReviewQueue = () => {
 
     const handleSubmitAnswer = async () => {
         if (!answerText.trim()) {
-            setSnackbar({ open: true, message: 'Please provide an answer', severity: 'error' });
+            showError('Please provide an answer');
             return;
         }
 
         if (!task?.question_id) {
-            setSnackbar({ open: true, message: 'Question ID is missing', severity: 'error' });
+            showError('Question ID is missing');
             return;
         }
 
@@ -71,37 +72,27 @@ export const ReviewQueue = () => {
             });
 
             if (!response.ok) {
-                throw new Error('Failed to submit answer');
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'Failed to submit answer');
             }
 
-            setSnackbar({ open: true, message: 'Answer submitted successfully!', severity: 'success' });
+            const responseData = await response.json();
+            showSuccess(responseData.message || 'Answer submitted successfully!');
             setAnswerText('');
             setSources([]);
             setSourceName('');
             setSourceLink('');
-            
-            // Navigate to dashboard after successful submission
+
             navigate("/agri-specialist/dashboard");
         } catch (err) {
             console.error('Error submitting answer:', err);
-            setSnackbar({
-                open: true,
-                message: err instanceof Error ? err.message : 'Failed to submit answer',
-                severity: 'error'
-            });
+            showError(err instanceof Error ? err.message : 'Failed to submit answer');
         } finally {
             setIsSubmitting(false);
         }
     };
 
 
-    const handleRemoveSource = (index: number) => {
-        setSources(sources.filter((_, i) => i !== index));
-    };
-
-    const handleCloseSnackbar = () => {
-        setSnackbar(prev => ({ ...prev, open: false }));
-    };
 
     const handleStatusSelect = (status: 'approved' | 'revised') => {
         setSelectedStatus(status);
@@ -113,31 +104,44 @@ export const ReviewQueue = () => {
 
     const handleSubmit = async () => {
         if (!selectedStatus) {
-            setSnackbar({ open: true, message: 'Please select a status', severity: 'error' });
+            showError('Please select a status');
             return;
         }
 
         if (selectedStatus === 'revised' && !revisedAnswer.trim()) {
-            setSnackbar({ open: true, message: 'Please provide a revised answer', severity: 'error' });
+            showError('Please provide a revised answer');
             return;
         }
 
         if (!task?.answer_id) {
-            setSnackbar({ open: true, message: 'Answer ID is missing', severity: 'error' });
+            showError('Answer ID is missing');
             return;
         }
 
         setIsSubmitting(true);
         try {
             const token = localStorage.getItem('access_token');
-            const validationData = {
-                answer_id: task.answer_id,
-                status: selectedStatus,
-                comments: comments.trim() || undefined,
-                revised_answer_text: selectedStatus === 'revised' ? revisedAnswer.trim() : undefined
-            };
+            
+            let apiUrl, validationData;
+            
+            if (user?.role === 'moderator') {
+                apiUrl = `${import.meta.env.VITE_API_BASE_URL}/validate`;
+                validationData = {
+                    answer_id: task.answer_id,
+                    validation_status:  selectedStatus == 'approved' ? 'valid' : 'invalid',
+                    comments: comments.trim() || undefined
+                };
+            } else {
+                apiUrl = `${import.meta.env.VITE_API_BASE_URL}/peer-validate`;
+                validationData = {
+                    answer_id: task.answer_id,
+                    status: selectedStatus,
+                    comments: comments.trim() || undefined,
+                    revised_answer_text: selectedStatus === 'revised' ? revisedAnswer.trim() : undefined
+                };
+            }
 
-            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/peer-validate`, {
+            const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -147,28 +151,20 @@ export const ReviewQueue = () => {
             });
 
             if (!response.ok) {
-                throw new Error('Failed to submit validation');
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'Failed to submit validation');
             }
 
-            setSnackbar({ 
-                open: true, 
-                message: `Answer ${selectedStatus === 'approved' ? 'approved' : 'revision submitted'} successfully!`,
-                severity: 'success' 
-            });
+            const responseData = await response.json();
+            showSuccess(responseData.message || `Answer ${selectedStatus === 'approved' ? 'approved' : 'revision submitted'} successfully!`);
 
-            // Reset form
             setComments('');
             setRevisedAnswer('');
 
-            // Navigate to dashboard after successful submission
-            navigate("/agri-specialist/dashboard");
+            navigate(user?.role === 'moderator' ? "/moderator/dashboard" : "/agri-specialist/dashboard")
         } catch (err) {
             console.error('Error submitting validation:', err);
-            setSnackbar({
-                open: true,
-                message: err instanceof Error ? err.message : 'Failed to submit validation',
-                severity: 'error'
-            });
+            showError(err instanceof Error ? err.message : 'Failed to submit validation');
         } finally {
             setIsSubmitting(false);
         }
@@ -187,7 +183,7 @@ export const ReviewQueue = () => {
             <Box sx={{ p: 3, maxWidth: 800, mx: 'auto' }}>
                 <Button
                     startIcon={<ArrowBackIcon />}
-                    onClick={() => navigate("/agri-specialist/dashboard")}
+                    onClick={() => navigate(user?.role === 'moderator' ? "/moderator/dashboard" : "/agri-specialist/dashboard")}
                     sx={{
                         mb: 2,
                         textTransform: "none",
@@ -215,7 +211,7 @@ export const ReviewQueue = () => {
         <Box sx={{ p: 3, maxWidth: 800, mx: "auto" }}>
             <Button
                 startIcon={<ArrowBackIcon />}
-                onClick={() => navigate("/agri-specialist/dashboard")}
+                onClick={() => navigate(user?.role === 'moderator' ? "/moderator/dashboard" : "/agri-specialist/dashboard")}
                 sx={{
                     mb: 2,
                     textTransform: "none",
@@ -373,16 +369,6 @@ export const ReviewQueue = () => {
                         >
                             {isSubmitting ? <CircularProgress size={24} color="inherit" /> : 'Submit Answer'}
                         </Button>
-                        <Snackbar
-                            open={snackbar.open}
-                            autoHideDuration={6000}
-                            onClose={handleCloseSnackbar}
-                            anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-                        >
-                            <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
-                                {snackbar.message}
-                            </Alert>
-                        </Snackbar>
                     </Box>
                 </Paper>
             ) : (
@@ -396,30 +382,30 @@ export const ReviewQueue = () => {
                     }}
                 >
                     <Typography sx={{ my: 2 }}>Answer</Typography>
-                    <Box>
-                        <TextField
-                            placeholder={!selectedStatus ? "Select a status first" : selectedStatus === 'approved' ? "No changes needed for approval" : "Edit the answer if needed (only for revisions)"}
-                            multiline
-                            rows={2}
-                            fullWidth
-                            variant="outlined"
-                            value={revisedAnswer}
-                            onChange={(e) => setRevisedAnswer(e.target.value)}
-                            disabled={!selectedStatus || selectedStatus === 'approved'}
-                            sx={{
-                                "& .MuiOutlinedInput-root": {
-                                    bgcolor: selectedStatus === 'approved' ? "#f5f5f5" : "#fff8f0",
-                                    borderRadius: "8px",
-                                    "& fieldset": { 
-                                        border: "1px solid #f0e0d0",
+                        <Box>
+                            <TextField
+                                placeholder={!selectedStatus ? "Select a status first" : selectedStatus === 'approved' ? "No changes needed for approval" : user?.role === 'moderator' ? "Answer text (read-only for moderators)" : "Edit the answer if needed (only for revisions)"}
+                                multiline
+                                rows={2}
+                                fullWidth
+                                variant="outlined"
+                                value={revisedAnswer}
+                                onChange={(e) => setRevisedAnswer(e.target.value)}
+                                disabled={!selectedStatus || selectedStatus === 'approved' || user?.role === 'moderator'}
+                                sx={{
+                                    "& .MuiOutlinedInput-root": {
+                                        bgcolor: selectedStatus === 'approved' || user?.role === 'moderator' ? "#f5f5f5" : "#fff8f0",
+                                        borderRadius: "8px",
+                                        "& fieldset": {
+                                            border: "1px solid #f0e0d0",
+                                        },
+                                        "&:hover fieldset": {
+                                            borderColor: selectedStatus === 'approved' || user?.role === 'moderator' ? "#f0e0d0" : "#e0c0a0"
+                                        },
                                     },
-                                    "&:hover fieldset": { 
-                                        borderColor: selectedStatus === 'approved' ? "#f0e0d0" : "#e0c0a0" 
-                                    },
-                                },
-                            }}
-                        />
-                    </Box>
+                                }}
+                            />
+                        </Box>
                     <Box sx={{ my: 2 }}>
                         <Typography sx={{ my: 2 }}>Add comments</Typography>
                         <TextField
@@ -436,11 +422,11 @@ export const ReviewQueue = () => {
                                 "& .MuiOutlinedInput-root": {
                                     bgcolor: selectedStatus === 'approved' ? "#f5f5f5" : "#fff8f0",
                                     borderRadius: "8px",
-                                    "& fieldset": { 
+                                    "& fieldset": {
                                         border: "1px solid #f0e0d0",
                                     },
-                                    "&:hover fieldset": { 
-                                        borderColor: selectedStatus === 'approved' ? "#f0e0d0" : "#e0c0a0" 
+                                    "&:hover fieldset": {
+                                        borderColor: selectedStatus === 'approved' ? "#f0e0d0" : "#e0c0a0"
                                     },
                                 },
                             }}
@@ -503,7 +489,7 @@ export const ReviewQueue = () => {
                         <Button
                             variant="contained"
                             onClick={handleSubmit}
-                            disabled={isSubmitting || !selectedStatus || (selectedStatus === 'revised' && !revisedAnswer.trim())}
+                            disabled={isSubmitting || !selectedStatus || (user?.role !== 'moderator' && selectedStatus === 'revised' && !revisedAnswer.trim())}
                             sx={{
                                 mt: 2,
                                 px: 4,
@@ -526,7 +512,7 @@ export const ReviewQueue = () => {
                             )}
                         </Button>
                     </Box>
-                    </Paper>
+                </Paper>
             )}
         </Box>
     );

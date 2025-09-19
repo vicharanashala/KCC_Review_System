@@ -25,7 +25,6 @@ const LogoutButton = () => {
       color="error"
       onClick={handleLogout}
       disabled={loading}
-      sx={{ position: 'absolute', top: 16, right: 16 }}
     >
       {loading ? 'Logging out...' : 'Logout'}
     </Button>

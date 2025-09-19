@@ -6,7 +6,7 @@ import { SubmitQuestionForm } from '../../components/admin/SubmitQuestionForm';
 import { QuestionList } from '../../components/admin/QuestionList';
 import type { Question } from '../../types/index';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -38,7 +38,6 @@ const AdminDashboard = () => {
   const [tabValue, setTabValue] = useState(0);
   const queryClient = useQueryClient();
 
-  // Fetch questions
   const { data: questions = [], isLoading } = useQuery<Question[]>({
     queryKey: ['questions'],
     queryFn: async () => {
@@ -47,7 +46,6 @@ const AdminDashboard = () => {
     },
   });
 
-  // Submit question mutation
   const submitQuestion = useMutation({
     mutationFn: async (questionData: Omit<Question, 'id' | 'status' | 'createdAt' | 'updatedAt'>) => {
       const { data } = await axios.post(`${API_BASE_URL}/questions/`, questionData);

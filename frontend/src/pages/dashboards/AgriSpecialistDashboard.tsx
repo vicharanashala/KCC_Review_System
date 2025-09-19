@@ -1,7 +1,8 @@
-import { Box, Typography, Paper, Grid, Card, CardContent, Button, IconButton, Badge, Dialog, DialogTitle, DialogContent, DialogActions, Alert, CircularProgress } from '@mui/material';
+import { Box, Typography, Paper, Grid, Card, CardContent, Button, IconButton, Badge, Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useToast } from '../../contexts/ToastContext';
+import { useAuth } from '../../contexts/AuthContext';
 import RateReviewIcon from '@mui/icons-material/RateReview';
 import AssessmentIcon from '@mui/icons-material/Assessment';
 import NotificationsIcon from '@mui/icons-material/Notifications';
@@ -29,34 +30,49 @@ const DashboardCard = ({
   <Card
     variant="outlined"
     sx={{
-      borderRadius: 3,
-      p: 2,
-      minHeight: 120,
+      borderRadius: 2,
+      p: 3,
+      minHeight: 140,
       display: 'flex',
       flexDirection: 'column',
-      justifyContent: 'space-between',
-      boxShadow: 'none',
-      borderColor: '#e0e0e0',
+      justifyContent: 'flex-start',
+      boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+      borderColor: '#e5e7eb',
       cursor: onClick ? 'pointer' : 'default',
-      paddingBottom: 0,
+      backgroundColor: '#ffffff',
+      '&:hover': onClick ? {
+        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+        transform: 'translateY(-1px)',
+        transition: 'all 0.2s ease-in-out'
+      } : {},
     }}
     onClick={onClick}
   >
-    <CardContent sx={{ p: 0 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <Typography variant="subtitle2" color="text.primary">
+    <CardContent sx={{ p: 0, '&:last-child': { pb: 0 } }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Typography variant="body2" color="#6b7280" sx={{ fontWeight: 500, fontSize: '0.875rem' }}>
           {title}
         </Typography>
-        <IconButton size="small" sx={{ p: 0.5 }}>
+        <Box sx={{ color: '#9ca3af', fontSize: '1.25rem' }}>
           {icon}
-        </IconButton>
+        </Box>
       </Box>
 
-      <Typography variant="h5" sx={{ mt: 1, mb: 0.5, fontWeight: 500 }}>
+      <Typography variant="h3" sx={{ 
+        fontWeight: 700, 
+        color: '#111827', 
+        mb: 1,
+        fontSize: '1rem',
+        lineHeight: 1.2
+      }}>
         {value}
       </Typography>
 
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{ 
+        color: '#6b7280', 
+        fontSize: '0.75rem',
+        fontWeight: 400
+      }}>
         {caption}
       </Typography>
     </CardContent>
@@ -66,6 +82,7 @@ const DashboardCard = ({
 const AgriSpecialistDashboard = () => {
   const navigate = useNavigate();
   const { showSuccess, showError } = useToast();
+  const { user } = useAuth();
   const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false);
   const [questionText, setQuestionText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -125,7 +142,9 @@ const AgriSpecialistDashboard = () => {
   }
 
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
   const [notifications, setNotifications] = useState<any[]>([]);
 
   const fetchMyTasks = async () => {
@@ -139,11 +158,12 @@ const AgriSpecialistDashboard = () => {
       });
       if (!res.ok) throw new Error('Failed to fetch tasks');
       const data = await res.json();
-      console.log(data.tasks, "data---------");
-      setTasks(data?.tasks);
+      setTasks(data?.tasks || []);
+      setFilteredTasks(data?.tasks || []);
     } catch (error) {
       console.error('Error fetching tasks:', error);
       setTasks([]);
+      setFilteredTasks([]);
     } finally {
       setLoading(false);
     }
@@ -170,66 +190,86 @@ const AgriSpecialistDashboard = () => {
     fetchMyTasks();
     fetchNotifications();
   }, []);
+  
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setFilteredTasks(tasks);
+      return;
+    }
+    
+    const query = searchQuery.toLowerCase().trim();
+    const filtered = tasks.filter(task => {
+      return (
+        (task.question_text?.toLowerCase().includes(query)) ||
+        (task.question_id?.toString().includes(query))
+      );
+    });
+    setFilteredTasks(filtered);
+  }, [searchQuery, tasks]);
+
+  const getBasePath = () => {
+    return user?.role === 'moderator' ? '/moderator' : '/agri-specialist';
+  };
 
   const quickActions = [
     {
-      title: 'Review Queue',
-      description: 'View and manage your assigned reviews',
+      title: 'Current Workload',
+      value: tasks.length,
+      description: 'Pending assignments',
       icon: <RateReviewIcon />,
-      buttonText: 'Review Now',
-      path: '/agri-specialist/review-queue',
+      path: `${getBasePath()}/review-queue`,
     },
     {
-      title: 'Performance',
-      description: 'Track your review performance and metrics',
+      title: 'Approval Rate',
+      value: '78.2%',
+      description: 'Of 147 reviews',
       icon: <AssessmentIcon />,
-      buttonText: 'View Performance',
-      path: '/agri-specialist/performance',
+      path: `${getBasePath()}/performance`,
     },
     {
-      title: 'Notifications',
-      description: 'View your recent notifications and updates',
+      title: 'Performance Score',
+      value: notifications.filter(n => !n.is_read).length,
+      description: `+2 / -0`,
       icon: <NotificationsIcon />,
-      buttonText: 'View Notifications',
-      path: '/agri-specialist/notifications',
+      path: `${getBasePath()}/notifications`,
     },
   ];
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
-
-      {/* Main Content */}
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Box>
             <Typography variant="h4" component="h1" gutterBottom>
-              Reviewer Dashboard
+              
+              {user?.role === 'moderator' ? "Moderator Dashboard" : "Reviewer Dashboard"}
             </Typography>
             <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
               Welcome back! You have {tasks.length} pending reviews.
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-          <Button
-              variant="outlined"
-              fullWidth
-              startIcon={<AddIcon fontSize="small" sx={{ color: '#000' }} />}
-              onClick={handleOpenQuestionModal}
-              sx={{
-                borderRadius: 2,
-                textTransform: 'none',
-                color: '#000',
-                width: '100%',
-                borderColor: '#0000001A',
-                '&:hover': {
+          {user?.role === 'agri_specialist' && (
+            <Button
+                variant="outlined"
+                fullWidth
+                startIcon={<AddIcon fontSize="small" sx={{ color: '#000' }} />}
+                onClick={handleOpenQuestionModal}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  color: '#000',
+                  width: '100%',
                   borderColor: '#0000001A',
-                },
-              }}
-            >
-              Question
-            </Button>
+                  '&:hover': {
+                    borderColor: '#0000001A',
+                  },
+                }}
+              >
+                Question
+              </Button>
+            )}
 
-            {/* Question Creation Modal */}
             <Dialog open={isQuestionModalOpen} onClose={handleCloseQuestionModal} maxWidth="sm" fullWidth>
               <DialogTitle sx={{ m: 0, p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Typography variant="h6">Create Question</Typography>
@@ -287,7 +327,7 @@ const AgriSpecialistDashboard = () => {
               variant="outlined"
               fullWidth
               startIcon={<TrendingUpIcon fontSize="small" sx={{ color: '#000' }} />}
-              onClick={() => navigate('/agri-specialist/performance')}
+              onClick={() => navigate(`${getBasePath()}/performance`)}
               sx={{
                 borderRadius: 2,
                 textTransform: 'none',
@@ -310,7 +350,7 @@ const AgriSpecialistDashboard = () => {
                 variant="outlined"
                 fullWidth
                 startIcon={<ReportProblemOutlinedIcon fontSize="small" sx={{ color: '#000' }} />}
-                onClick={() => navigate('/agri-specialist/notifications')}
+                onClick={() => navigate(`${getBasePath()}/notifications`)}
                 sx={{
                   borderRadius: 2,
                   textTransform: 'none',
@@ -332,8 +372,8 @@ const AgriSpecialistDashboard = () => {
             <Grid item xs={12} md={4} key={index}>
               <DashboardCard
                 title={action.title}
-                value={action.description}
-                caption={action.buttonText}
+                value={action.value}
+                caption={action.description}
                 icon={action.icon}
                 onClick={() => navigate(action.path)}
               />
@@ -363,6 +403,8 @@ const AgriSpecialistDashboard = () => {
                 variant="outlined"
                 placeholder="Search questions by title, content, or category..."
                 size="small"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 sx={{
                   backgroundColor: '#fff8ef',
                   borderRadius: 2,
@@ -389,13 +431,12 @@ const AgriSpecialistDashboard = () => {
                 <Typography variant="body2" color="text.secondary">
                   Loading tasks...
                 </Typography>
-              ) : tasks.length === 0 ? (
+              ) : filteredTasks.length === 0 ? (
                 <Typography variant="body2" color="text.secondary">
-                  No tasks available.
+                  {searchQuery ? 'No tasks match your search.' : 'No tasks available.'}
                 </Typography>
               ) : (
-                tasks.map((task, index) => (
-                  console.log(task, "tasktasktask---------"),
+                filteredTasks.map((task, index) => (
                   
                   <Paper
                     key={`${task.answer_id}-${index}`}
@@ -409,12 +450,7 @@ const AgriSpecialistDashboard = () => {
                         boxShadow: 1,
                         cursor: 'pointer'
                       }
-                    }}
-                    onClick={() => {
-                      // Add navigation to review page if needed
-                      // navigate(`/review/${task.answer_id}`);
-                    }}
-                  >
+                    }}>
                     <Typography variant="subtitle2" fontWeight={600} gutterBottom>
                       {task.question_text}
                     </Typography>
@@ -431,7 +467,7 @@ const AgriSpecialistDashboard = () => {
                       <Button
                         variant="contained"
                         size="small"
-                        onClick={() => navigate('/agri-specialist/review-queue', { state: { task } })}
+                        onClick={() => navigate(`${getBasePath()}/review-queue`, { state: { task } })}
                         sx={{
                           backgroundColor: '#000',
                           textTransform: 'none',
@@ -509,7 +545,6 @@ const AgriSpecialistDashboard = () => {
               </Box>
             </Paper>
 
-            {/* Quick Stats */}
             <Paper
               sx={{
                 p: 3,

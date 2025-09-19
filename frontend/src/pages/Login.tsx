@@ -21,10 +21,8 @@ const Login: React.FC = () => {
   const location = useLocation();
 
   useEffect(() => {
-    // Check for registration success message in location state
     if (location.state?.registered) {
       showSuccess('Registration successful! Please log in.');
-      // Clear the location state
       window.history.replaceState({}, document.title);
     }
   }, [location, showSuccess]);
@@ -39,9 +37,7 @@ const Login: React.FC = () => {
     
     try {
       await login(email, password);
-      // Success message will be shown by the auth API
     } catch (err) {
-      // Error message will be shown by the auth API
       console.error('Login error:', err);
     }
   };
@@ -61,8 +57,6 @@ const Login: React.FC = () => {
           <Typography component="h1" variant="h5" align="center" gutterBottom>
             Sign in
           </Typography>
-          
-          {/* Error messages are shown via toast context */}
           
           <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
             <TextField

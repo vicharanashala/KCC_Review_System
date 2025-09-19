@@ -16,7 +16,15 @@ const CommonHeader = () => {
           KCC Review System
         </Typography>
         {user && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, ml: 'auto' }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', mr: 2 }}>
+              <Typography variant="body2" sx={{ color: '#000000', fontWeight: 600 }}>
+                {user.name || 'User'}
+              </Typography>
+              <Typography variant="caption" sx={{ color: '#666666' }}>
+                {user.email}
+              </Typography>
+            </Box>
             <LogoutButton />
           </Box>
         )}

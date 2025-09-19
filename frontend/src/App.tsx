@@ -14,10 +14,8 @@ import AgriSpecialistDashboard from './pages/dashboards/AgriSpecialistDashboard'
 import { ReviewQueue } from './pages/agri-specialist/ReviewQueue';
 import { Performance } from './pages/agri-specialist/Performance';
 import { Notifications } from './pages/agri-specialist/Notifications';
-import ModeratorDashboard from './pages/dashboards/ModeratorDashboard';
 import AdminDashboard from './pages/dashboards/AdminDashboard';
 
-// Create a theme instance
 const theme = createTheme({
   palette: {
     primary: {
@@ -38,7 +36,6 @@ const theme = createTheme({
   },
 });
 
-// Role-based protected route component
 const RoleBasedRoute = ({ allowedRoles }: { allowedRoles: string[] }) => {
   const { user } = useAuth();
   
@@ -53,24 +50,17 @@ const RoleBasedRoute = ({ allowedRoles }: { allowedRoles: string[] }) => {
   return <Outlet />;
 };
 
-// Toast initializer component
 const ToastInitializer = ({ children }: { children: React.ReactNode }) => {
   const { showSuccess, showError } = useToast();
 
-  // Initialize immediately, not in useEffect
   React.useMemo(() => {
-    console.log('Initializing toast functions');
-    // Initialize toast functions for auth API
     setToastFunctions(showSuccess, showError);
-    // Initialize toast functions for utility API
     setApiToastFunctions(showSuccess, showError);
-    console.log('Toast functions initialized');
   }, [showSuccess, showError]);
 
   return <>{children}</>;
 };
 
-// Main App component with routing
 const AppRoutes = () => {
   const { isAuthenticated } = useAuth();
 
@@ -85,7 +75,6 @@ const AppRoutes = () => {
         element={isAuthenticated ? <Navigate to="/" replace /> : <Register />} 
       />
       
-      {/* Protected routes */}
       <Route element={
         <ProtectedRoute>
           {() => (
@@ -95,7 +84,6 @@ const AppRoutes = () => {
           )}
         </ProtectedRoute>
       }>
-        {/* Role-based dashboard routes */}
         <Route element={<RoleBasedRoute allowedRoles={['agri_specialist']} />}>
           <Route path="/agri-specialist/dashboard" element={<AgriSpecialistDashboard />} />
         </Route>
@@ -108,14 +96,16 @@ const AppRoutes = () => {
         </Route>
         
         <Route element={<RoleBasedRoute allowedRoles={['moderator']} />}>
-          <Route path="/moderator" element={<ModeratorDashboard />} />
+          <Route path="/moderator/dashboard" element={<AgriSpecialistDashboard />} />
+          <Route path="/moderator/review-queue/:questionId?" element={<AgriSpecialistLayout><ReviewQueue /></AgriSpecialistLayout>} />
+          <Route path="/moderator/performance" element={<AgriSpecialistLayout><Performance /></AgriSpecialistLayout>} />
+          <Route path="/moderator/notifications" element={<AgriSpecialistLayout><Notifications /></AgriSpecialistLayout>} />
         </Route>
         
         <Route element={<RoleBasedRoute allowedRoles={['admin']} />}>
           <Route path="/admin" element={<AdminDashboard />} />
         </Route>
         
-        {/* Default route based on role */}
         <Route 
           path="/" 
           element={
@@ -136,7 +126,6 @@ const AppRoutes = () => {
         />
       </Route>
       
-      {/* Unauthorized route */}
       <Route 
         path="/unauthorized" 
         element={
@@ -151,7 +140,6 @@ const AppRoutes = () => {
         } 
       />
       
-      {/* Catch-all route */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

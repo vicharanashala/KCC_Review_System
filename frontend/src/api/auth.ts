@@ -64,7 +64,6 @@ login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
         
         // Show success toast
         if (toastSuccess) {
-          console.log('Showing login success toast');
           toastSuccess('Login successful!');
         } else {
           console.log('Toast success function not available');
@@ -74,7 +73,6 @@ login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
     } catch (error: any) {
         // Show error toast
         if (toastError) {
-          console.log('Showing login error toast');
           if (axios.isAxiosError(error) && error.response) {
             const apiError = error.response.data as ApiError;
             toastError(apiError.detail || 'Login failed');
@@ -106,7 +104,6 @@ login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
         toastSuccess('Logged out successfully!');
       }
       
-      console.log('User logged out successfully (local storage cleared)');
     },
 
     register: async (credentials: RegisterCredentials): Promise<any> => {

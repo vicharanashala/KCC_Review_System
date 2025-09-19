@@ -52,7 +52,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         role: role
       };
       
-      console.log('Loaded user from localStorage:', userData);
       setUser(userData);
       return userData;
     } catch (error: any) {
@@ -95,7 +94,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       // 3. Redirect based on role (case-insensitive check)
       const normalizedRole = role.toLowerCase().trim();
-      console.log('Login successful, role:', normalizedRole);
       
       // 4. Redirect based on role
       let redirectPath = '/';
@@ -111,7 +109,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           break;
       }
       
-      console.log('Redirecting to:', redirectPath);
       navigate(redirectPath, { replace: true });
     } catch (error: any) {
       console.error('Login error:', error);

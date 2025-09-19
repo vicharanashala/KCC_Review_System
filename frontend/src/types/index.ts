@@ -1,3 +1,13 @@
+export const NotificationType = {
+  QUESTION_ASSIGNED: 'question_assigned',
+  PEER_REVIEW_REQUEST: 'peer_review_request',
+  REVISION_NEEDED: 'revision_needed',
+  VALIDATION_REQUEST: 'validation_request',
+  READY_FOR_GOLDEN_FAQ: 'ready_for_golden_faq',
+} as const;
+
+export type NotificationType = typeof NotificationType[keyof typeof NotificationType];
+
 export interface Question {
   id: string;
   crop: string;

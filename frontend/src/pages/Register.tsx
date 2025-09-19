@@ -66,7 +66,6 @@ const Register: React.FC = () => {
         navigate('/login', { state: { registered: true } });
       }, 2000);
     } catch (err: any) {
-      // Error toast will be shown by the auth API
       console.error('Registration error:', err);
     } finally {
       setLoading(false);
