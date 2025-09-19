@@ -49,22 +49,18 @@ export default class DashboardService {
   async getMyTasks(currentUserId: string, currentRole: string): Promise<any> {
     const tasks = [];
     if (currentRole === UserRole.AGRI_SPECIALIST) {
-      console.log("Here")
       const assignedQuestions = await questionRepo.findAssignedToUser(currentUserId, [
         QuestionStatus.ASSIGNED_TO_SPECIALIST,
         QuestionStatus.NEEDS_REVISION,
         QuestionStatus.READY_FOR_GOLDEN_FAQ,
       ]);
-      console.log("Assifned question ",assignedQuestions)
       for (const question of assignedQuestions) {
-        console.log("question from loop ",question)
         let taskType = 'create_answer';
         if (question.status === QuestionStatus.READY_FOR_GOLDEN_FAQ) {
           const currentAns = await answerRepo.findCurrentByQuestionId(question._id.toString());
           if (currentAns && currentAns.specialist_id.toString() === currentUserId) taskType = 'create_golden_faq';
         } else if (question.status === QuestionStatus.NEEDS_REVISION) {
           const currentAns = await answerRepo.findCurrentByQuestionId(question._id.toString());
-          console.log("Curent ANswrr",currentAns)
           if (currentAns && currentAns.specialist_id.toString() === currentUserId) taskType = 'revise_answer';
           else continue;
         }
@@ -80,10 +76,8 @@ export default class DashboardService {
       }
 
       const peerNotifications = await notificationRepo.findUnreadByUserId(currentUserId, NotificationType.PEER_REVIEW_REQUEST);
-      console.log("Peer notification ",peerNotifications)
       for (const notification of peerNotifications) {
   const peerAnswer = await answerRepo.findByAnswerId(notification.related_entity_id as string);
-  console.log("Peer Answer full object", peerAnswer);
 
   if (peerAnswer && peerAnswer.question_id && !(peerAnswer.question_id instanceof Types.ObjectId)) {
     const q = peerAnswer.question_id as IQuestion;
@@ -106,12 +100,9 @@ export default class DashboardService {
   }
 }
     } else if (currentRole === UserRole.MODERATOR) {
-      console.log("here moderator")
       const validationNotifications = await notificationRepo.findUnreadByUserId(currentUserId, NotificationType.VALIDATION_REQUEST);
       for (const notification of validationNotifications) {
         const answer = await answerRepo.findByAnswerId(notification.related_entity_id as string);
-        console.log("Answer ", answer);
-
         if (answer && answer.question_id && !(answer.question_id instanceof Types.ObjectId)) {
           const q = answer.question_id as IQuestion;
 

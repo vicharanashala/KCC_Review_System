@@ -63,7 +63,6 @@ const question = await questionRepo.findById(questionId);
     ? answer.specialist_id._id.toString()
     : answer.specialist_id;
       const updateIncentive=await userRepo.updateIncentive(originalSpecialistId,1)
-      console.log("Update incentive ",updateIncentive)
       const lastPeer = await peerValidationRepo.findLastByAnswerId(answer._id.toString());
       if (lastPeer && lastPeer.status === PeerStatus.APPROVED) {
         question.consecutive_peer_approvals += 1;
@@ -124,8 +123,6 @@ const question = await questionRepo.findById(questionId);
 
     // Decrement workload
     const workload=await userRepo.updateWorkload(currentUserId, -1);
-    console.log("Workload decreased ",workload)
-
     return { message: 'Peer validation submitted successfully', peer_validation_id: newPeerVal.peer_validation_id };
   }
 

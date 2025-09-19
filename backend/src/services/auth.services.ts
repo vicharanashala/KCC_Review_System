@@ -32,9 +32,6 @@ export default class AuthService {
         workload_count: user?.workload_count,
         incentive_points:user?.incentive_points
     }
-    console.log("from auth service",user)
-    console.log("from auth service",loginData.password)
-    console.log("from auth passwor",user!.comparePassword(loginData.password))
     if (!user || !user.comparePassword(loginData.password)) {
       throw new Error('Incorrect email or password');
     }

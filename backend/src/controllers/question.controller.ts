@@ -64,7 +64,6 @@ export const getMyQuestions: Middleware[] = [
   authenticateToken,
   async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-      console.log("Controller called get my questions")
       const userId = req.user._id.toString();
       const questions = await questionService.getAssignedToUser(userId);
       res.json(questions);
