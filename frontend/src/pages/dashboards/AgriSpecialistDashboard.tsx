@@ -86,7 +86,7 @@ const AgriSpecialistDashboard = () => {
   const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false);
   const [questionText, setQuestionText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const [selectedFile,setSelectedFile] = useState<File | null>(null)
   const handleOpenQuestionModal = () => {
     setIsQuestionModalOpen(true);
   };
@@ -94,33 +94,47 @@ const AgriSpecialistDashboard = () => {
   const handleCloseQuestionModal = () => {
     setIsQuestionModalOpen(false);
     setQuestionText('');
+    setSelectedFile(null)
   };
 
   const handleQuestionSubmit = async () => {
-    if (!questionText.trim()) {
-      showError('Please enter a question');
-      return;
-    }
+    // if (!questionText.trim()) {
+    //   showError('Please enter a question');
+    //   return;
+    // }
 
     setIsSubmitting(true);
     try {
       const token = localStorage.getItem('access_token');
+      const formData = new FormData()
+      if (questionText.trim()) {
+        formData.append('original_query_text', questionText.trim());
+      }
+      if (selectedFile) {
+        formData.append('csvFile', selectedFile);
+      }
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/questions`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          // 'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          original_query_text: questionText.trim()
-        }),
+        // body: JSON.stringify({
+        //   original_query_text: questionText.trim()
+        // }),
+        body:formData
       });
 
       if (!response.ok) {
         throw new Error('Failed to create question');
       }
-
-      showSuccess('Question created successfully!');
+      const data = await response.json()
+      // showSuccess('Question created successfully!');
+      if (Array.isArray(data)) {
+        showSuccess(`${data.length} questions created successfully!`);
+      } else {
+        showSuccess('Question created successfully!');
+      }
       handleCloseQuestionModal();
       await fetchMyTasks();
     } catch (err) {
@@ -299,6 +313,10 @@ const AgriSpecialistDashboard = () => {
                   sx={{ mt: 1 }}
                 />
               </DialogContent>
+              <DialogContent>
+                <label >Add Your CSV here</label> <br/>
+                <input type="file" accept='.csv' onChange={(e) => setSelectedFile(e.target.files ? e.target.files[0] : null)}/>
+              </DialogContent>
               <DialogActions sx={{ p: 2 }}>
                 <Button 
                   onClick={handleCloseQuestionModal}
@@ -309,7 +327,7 @@ const AgriSpecialistDashboard = () => {
                 <Button
                   variant="contained"
                   onClick={handleQuestionSubmit}
-                  disabled={isSubmitting || !questionText.trim()}
+                  disabled={isSubmitting || (!questionText.trim() && !selectedFile)}
                   sx={{
                     textTransform: 'none',
                     backgroundColor: '#00A63E',

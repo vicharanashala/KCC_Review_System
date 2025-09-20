@@ -1,11 +1,16 @@
 import Question from '../models/question.model';
 import { IQuestion } from '../interfaces/question.interface';
 import { QuestionStatus } from '../interfaces/enums';
-
+import { HydratedDocument } from 'mongoose';
+export type QuestionDocument = HydratedDocument<IQuestion>
 export default class QuestionRepository {
   async create(questionData: Partial<IQuestion>): Promise<IQuestion> {
     return Question.create(questionData);
   }
+
+  async createMany(questionDatas: Partial<IQuestion>[]): Promise<QuestionDocument[]> {
+  return Question.insertMany(questionDatas as IQuestion[])
+}
 
   async findByQuestionId(questionId: string): Promise<IQuestion | null> {
     return Question.findOne({ question_id: questionId });

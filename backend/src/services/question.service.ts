@@ -23,6 +23,38 @@ export default class QuestionService {
     };
   }
 
+  async createMany(questionDatas: QuestionCreateDto[]): Promise<QuestionResponseDto[]> {
+  const preparedDatas = questionDatas.map(data => ({
+    ...data,
+    question_id: `Q_${uuidv4().slice(0, 8).toUpperCase()}`,
+    // Ensure defaults if not provided (though schema handles)
+    status: QuestionStatus.PENDING_ASSIGNMENT,
+    valid_count: 0,
+    consecutive_peer_approvals: 0,
+    // Other defaults as per schema
+  }));
+
+  const questions = await questionRepo.createMany(preparedDatas);
+
+  // Trigger workflow for each
+  for (const question of questions) {
+    await WorkflowService.assignQuestionToSpecialist(question.question_id);
+  }
+
+  logger.info(`Batch questions submitted: ${questions.length} questions`);
+
+  // Map to DTOs
+  return questions.map(question => ({
+    question_id: question.question_id,
+    original_query_text: question.original_query_text,
+    status: question.status,
+    assigned_specialist: undefined,
+    valid_count: question.valid_count,
+    consecutive_peer_approvals: question.consecutive_peer_approvals,
+    created_at: question.created_at,
+  }));
+}
+
   async getByQuestionId(questionId: string): Promise<any> {
     const question = await questionRepo.findByQuestionId(questionId);
     if (!question) throw new Error('Question not found');
