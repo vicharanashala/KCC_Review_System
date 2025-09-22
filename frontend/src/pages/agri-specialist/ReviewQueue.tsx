@@ -51,6 +51,7 @@ export const ReviewQueue = () => {
     const [sources, setSources] = useState<Source[]>([]);
     const [sourceName, setSourceName] = useState('');
     const [sourceLink, setSourceLink] = useState('');
+    const [urlError, setUrlError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedStatus, setSelectedStatus] = useState<'approved' | 'revised' | null>(null);
     const [comments, setComments] = useState('');
@@ -171,6 +172,23 @@ export const ReviewQueue = () => {
     };
 
 
+    const isValidURL = (url: string) => {
+        try {
+            const urlPattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/i;
+            if (!urlPattern.test(url.trim())) {
+                return false;
+            }
+            
+            const urlToTest = url.startsWith('http://') || url.startsWith('https://') 
+                ? url 
+                : `https://${url}`;
+            new URL(urlToTest);
+            return true;
+        } catch {
+            return false;
+        }
+    };
+
     const handleSubmitAnswer = async () => {
         if (!answerText.trim()) {
             showError('Please provide an answer');
@@ -179,6 +197,12 @@ export const ReviewQueue = () => {
 
         if (!task?.question_id) {
             showError('Question ID is missing');
+            return;
+        }
+
+        if (sourceLink.trim() && !isValidURL(sourceLink.trim())) {
+            setUrlError('Please enter a valid URL');
+            showError('Please enter a valid URL for the source');
             return;
         }
 
@@ -716,16 +740,29 @@ export const ReviewQueue = () => {
                                 <TextField
                                     placeholder="Source URL"
                                     value={sourceLink}
-                                    onChange={(e) => setSourceLink(e.target.value)}
+                                    onChange={(e) => {
+                                        const value = e.target.value;
+                                        setSourceLink(value);
+                                        
+                                        if (!value.trim()) {
+                                            setUrlError('');
+                                        } else if (!isValidURL(value.trim())) {
+                                            setUrlError('Please enter a valid URL');
+                                        } else {
+                                            setUrlError('');
+                                        }
+                                    }}
                                     fullWidth
                                     variant="outlined"
                                     size="small"
+                                    error={!!urlError}
+                                    helperText={urlError}
                                     sx={{
                                         "& .MuiOutlinedInput-root": {
                                             bgcolor: "#fff8f0",
                                             borderRadius: "8px",
-                                            "& fieldset": { border: "1px solid #f0e0d0" },
-                                            "&:hover fieldset": { borderColor: "#e0c0a0" },
+                                            "& fieldset": { border: urlError ? "1px solid #d32f2f" : "1px solid #f0e0d0" },
+                                            "&:hover fieldset": { borderColor: urlError ? "#d32f2f" : "#e0c0a0" },
                                         },
                                     }}
                                 />
@@ -735,7 +772,7 @@ export const ReviewQueue = () => {
                                 <Button
                                     variant="contained"
                                     onClick={handleSubmitAnswer}
-                                    disabled={isSubmitting}
+                                    disabled={isSubmitting || !!urlError}
                                     sx={{
                                         mt: 2,
                                         px: 4,
