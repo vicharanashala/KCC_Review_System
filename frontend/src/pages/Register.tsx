@@ -32,8 +32,8 @@ const Register: React.FC = () => {
 
   const roles = [
     { value: 'agri_specialist', label: 'Agriculture Specialist' },
-    { value: 'moderator', label: 'Moderator' },
-    { value: 'admin', label: 'Admin' }
+    { value: 'moderator', label: 'Moderator' }
+    // { value: 'admin', label: 'Admin' }
   ];
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
