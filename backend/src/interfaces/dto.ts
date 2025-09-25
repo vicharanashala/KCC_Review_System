@@ -36,6 +36,7 @@ export interface QuestionCreateDto {
   latitude?: string;
   longitude?: string;
   priority?: string;
+  user_id?: string
 }
 
 export interface QuestionResponseDto {
@@ -46,6 +47,7 @@ export interface QuestionResponseDto {
   valid_count: number;
   consecutive_peer_approvals: number;
   created_at: Date;
+  user_id?: string
 }
 
 export interface AnswerCreateDto {

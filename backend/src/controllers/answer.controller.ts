@@ -11,6 +11,7 @@ const answerService = new AnswerService();
 const createSchema = Joi.object({
   question_id: Joi.string().required(),
   answer_text: Joi.string().required(),
+  userId:Joi.string().optional(),
   sources: Joi.array().items(Joi.object({ name: Joi.string().required(), link: Joi.string().required() })).optional(),
 });
 

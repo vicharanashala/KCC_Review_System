@@ -21,7 +21,7 @@ export default class AuthService {
   async login(loginData: LoginDto) {
     const user = await userRepo.findByEmail(loginData.username);
     const userData = {
-        user_id: user?.user_id,
+        user_id: user?._id,
         name: user?.name,
         email: user?.email,
         phone: user?.phone,

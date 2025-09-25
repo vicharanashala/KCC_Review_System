@@ -15,6 +15,7 @@ interface AnswerData {
     question_id: string;
     answer_text: string;
     sources?: Source[];
+    userId?: string;
 }
 
 interface VersionHistory {
@@ -209,10 +210,12 @@ export const ReviewQueue = () => {
         setIsSubmitting(true);
         try {
             const token = localStorage.getItem('access_token');
+            const userId=localStorage.getItem('user_id')
             const answerData: AnswerData = {
                 question_id: task.question_id,
                 answer_text: answerText,
-                sources: sources.length > 0 ? sources : undefined
+                sources: sources.length > 0 ? sources : undefined,
+                userId:userId?.toString()
             };
 
             const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/answers`, {

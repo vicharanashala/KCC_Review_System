@@ -57,7 +57,7 @@ login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
           localStorage.setItem('user_email', credentials.email);
           
           if (response.data.user) {
-            localStorage.setItem('user_id', response.data.user.id || '');
+            localStorage.setItem('user_id', response.data.user.user_id || '');
             localStorage.setItem('user_name', response.data.user.name || '');
           }
         }

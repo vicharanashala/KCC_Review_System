@@ -23,6 +23,7 @@ const createSchema = Joi.object({
   latitude: Joi.string().optional(),
   longitude: Joi.string().optional(),
   priority: Joi.string().default('medium').optional(),
+  user_id:Joi.string().optional()
 });
 
 // Define Middleware type for consistency
@@ -52,6 +53,7 @@ export const submitQuestion: Middleware[] = [
   // },
   authenticateToken,
   async (req: AuthRequest, res: Response): Promise<void> => {
+
     try {
       if (req.file) {
         // NEW: Batch mode - Process CSV for multiple questions

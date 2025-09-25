@@ -72,6 +72,8 @@ export default class DashboardService {
           status: question.status,
           valid_count: question.valid_count,
           created_at: question.created_at,
+          consecutive_peer_approvals:question.consecutive_peer_approvals
+
         });
       }
 

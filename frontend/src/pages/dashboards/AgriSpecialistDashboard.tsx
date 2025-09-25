@@ -107,6 +107,12 @@ const AgriSpecialistDashboard = () => {
     try {
       const token = localStorage.getItem('access_token');
       const formData = new FormData()
+      const userId=localStorage.getItem('user_id')
+      if(userId)
+      {
+        formData.append('user_id',userId.toString())
+      }
+      
       if (questionText.trim()) {
         formData.append('original_query_text', questionText.trim());
       }
@@ -496,7 +502,8 @@ const AgriSpecialistDashboard = () => {
                           '&:hover': { backgroundColor: '#222' },
                         }}
                       >
-                       Review Answer
+                        {task.type==='create_answer'?'Submit Answer':'Review Answer'}
+                      
                       </Button>
                     </Box>
                   </Paper>

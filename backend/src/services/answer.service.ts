@@ -12,6 +12,7 @@ const questionRepo = new QuestionRepository();
 const userRepo = new UserRepository()
 export default class AnswerService {
   async create(answerData: AnswerCreateDto, currentUserId: string): Promise<any> {
+    const currentUser = await userRepo.findById(currentUserId)
     const question = await questionRepo.findByQuestionId(answerData.question_id);
     if (!question) throw new Error('Question not found');
     if (question.status === QuestionStatus.ASSIGNED_TO_SPECIALIST) {
@@ -24,7 +25,7 @@ export default class AnswerService {
     }
 
     await answerRepo.markPreviousNotCurrent(question._id.toString());
-
+   
     const version = await answerRepo.countVersionsByQuestionId(question._id.toString()) + 1;
     const userObjectId = new Types.ObjectId(currentUserId)
     const newAnswer = await answerRepo.create({
@@ -45,7 +46,8 @@ export default class AnswerService {
     question.status = QuestionStatus.PENDING_PEER_REVIEW;
     await question.save();
     await userRepo.updateWorkload(currentUserId,-1)
-    setImmediate(() => WorkflowService.assignToPeerReviewer(newAnswer.answer_id));
+   
+    setImmediate(() => WorkflowService.assignToPeerReviewer(newAnswer.answer_id,currentUser,question));
 
     logger.info(`Answer created: ${newAnswer.answer_id}, version: ${newAnswer.version}`);
     return { message: 'Answer created successfully', answer_id: newAnswer.answer_id, version: newAnswer.version };

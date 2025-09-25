@@ -10,7 +10,8 @@ const questionRepo = new QuestionRepository();
 export default class QuestionService {
   async create(questionData: QuestionCreateDto): Promise<QuestionResponseDto> {
     const question = await questionRepo.create({ ...questionData, question_id: `Q_${uuidv4().slice(0, 8).toUpperCase()}` });
-    setImmediate(() => WorkflowService.assignQuestionToSpecialist(question.question_id));
+   
+    setImmediate(() => WorkflowService.assignQuestionToSpecialist(question.question_id,questionData.user_id));
     logger.info(`New question submitted: ${question.question_id}`);
     return {
       question_id: question.question_id,

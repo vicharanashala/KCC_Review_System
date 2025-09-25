@@ -14,27 +14,38 @@ const validationRepo = new ValidationRepository();
 const notificationRepo = new NotificationRepository();
 
 export default class WorkflowService {
-  static async getRandomAvailableSpecialist(): Promise<any | null> {
-    const specialists = await userRepo.getAvailableSpecialists();
+  static async getRandomAvailableSpecialist(currentUserObj?:any,questionObj?:any): Promise<any | null> {
+    const specialists = await userRepo.getAvailableSpecialists(currentUserObj,questionObj);
     if (!specialists.length) return null;
     const minWorkload = Math.min(...specialists.map((s: any) => s.workload_count));
     const candidates = specialists.filter((s: any) => s.workload_count === minWorkload);
     return candidates[Math.floor(Math.random() * candidates.length)];
   }
 
-  static async getRandomAvailableModerator(): Promise<any | null> {
-    const moderators = await userRepo.getAvailableModerators();
+  static async getRandomAvailableModerator(currentUserObj?: any,questionObj?: any): Promise<any | null> {
+    const moderators = await userRepo.getAvailableModerators(currentUserObj,questionObj);
     if (!moderators.length) return null;
     const minWorkload = Math.min(...moderators.map((m: any) => m.workload_count));
     const candidates = moderators.filter((m: any) => m.workload_count === minWorkload);
     return candidates[Math.floor(Math.random() * candidates.length)];
   }
 
-  static async assignQuestionToSpecialist(questionId: string): Promise<boolean> {
+  static async assignQuestionToSpecialist(questionId: string,currentUserId?: string): Promise<boolean> {
     const question = await questionRepo.findByQuestionId(questionId);
+    let currentUser
+    let specialist
+    if(currentUserId)
+    {
+       currentUser = await userRepo.findById(currentUserId)
+       specialist = await this.getRandomAvailableSpecialist(currentUser,question);
+    }
+    else{
+      specialist = await this.getRandomAvailableSpecialist();
+    }
+    
     if (!question) return false;
-
-    const specialist = await this.getRandomAvailableSpecialist();
+   
+   // const specialist = await this.getRandomAvailableSpecialist();
     if (!specialist) {
       logger.warning('No available specialists for assignment');
       return false;
@@ -59,7 +70,7 @@ export default class WorkflowService {
     return true;
   }
 
-  static async assignToPeerReviewer(answerId: string): Promise<boolean> {
+  static async assignToPeerReviewer(answerId: string,currentUserObj?: any,questionObj?: any ): Promise<boolean> {
     const answer = await answerRepo.findByAnswerId(answerId);
     if (!answer) return false;
     const questionId = answer.question_id?._id ? answer.question_id._id : answer.question_id
@@ -71,7 +82,7 @@ export default class WorkflowService {
     if(question.assigned_specialist_id){
       excludedIds.push(question.assigned_specialist_id.toString())
     }
-    const specialists = await userRepo.getAvailableSpecialists();
+    const specialists = await userRepo.getAvailableSpecialists(currentUserObj,questionObj);
     const available = specialists.filter((s: any) => !excludedIds.includes(s._id.toString()));
 
     if (!available.length) {
@@ -102,11 +113,11 @@ export default class WorkflowService {
     return true;
   }
 
-  static async assignToModerator(answerId: string): Promise<boolean> {
+  static async assignToModerator(answerId: string,currentUserObj?: any,questionObj?: any): Promise<boolean> {
     const answer = await answerRepo.findByAnswerId(answerId);
     if (!answer) return false;
 
-    const moderator = await this.getRandomAvailableModerator();
+    const moderator = await this.getRandomAvailableModerator(currentUserObj,questionObj);
     if (!moderator) {
       logger.warning('No available moderators for validation');
       return false;

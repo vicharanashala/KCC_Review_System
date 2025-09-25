@@ -74,10 +74,10 @@ const question = await questionRepo.findById(questionId);
       if (question.consecutive_peer_approvals >= 3) {
         question.status = QuestionStatus.PENDING_MODERATION;
         await question.save();
-        setImmediate(() => WorkflowService.assignToModerator(answer.answer_id));
+        setImmediate(() => WorkflowService.assignToModerator(answer.answer_id,currentUser,question));
         logger.info(`3 consecutive peer approvals for answer ${answer.answer_id}, assigned to moderator`);
       } else {
-        setImmediate(() => WorkflowService.assignToPeerReviewer(answer.answer_id));
+        setImmediate(() => WorkflowService.assignToPeerReviewer(answer.answer_id,currentUser,question));
         logger.info(`Peer approved answer ${answer.answer_id}, consecutive: ${question.consecutive_peer_approvals}`);
       }
     } else {
@@ -113,7 +113,7 @@ const question = await questionRepo.findById(questionId);
         question.status = QuestionStatus.PENDING_PEER_REVIEW;
         await question.save();
 
-        setImmediate(() => WorkflowService.assignToPeerReviewer(newAnswer.answer_id));
+        setImmediate(() => WorkflowService.assignToPeerReviewer(newAnswer.answer_id,currentUser,question));
         logger.info(`Peer revised answer ${answer.answer_id} to new version ${newAnswer.version}`);
       } else {
         logger.warning(`Peer revised without new text for answer ${answer.answer_id}`);
