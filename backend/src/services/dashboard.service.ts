@@ -72,8 +72,6 @@ export default class DashboardService {
           status: question.status,
           valid_count: question.valid_count,
           created_at: question.created_at,
-          consecutive_peer_approvals:question.consecutive_peer_approvals
-
         });
       }
 
@@ -98,6 +96,7 @@ export default class DashboardService {
           : peerAnswer.answer_text,
       consecutive_approvals: q.consecutive_peer_approvals,
       created_at: notification.created_at,
+       sources:peerAnswer.sources
     });
   }
 }

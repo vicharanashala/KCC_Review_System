@@ -159,6 +159,7 @@ const AgriSpecialistDashboard = () => {
     answer_preview: string;
     consecutive_approvals: number;
     created_at: string;
+    sources: any[];
   }
 
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -483,11 +484,23 @@ const AgriSpecialistDashboard = () => {
                     <Typography variant="caption" color="text.secondary" display="block">
                       Approvals: {task.consecutive_approvals} • {new Date(task.created_at).toLocaleDateString()}
                     </Typography>
-
+                    <div style={{}}>
+                      {task.sources && task.sources.length>=1 &&task.sources.map(source => (
+                         <div key={source._id}>
+                          <Typography variant="caption" color="text.secondary" display="block">
+                          SourceName:{source.name}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary" display="block">
+                          SourceUrl:<a href={source.link}>Open</a>
+                          </Typography>
+                         </div>
+                          ))}
+                          </div>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <Typography variant="caption" color="text.secondary">
                         Question ID: {task.question_id}
                       </Typography>
+                      
                       <Button
                         variant="contained"
                         size="small"

@@ -14,7 +14,9 @@ interface Source {
 interface AnswerData {
     question_id: string;
     answer_text: string;
-    sources?: Source[];
+    sources?: Source [];
+    sourceName?:string;
+    sourceLink?: string;
     userId?: string;
 }
 
@@ -191,6 +193,7 @@ export const ReviewQueue = () => {
     };
 
     const handleSubmitAnswer = async () => {
+
         if (!answerText.trim()) {
             showError('Please provide an answer');
             return;
@@ -200,13 +203,25 @@ export const ReviewQueue = () => {
             showError('Question ID is missing');
             return;
         }
+        if(!sourceName.trim())
+        {
+            showError('Please Provide Source Name')
+            return;
+        }
 
-        if (sourceLink.trim() && !isValidURL(sourceLink.trim())) {
+        if (!sourceLink.trim() && !isValidURL(sourceLink.trim())) {
             setUrlError('Please enter a valid URL');
             showError('Please enter a valid URL for the source');
             return;
         }
+        console.log(sourceName,sourceLink)
+       // setSources( [{ name:'hello',link: 'link'}])
+       
+        sources: [{ name: sourceName,link: sourceLink }]
+       // sources: [{ sourceLink: sourceLink}]
+    //  setSources(sources)
 
+       // console.log(sources)
         setIsSubmitting(true);
         try {
             const token = localStorage.getItem('access_token');
@@ -214,8 +229,10 @@ export const ReviewQueue = () => {
             const answerData: AnswerData = {
                 question_id: task.question_id,
                 answer_text: answerText,
-                sources: sources.length > 0 ? sources : undefined,
-                userId:userId?.toString()
+                sources: [{ name: sourceName,link: sourceLink }] ,
+                userId:userId?.toString(),
+               // sourceName:sourceName,
+               // sourceLink:sourceLink
             };
 
             const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/answers`, {
