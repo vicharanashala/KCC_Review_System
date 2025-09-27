@@ -18,6 +18,8 @@ interface AnswerData {
     sourceName?:string;
     sourceLink?: string;
     userId?: string;
+    RejectedUser?: string;
+    status?:string
 }
 
 interface VersionHistory {
@@ -44,16 +46,30 @@ interface KeyImprovement {
 }
 
 export const ReviewQueue = () => {
+    
     const navigate = useNavigate();
     const location = useLocation();
     const { user } = useAuth();
     const task = location.state?.task;
+    console.log("the task coming====",task)
+    const answer=task?. answer_text
+    let sourceNameToEdit
+    let sourceUrlToEdit
+    if(task?.sources)
+    {
+         sourceNameToEdit=task?.sources[0]?.name||''
+         sourceUrlToEdit=task?.sources[0]?.link||''
+    }
+  
+  
+    
+    
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [answerText, setAnswerText] = useState('');
+    const [answerText, setAnswerText] = useState(''||answer);
     const [sources, setSources] = useState<Source[]>([]);
-    const [sourceName, setSourceName] = useState('');
-    const [sourceLink, setSourceLink] = useState('');
+    const [sourceName, setSourceName] = useState(''||sourceNameToEdit);
+    const [sourceLink, setSourceLink] = useState(''||sourceUrlToEdit);
     const [urlError, setUrlError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedStatus, setSelectedStatus] = useState<'approved' | 'revised' | null>(null);
@@ -215,6 +231,7 @@ export const ReviewQueue = () => {
             return;
         }
         console.log(sourceName,sourceLink)
+        
        // setSources( [{ name:'hello',link: 'link'}])
        
         sources: [{ name: sourceName,link: sourceLink }]
@@ -231,6 +248,11 @@ export const ReviewQueue = () => {
                 answer_text: answerText,
                 sources: [{ name: sourceName,link: sourceLink }] ,
                 userId:userId?.toString(),
+                RejectedUser:task?. RejectedUser,
+                status:task?.status
+                
+                
+
                // sourceName:sourceName,
                // sourceLink:sourceLink
             };
@@ -704,7 +726,7 @@ export const ReviewQueue = () => {
                         )}
                     </Paper>
 
-                    {task?.type === 'create_answer' ? (
+                    {task?.type === 'create_answer'||task?.type === 'Reject' ? (
                         <Paper
                             sx={{
                                 p: 3,

@@ -481,9 +481,18 @@ const AgriSpecialistDashboard = () => {
                     </Typography>
 
                     
-                    <Typography variant="caption" color="text.secondary" display="block">
+                   
+                      {task.type==="Reject"?
+                       <Typography variant="caption" color="text.secondary" display="block">
+                      Rejected: {new Date(task.created_at).toLocaleDateString()}
+                      </Typography>
+                      :
+                      <Typography variant="caption" color="text.secondary" display="block">
                       Approvals: {task.consecutive_approvals} • {new Date(task.created_at).toLocaleDateString()}
-                    </Typography>
+                      </Typography>
+                      }
+                      
+                    
                     <div style={{}}>
                       {task.sources && task.sources.length>=1 &&task.sources.map(source => (
                          <div key={source._id}>
@@ -515,7 +524,10 @@ const AgriSpecialistDashboard = () => {
                           '&:hover': { backgroundColor: '#222' },
                         }}
                       >
-                        {task.type==='create_answer'?'Submit Answer':'Review Answer'}
+                       
+                        {task.type=="Reject"?" ReSubmit Answer":
+                        task.type==='create_answer'?'Submit Answer':'Review Answer'
+                        }
                       
                       </Button>
                     </Box>
