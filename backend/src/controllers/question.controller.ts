@@ -23,7 +23,8 @@ const createSchema = Joi.object({
   latitude: Joi.string().optional(),
   longitude: Joi.string().optional(),
   priority: Joi.string().default('medium').optional(),
-  user_id:Joi.string().optional()
+  user_id:Joi.string().optional(),
+  
 });
 
 // Define Middleware type for consistency
@@ -135,6 +136,7 @@ export const submitQuestion: Middleware[] = [
           logger.warn('Ignoring original_query_text from body in CSV batch mode');
         }
       } else {
+      //  console.log("the questionCreated===",req.body)
         // Existing: Single question mode
         const { error } = createSchema.validate(req.body);
         if (error) {
@@ -143,7 +145,7 @@ export const submitQuestion: Middleware[] = [
           return;
         }
         const questionData: QuestionCreateDto = req.body;
-        const question = await questionService.create(questionData);
+       const question = await questionService.create(questionData);
         res.status(201).json(question);
       }
 

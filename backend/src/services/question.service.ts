@@ -9,6 +9,7 @@ const questionRepo = new QuestionRepository();
 
 export default class QuestionService {
   async create(questionData: QuestionCreateDto): Promise<QuestionResponseDto> {
+  //  console.log("the question data===",questionData)
     const question = await questionRepo.create({ ...questionData, question_id: `Q_${uuidv4().slice(0, 8).toUpperCase()}` });
    
     setImmediate(() => WorkflowService.assignQuestionToSpecialist(question.question_id,questionData.user_id));
@@ -21,6 +22,7 @@ export default class QuestionService {
       valid_count: question.valid_count,
       consecutive_peer_approvals: question.consecutive_peer_approvals,
       created_at: question.created_at,
+      question_owner:questionData.user_id
     };
   }
 

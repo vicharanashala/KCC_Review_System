@@ -209,7 +209,6 @@ export const ReviewQueue = () => {
     };
 
     const handleSubmitAnswer = async () => {
-
         if (!answerText.trim()) {
             showError('Please provide an answer');
             return;

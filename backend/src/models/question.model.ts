@@ -24,6 +24,7 @@ const questionSchema = new Schema<IQuestion>({
   reviewed_by_specialists: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now },
+  user_id: { type: String }
 });
 
 questionSchema.pre('save', function (next) {

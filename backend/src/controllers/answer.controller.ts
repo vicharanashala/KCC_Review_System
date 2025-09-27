@@ -13,6 +13,9 @@ const createSchema = Joi.object({
   answer_text: Joi.string().required(),
   userId:Joi.string().optional(),
   sources: Joi.array().items(Joi.object({ name: Joi.string().required(), link: Joi.string().required() })).optional(),
+  RejectedUser:Joi.string().optional(),
+  status:Joi.string().optional()
+
 });
 
 export const createAnswer = [
@@ -26,9 +29,19 @@ export const createAnswer = [
         return;
       }
       const answerData: AnswerCreateDto = req.body;
-      const currentUserId = (req as any).user._id.toString();
+      if(req.body.status &&req.body.status=='Rejected' )
+      {
+        const currentUserId = (req as any).user._id.toString();
+        const result = await answerService.create(answerData, currentUserId);
+        res.json(result);
+      }
+      else{
+        const currentUserId = (req as any).user._id.toString();
       const result = await answerService.create(answerData, currentUserId);
       res.json(result);
+      }
+     
+      
     } catch (error: any) {
       logger.error(error);
       if (error.message.includes('403')) {

@@ -6,6 +6,7 @@ import { NotificationType, QuestionStatus, UserRole } from '../interfaces/enums'
 import AnswerRepository from '../repositories/answer.repository';
 import { IQuestion } from '../interfaces/question.interface';
 import { Types } from 'mongoose';
+import { boolean } from 'joi';
 
 const userRepo = new UserRepository();
 const questionRepo = new QuestionRepository();
@@ -127,6 +128,35 @@ export default class DashboardService {
         }
       }
     }
+    const status=false
+    const revisionSuccess=true
+    const rejectedAnswers= await answerRepo.findRejectedQuestions(currentUserId,status,revisionSuccess)
+    if(rejectedAnswers)
+    {
+      rejectedAnswers.map(async (question)=>{
+       
+        let answer_text=''
+      //  console.log("questionObj====",questionObj)
+        if(question.specialist_id?.toString()=== question.first_answered_person.toString())
+        {
+          answer_text= question.answer_text
+        }
+        tasks.push({
+          type: "Reject",
+          question_id: question.original_question_id,
+          question_text: question.original_query_text?.length > 100 ? question.original_query_text.slice(0, 100) + '...' : question.original_query_text,
+          status:"Rejected",
+          valid_count: 0,
+          created_at: question.created_at,
+          answer_text:answer_text,
+          sources:question.sources,
+          RejectedUser:question.specialist_id
+        });
+      })
+
+    }
+   // console.log("the rejected anserw====",rejectedAnswers)
+
     return { tasks };
   }
 }

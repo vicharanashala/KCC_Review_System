@@ -88,18 +88,22 @@ const question = await questionRepo.findById(questionId);
       await userRepo.updateIncentive(originalSpecialistId,-1)
       logger.info(`Incentive -1 applied to specialist ${originalSpecialistId} for revised peer review`);
       const revisionMessage =peerData.comments ? `Peer review requires changes to your answer for question ${question.question_id}. Suggested changes: ${peerData.comments}` : `Peer review requires changes to your answer for question ${question.question_id}. Please revise based on feedback.`;
+     // console.log("Question_id",question)
+     // console.log("current user===",currentUser)
       await notificationRepo.create({
-        user_id: answer.specialist_id, 
+        user_id: question.assigned_specialist_id, 
         type: NotificationType.REVISION_NEEDED,
         title: 'Peer Review Revision Needed',
         message: revisionMessage,
         related_entity_type: 'answer',
         related_entity_id: answer.answer_id, 
       });
-      logger.info(`Revision notification sent to original specialist for answer ${answer.answer_id}`);
+      logger.info(`Revision notification sent to original specialist for answer ${question.assigned_specialist_id}`);
       question.consecutive_peer_approvals = 0;
       if (peerData.revised_answer_text) {
         answer.is_current = false;
+      //  answer.sendBackToRevision="Revesion"
+      //  answer.first_answered_person=question.assigned_specialist_id
         await answer.save();
         const newAnswer = await answerRepo.create({
           question_id: question._id,
@@ -108,12 +112,16 @@ const question = await questionRepo.findById(questionId);
           sources: answer.sources,
           version: answer.version + 1,
           answer_id: `A_${uuidv4().slice(0, 8).toUpperCase()}`,
+          first_answered_person:question.assigned_specialist_id,
+          original_query_text:question. original_query_text,
+          original_question_id:question.question_id
         });
 
         question.status = QuestionStatus.PENDING_PEER_REVIEW;
         await question.save();
 
         setImmediate(() => WorkflowService.assignToPeerReviewer(newAnswer.answer_id,currentUser,question));
+       logger.info(`Revision Send back to${question.assigned_specialist_id} `)
         logger.info(`Peer revised answer ${answer.answer_id} to new version ${newAnswer.version}`);
       } else {
         logger.warning(`Peer revised without new text for answer ${answer.answer_id}`);

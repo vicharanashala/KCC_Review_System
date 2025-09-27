@@ -525,7 +525,7 @@ const AgriSpecialistDashboard = () => {
                         }}
                       >
                        
-                        {task.type=="Reject"?" ReSubmit Answer":
+                        {task.type=="Reject"?" Revise Answer":
                         task.type==='create_answer'?'Submit Answer':'Review Answer'
                         }
                       

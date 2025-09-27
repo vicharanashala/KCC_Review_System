@@ -70,7 +70,7 @@ export default class WorkflowService {
     return true;
   }
 
-  static async assignToPeerReviewer(answerId: string,currentUserObj?: any,questionObj?: any ): Promise<boolean> {
+  static async assignToPeerReviewer(answerId: string,currentUserObj?: any,questionObj?: any ,answerData?: any): Promise<boolean> {
     const answer = await answerRepo.findByAnswerId(answerId);
     if (!answer) return false;
     const questionId = answer.question_id?._id ? answer.question_id._id : answer.question_id
@@ -79,11 +79,15 @@ export default class WorkflowService {
       throw new Error("Question not found")
     }
     const excludedIds = [answer.specialist_id.toString(), ...question.reviewed_by_specialists.map((id: any) => id.toString())];
+   
     if(question.assigned_specialist_id){
       excludedIds.push(question.assigned_specialist_id.toString())
     }
-    const specialists = await userRepo.getAvailableSpecialists(currentUserObj,questionObj);
+   // console.log("the exclude ids====",excludedIds)
+    const specialists = await userRepo.getAvailableSpecialists(currentUserObj,questionObj,answerData);
     const available = specialists.filter((s: any) => !excludedIds.includes(s._id.toString()));
+
+   // console.log("available userList====",specialists,available)
 
     if (!available.length) {
       logger.warning(`No available peer reviewers for answer ${answerId}, fallback to moderator`);

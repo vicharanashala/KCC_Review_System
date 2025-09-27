@@ -12,6 +12,10 @@ const answerSchema = new Schema<IAnswer>({
   is_current: { type: Boolean, default: true },
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now },
+  first_answered_person: { type: Schema.Types.ObjectId, ref: 'Question'},
+  original_query_text:{ type: String},
+  original_question_id:{type:String},
+  RevisedAnswer:{ type: Boolean, default: false}
 });
 
 answerSchema.pre('save', function (next) {

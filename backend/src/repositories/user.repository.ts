@@ -68,27 +68,41 @@ export default class UserRepository {
     return User.findByIdAndUpdate(userId, update, { new: true });
   }
 
-  async getAvailableSpecialists(currentUserObj?: any,questionObj?: any): Promise<IUser[]> {
+  async getAvailableSpecialists(currentUserObj?: any,questionObj?: any,answerData?: any): Promise<IUser[]> {
+  /*  if(answerData && answerData.status=='Rejected')
+    {
+      const rejectedUser= await User.find({
+        _id:answerData.RejectedUser,
+        role: UserRole.AGRI_SPECIALIST,
+        is_active: true,
+        is_available: true,
+      }).sort({ workload_count: 1 });
+        return rejectedUser
+    }*/
    if(currentUserObj &&questionObj )
    {
    
-    const result= await Question.find({question_id:questionObj.question_id})
+    const result= await Question.find({question_id:questionObj.question_id} )
    let questionOwner=currentUserObj._id.toString()
   
   let reviewed_by_specialist_array= []
   reviewed_by_specialist_array.push(questionOwner)
   let arr=result[0]?.reviewed_by_specialists|| []
+  let actualOwner=result[0]?.user_id
   let assigned_specialist_id=result[0]?.assigned_specialist_id?.toString() 
   for await (const value of arr) {
     reviewed_by_specialist_array.push(value.toString());
   }
-  const totalReviewedUserList=[...reviewed_by_specialist_array,assigned_specialist_id] 
-      return User.find({
-        _id: { $nin: totalReviewedUserList },
-        role: UserRole.AGRI_SPECIALIST,
-        is_active: true,
-        is_available: true,
-      }).sort({ workload_count: 1 });
+  
+  const totalReviewedUserList=[...reviewed_by_specialist_array,assigned_specialist_id,actualOwner] 
+
+  let userList= await User.find({
+    _id: { $nin: totalReviewedUserList },
+    role: UserRole.AGRI_SPECIALIST,
+    is_active: true,
+    is_available: true,
+  }).sort({ workload_count: 1 });
+      return userList
      
    }
    else{

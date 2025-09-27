@@ -47,4 +47,21 @@ export default class AnswerRepository {
   async countVersionsByQuestionId(questionId: string): Promise<number> {
     return Answer.countDocuments({ question_id: questionId });
   }
+  async findRejectedQuestions( first_answered_person: string , status: boolean, RevisionSuccess:boolean):Promise<IAnswer[]>{
+   
+    return Answer.find(
+      { is_current:false,
+      first_answered_person:first_answered_person,
+      RevisedAnswer:false
+     
+    });
+  }
+  async findByExactQuestionId(original_question_id : string ):Promise<IAnswer[]>{
+    return Answer.find({ original_question_id:original_question_id});
+  }
+  async findByQuestion(original_question_id : string ):Promise<IAnswer[]>{
+    return Answer.find({ question_id:original_question_id});
+  }
+
+
 }
