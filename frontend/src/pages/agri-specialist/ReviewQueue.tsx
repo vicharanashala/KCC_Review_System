@@ -66,10 +66,10 @@ export const ReviewQueue = () => {
     
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [answerText, setAnswerText] = useState(''||answer);
+    const [answerText, setAnswerText] = useState(answer|| '');
     const [sources, setSources] = useState<Source[]>([]);
-    const [sourceName, setSourceName] = useState(''||sourceNameToEdit);
-    const [sourceLink, setSourceLink] = useState(''||sourceUrlToEdit);
+    const [sourceName, setSourceName] = useState(sourceNameToEdit||'');
+    const [sourceLink, setSourceLink] = useState(sourceUrlToEdit||'');
     const [urlError, setUrlError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedStatus, setSelectedStatus] = useState<'approved' | 'revised' | null>(null);
@@ -79,7 +79,7 @@ export const ReviewQueue = () => {
     // const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
     // const [isLoadingHistory, setIsLoadingHistory] = useState(false);
     const { showSuccess, showError } = useToast();
-
+    console.log("sources===",sources)
     const [versionHistory, setVersionHistory] = useState<VersionHistory[]>([]);
     const [reviewerInsights, setReviewerInsights] = useState<ReviewerInsights>({ approvals: 0, revisions: 0 });
     // const [keyImprovements, setKeyImprovements] = useState<KeyImprovement[]>([]);
