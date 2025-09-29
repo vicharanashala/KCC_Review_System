@@ -120,9 +120,17 @@ const question = await questionRepo.findById(questionId);
         question.status = QuestionStatus.PENDING_PEER_REVIEW;
         await question.save();
 
-        setImmediate(() => WorkflowService.assignToPeerReviewer(newAnswer.answer_id,currentUser,question));
+      //  setImmediate(() => WorkflowService.assignToPeerReviewer(newAnswer.answer_id,currentUser,question));
        logger.info(`Revision Send back to${question.assigned_specialist_id} `)
+        if(question && question.assigned_specialist_id)
+        {
+          const user= await userRepo.findById(question?.assigned_specialist_id.toString())
+          logger.info(`Peer Review Submitted Successfully to---${user?.name} `);
+
         logger.info(`Peer revised answer ${answer.answer_id} to new version ${newAnswer.version}`);
+        }
+       
+        return { message: 'Peer Review Submitted Successfully', peer_validation_id: newPeerVal.peer_validation_id };
       } else {
         logger.warning(`Peer revised without new text for answer ${answer.answer_id}`);
       }
