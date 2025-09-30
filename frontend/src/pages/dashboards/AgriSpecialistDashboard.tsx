@@ -1,4 +1,4 @@
-import { Box, Typography, Paper, Grid, Card, CardContent, Button, IconButton, Badge, Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress } from '@mui/material';
+import { Box, Typography, Paper, Grid, Card, CardContent, Button, IconButton, Badge, Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress,Stack } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useToast } from '../../contexts/ToastContext';
@@ -493,18 +493,29 @@ const AgriSpecialistDashboard = () => {
                       }
                       
                     
-                    <div style={{}}>
+                        <Box
+     
+    >
                       {task.sources && task.sources.length>=1 &&task.sources.map(source => (
-                         <div key={source._id}>
+                         <Box 
+                         sx={{
+                          width: 400,         // fixed width in px
+                          height: 20,        // fixed height in px
+                         
+                          display:'flex',
+                          justifyContent:'space-between'
+                        }}
+                           >
                           <Typography variant="caption" color="text.secondary" display="block">
                           SourceName:{source.name}
                           </Typography>
                           <Typography variant="caption" color="text.secondary" display="block">
                           SourceUrl:<a href={source.link}>Open</a>
                           </Typography>
-                         </div>
+                         </Box>
                           ))}
-                          </div>
+                        </Box>
+                         
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <Typography variant="caption" color="text.secondary">
                         Question ID: {task.question_id}

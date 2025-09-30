@@ -1,14 +1,21 @@
-import { Box, Typography, Paper, Button, TextField, CircularProgress, Chip } from "@mui/material";
+import { Box, Typography, Paper, Button, TextField, CircularProgress, Chip, colors } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../../contexts/ToastContext";
 import { peerValidationApi } from "../../api/peerValidation";
+import {ChangeEvent} from 'react'
 
 interface Source {
     name: string;
     link: string;
+    id:number;
+    errorsList: {
+        name?: string;
+        link?: string;
+      };
+    
 }
 
 interface AnswerData {
@@ -53,23 +60,23 @@ export const ReviewQueue = () => {
     const task = location.state?.task;
     console.log("the task coming====",task)
     const answer=task?. answer_text
-    let sourceNameToEdit
-    let sourceUrlToEdit
-    if(task?.sources)
+    let avilableSourceList=[]
+    
+    if(task?.type=='Reject')
     {
-         sourceNameToEdit=task?.sources[0]?.name||''
-         sourceUrlToEdit=task?.sources[0]?.link||''
+        avilableSourceList=task.sources || [ { id: Date.now(), name: "", link: "" ,errorsList:{}}]
+        //task.type="Revise Answer.."
     }
   
   
-    
+   
     
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [answerText, setAnswerText] = useState(answer|| '');
-    const [sources, setSources] = useState<Source[]>([]);
-    const [sourceName, setSourceName] = useState(sourceNameToEdit||'');
-    const [sourceLink, setSourceLink] = useState(sourceUrlToEdit||'');
+    const [sources, setSources] = useState<Source[]>(task?.type=='Reject'?avilableSourceList:[ { id: Date.now(), name: "", link: "" ,errorsList:{}}]);
+    //const [sourceName, setSourceName] = useState(sourceNameToEdit||'');
+    //const [sourceLink, setSourceLink] = useState(sourceUrlToEdit||'');
     const [urlError, setUrlError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedStatus, setSelectedStatus] = useState<'approved' | 'revised' | null>(null);
@@ -79,7 +86,7 @@ export const ReviewQueue = () => {
     // const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
     // const [isLoadingHistory, setIsLoadingHistory] = useState(false);
     const { showSuccess, showError } = useToast();
-    console.log("sources===",sources)
+    //console.log("sources===",sources)
     const [versionHistory, setVersionHistory] = useState<VersionHistory[]>([]);
     const [reviewerInsights, setReviewerInsights] = useState<ReviewerInsights>({ approvals: 0, revisions: 0 });
     // const [keyImprovements, setKeyImprovements] = useState<KeyImprovement[]>([]);
@@ -90,6 +97,57 @@ export const ReviewQueue = () => {
         { text: "Enhanced regional adaptation notes" },
         { text: "Improved technical accuracy" }
     ];
+     // Add new input
+     const addGroup = (id: number): void => {
+        setSources((prev) => [
+          ...prev,
+          { id: Date.now(), name: "", link: "" , errorsList: {}},
+        ]);
+      };
+    
+      const removeGroup = (id: number): void => {
+        if (sources.length > 1) {
+          setSources((prev) => prev.filter((group) => group.id !== id));
+        }
+      };
+      const validateInput = (value: string,field:string): string | undefined => {
+        console.log("the value coming====",value,field)
+        
+        if(field==="link")
+        {
+            if (value.trim() === "") return "SourceUrl is required";
+            try {
+                new URL(value); // will throw if invalid
+                return undefined;
+              } catch {
+                return "Invalid URL";
+              }
+        }
+        else{
+            if (value.trim() === "") return "SourceName is required";
+        }
+       
+      };
+      const handleChange = (
+        id: number,
+        field: "name" | "link",
+        value: string
+      ): void => {
+        setSources((prev) =>
+          prev.map((group) => {
+            if (group.id === id) {
+              const error = validateInput(value,field); // validate in real-time
+              return {
+                ...group,
+                [field]: value,
+                errorsList: { ...group.errorsList, [field]: error},
+              };
+            }
+            return group;
+          })
+        );
+      };
+    
     useEffect(() => {
         if (!task) {
             setError('No task data available');
@@ -191,24 +249,35 @@ export const ReviewQueue = () => {
     };
 
 
-    const isValidURL = (url: string) => {
-        try {
-            const urlPattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/i;
-            if (!urlPattern.test(url.trim())) {
-                return false;
-            }
+    const isValidURL = (url: string,id:number) => {
+
+                try {
+                    const urlPattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/i;
+                    if (!urlPattern.test(url.trim())) {
+                        return false;
+                    }
+                    
+                    const urlToTest = url.startsWith('http://') || url.startsWith('https://') 
+                        ? url 
+                        : `https://${url}`;
+                    new URL(urlToTest);
+                    return true;
+                } catch {
+                    return false;
+                }
+           
             
-            const urlToTest = url.startsWith('http://') || url.startsWith('https://') 
-                ? url 
-                : `https://${url}`;
-            new URL(urlToTest);
-            return true;
-        } catch {
-            return false;
-        }
+       
+   
     };
 
     const handleSubmitAnswer = async () => {
+        console.log("the source List===",sources)
+        const isValid = sources.every(
+            (group) => group.name.trim() !== "" && group.link.trim() !== ""
+          );
+      
+         
         if (!answerText.trim()) {
             showError('Please provide an answer');
             return;
@@ -218,7 +287,11 @@ export const ReviewQueue = () => {
             showError('Question ID is missing');
             return;
         }
-        if(!sourceName.trim())
+        if (!isValid) {
+            showError("Please Enter All The Required Fields");
+            return;
+          }
+      /*  if(sources.length>1)
         {
             showError('Please Provide Source Name')
             return;
@@ -228,12 +301,12 @@ export const ReviewQueue = () => {
             setUrlError('Please enter a valid URL');
             showError('Please enter a valid URL for the source');
             return;
-        }
-        console.log(sourceName,sourceLink)
+        }*/
+       // console.log(sourceName,sourceLink)
         
        // setSources( [{ name:'hello',link: 'link'}])
        
-        sources: [{ name: sourceName,link: sourceLink }]
+       // sources: [{ name: sourceName,link: sourceLink }]
        // sources: [{ sourceLink: sourceLink}]
     //  setSources(sources)
 
@@ -245,7 +318,7 @@ export const ReviewQueue = () => {
             const answerData: AnswerData = {
                 question_id: task.question_id,
                 answer_text: answerText,
-                sources: [{ name: sourceName,link: sourceLink }] ,
+                sources: sources,
                 userId:userId?.toString(),
                 RejectedUser:task?. RejectedUser,
                 status:task?.status
@@ -274,8 +347,8 @@ export const ReviewQueue = () => {
             showSuccess(responseData.message || 'Answer submitted successfully!');
             setAnswerText('');
             setSources([]);
-            setSourceName('');
-            setSourceLink('');
+          //  setSourceName('');
+           // setSourceLink('');
 
             navigate("/agri-specialist/dashboard");
         } catch (err) {
@@ -297,6 +370,9 @@ export const ReviewQueue = () => {
     };
 
     const handleSubmit = async () => {
+        console.log("Submitted values:", sources);
+    //setSources(values);
+   
         if (!selectedStatus) {
             showError('Please select a status');
             return;
@@ -696,7 +772,12 @@ export const ReviewQueue = () => {
                             <Typography variant="body2" sx={{ color: "#6d6d6d" }}>
                                 Type:{' '}
                                 <span style={{ color: "#2B7FFF", fontWeight: 500 }}>
-                                    {task.type?.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) || 'N/A'}
+                                    {task.type==="Reject"?
+                                    "Revise Answer"|| 'N/A'
+                                    :
+                                    task.type?.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) || 'N/A'
+                                    }
+                                    
                                 </span>
                             </Typography>
 
@@ -760,55 +841,69 @@ export const ReviewQueue = () => {
                                     },
                                 }}
                             />
-
+                    {sources.map((sourceEle,ind)=>{
+                        return(
+                            <div>
                             <Box sx={{ display: 'flex', gap: 2, my: 2 }}>
-                                <TextField
-                                    placeholder="Source name"
-                                    value={sourceName}
-                                    onChange={(e) => setSourceName(e.target.value)}
-                                    fullWidth
-                                    variant="outlined"
-                                    size="small"
-                                    sx={{
-                                        "& .MuiOutlinedInput-root": {
-                                            bgcolor: "#fff8f0",
-                                            borderRadius: "8px",
-                                            "& fieldset": { border: "1px solid #f0e0d0" },
-                                            "&:hover fieldset": { borderColor: "#e0c0a0" },
-                                        },
-                                    }}
-                                />
-                                <TextField
-                                    placeholder="Source URL"
-                                    value={sourceLink}
-                                    onChange={(e) => {
-                                        const value = e.target.value;
-                                        setSourceLink(value);
-                                        
-                                        if (!value.trim()) {
-                                            setUrlError('');
-                                        } else if (!isValidURL(value.trim())) {
-                                            setUrlError('Please enter a valid URL');
-                                        } else {
-                                            setUrlError('');
-                                        }
-                                    }}
-                                    fullWidth
-                                    variant="outlined"
-                                    size="small"
-                                    error={!!urlError}
-                                    helperText={urlError}
-                                    sx={{
-                                        "& .MuiOutlinedInput-root": {
-                                            bgcolor: "#fff8f0",
-                                            borderRadius: "8px",
-                                            "& fieldset": { border: urlError ? "1px solid #d32f2f" : "1px solid #f0e0d0" },
-                                            "&:hover fieldset": { borderColor: urlError ? "#d32f2f" : "#e0c0a0" },
-                                        },
-                                    }}
-                                />
-                            </Box>
-
+                          
+                            <TextField
+                                placeholder="Source name"
+                                value={sourceEle.name}
+                                onChange={(e) => handleChange(sourceEle.id, "name", e.target.value)}
+                                fullWidth
+                                variant="outlined"
+                                size="small"
+                                error={Boolean(sourceEle?.errorsList?.name)||false}
+                                helperText={sourceEle?.errorsList?.name||null}
+                                sx={{
+                                    "& .MuiOutlinedInput-root": {
+                                        bgcolor: "#fff8f0",
+                                        borderRadius: "8px",
+                                        "& fieldset": { border: "1px solid #f0e0d0" },
+                                        "&:hover fieldset": { borderColor: "#e0c0a0" },
+                                    },
+                                }}
+                            />
+                            <TextField
+                                placeholder="Source URL"
+                                value={sourceEle.link}
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    handleChange(sourceEle.id, "link", e.target.value);
+                                    
+                                  /*  if (!value.trim()) {
+                                        setUrlError('');
+                                    } else if (!isValidURL(value.trim(),sourceEle.id)) {
+                                        setUrlError('Please enter a valid URL');
+                                    } else {
+                                        setUrlError('');
+                                    }*/
+                                }}
+                                fullWidth
+                                variant="outlined"
+                                size="small"
+                               error={Boolean(sourceEle?.errorsList?.link) || false}
+                                helperText={sourceEle?.errorsList?.link|| ''}
+                                sx={{
+                                    "& .MuiOutlinedInput-root": {
+                                        bgcolor: "#fff8f0",
+                                        borderRadius: "8px",
+                                        "& fieldset": { border: urlError ? "1px solid #d32f2f" : "1px solid #f0e0d0" },
+                                        "&:hover fieldset": { borderColor: urlError ? "#d32f2f" : "#e0c0a0" },
+                                    },
+                                }}
+                            />
+                           
+                             <button onClick={()=>addGroup(ind)}>+</button>
+                             {sources.length > 1 && (
+                            <button onClick={() => removeGroup(sourceEle.id)}>X </button> )}
+                           
+                        </Box>
+                        
+                        </div>
+                        )
+                    })}
+                    
                             <Box sx={{ display: "flex", justifyContent: "center" }}>
                                 <Button
                                     variant="contained"
