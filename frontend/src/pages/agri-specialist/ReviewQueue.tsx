@@ -1,11 +1,11 @@
-import { Box, Typography, Paper, Button, TextField, CircularProgress, Chip, colors } from "@mui/material";
+import { Box, Typography, Paper, Button, TextField, CircularProgress, Chip, } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../../contexts/ToastContext";
 import { peerValidationApi } from "../../api/peerValidation";
-import {ChangeEvent} from 'react'
+
 
 interface Source {
     name: string;
@@ -98,7 +98,8 @@ export const ReviewQueue = () => {
         { text: "Improved technical accuracy" }
     ];
      // Add new input
-     const addGroup = (id: number): void => {
+     const addGroup = (id:number): void => {
+        console.log("the index coming===",id)
         setSources((prev) => [
           ...prev,
           { id: Date.now(), name: "", link: "" , errorsList: {}},
@@ -249,7 +250,7 @@ export const ReviewQueue = () => {
     };
 
 
-    const isValidURL = (url: string,id:number) => {
+   /* const isValidURL = (url: string,id:number) => {
 
                 try {
                     const urlPattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/i;
@@ -269,10 +270,10 @@ export const ReviewQueue = () => {
             
        
    
-    };
+    };*/
 
     const handleSubmitAnswer = async () => {
-        console.log("the source List===",sources)
+      //  console.log("the source List===",sources)
         const isValid = sources.every(
             (group) => group.name.trim() !== "" && group.link.trim() !== ""
           );
@@ -349,6 +350,7 @@ export const ReviewQueue = () => {
             setSources([]);
           //  setSourceName('');
            // setSourceLink('');
+           setUrlError('')
 
             navigate("/agri-specialist/dashboard");
         } catch (err) {
@@ -773,7 +775,7 @@ export const ReviewQueue = () => {
                                 Type:{' '}
                                 <span style={{ color: "#2B7FFF", fontWeight: 500 }}>
                                     {task.type==="Reject"?
-                                    "Revise Answer"|| 'N/A'
+                                    "Revise Answer"
                                     :
                                     task.type?.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) || 'N/A'
                                     }
@@ -868,7 +870,7 @@ export const ReviewQueue = () => {
                                 placeholder="Source URL"
                                 value={sourceEle.link}
                                 onChange={(e) => {
-                                    const value = e.target.value;
+                                    //const value = e.target.value;
                                     handleChange(sourceEle.id, "link", e.target.value);
                                     
                                   /*  if (!value.trim()) {

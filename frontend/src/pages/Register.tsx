@@ -29,7 +29,7 @@ const Register: React.FC = () => {
   });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { showError,specialization,setSpecialization } = useToast();
+  const { showError,specialization } = useToast();
   const [positions,setPositions]=useState <[number,number ]|null> (null)
   const [locationAllowed, setLocationAllowed] = useState(false);
   const [district,setDistrict]=useState('')
