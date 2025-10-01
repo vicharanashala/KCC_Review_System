@@ -1,4 +1,8 @@
-import { Box, Typography, Paper, Grid, Card, CardContent, Button, IconButton, Badge, Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress,Stack } from '@mui/material';
+import { Box, Typography, Paper, Grid, Card, CardContent, Button, IconButton, Badge, Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress,Stack , 
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Select } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useToast } from '../../contexts/ToastContext';
@@ -81,10 +85,11 @@ const DashboardCard = ({
 
 const AgriSpecialistDashboard = () => {
   const navigate = useNavigate();
-  const { showSuccess, showError } = useToast();
+  const { showSuccess, showError,specialization } = useToast();
   const { user } = useAuth();
   const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false);
   const [questionText, setQuestionText] = useState('');
+  const [specializationvalue,setSpecilizationValue]=useState('')
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFile,setSelectedFile] = useState<File | null>(null)
   const handleOpenQuestionModal = () => {
@@ -95,13 +100,14 @@ const AgriSpecialistDashboard = () => {
     setIsQuestionModalOpen(false);
     setQuestionText('');
     setSelectedFile(null)
+    setSpecilizationValue('')
   };
 
   const handleQuestionSubmit = async () => {
-    // if (!questionText.trim()) {
-    //   showError('Please enter a question');
-    //   return;
-    // }
+     if (!specializationvalue.trim()) {
+     showError('Please enter question type');
+    return;
+     }
 
     setIsSubmitting(true);
     try {
@@ -119,6 +125,7 @@ const AgriSpecialistDashboard = () => {
       if (selectedFile) {
         formData.append('csvFile', selectedFile);
       }
+      formData.append('query_type',specializationvalue)
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/questions`, {
         method: 'POST',
         headers: {
@@ -148,6 +155,7 @@ const AgriSpecialistDashboard = () => {
       showError(err instanceof Error ? err.message : 'Failed to create question');
     } finally {
       setIsSubmitting(false);
+      setSpecilizationValue('')
     }
   };
 
@@ -319,7 +327,29 @@ const AgriSpecialistDashboard = () => {
                   onChange={(e) => setQuestionText(e.target.value)}
                   sx={{ mt: 1 }}
                 />
+                 <FormControl fullWidth margin="normal" sx={{ mb: 2 }}>
+              <InputLabel id="role-label">Question Type *</InputLabel>
+              <Select
+                labelId="role-label"
+                id="role"
+                name="role"
+                value={specializationvalue}
+                label="Question Type *"
+                onChange={(e) => setSpecilizationValue( e.target.value)}
+                required
+              >
+                <MenuItem value="">
+                  <em>Select Question Type *</em>
+                </MenuItem>
+                {specialization.map((role) => (
+                  <MenuItem key={role.value} value={role.value}>
+                    {role.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
               </DialogContent>
+              
               <DialogContent>
                 <label >Add Your CSV here</label> <br/>
                 <input type="file" accept='.csv' onChange={(e) => setSelectedFile(e.target.files ? e.target.files[0] : null)}/>

@@ -7,6 +7,10 @@ export interface UserCreateDto {
   role: UserRole;
   password: string;
   specialization?: string[];
+  specializationField:string,
+  district:string,
+  state:string,
+  coordinates:number[]
 }
 
 export interface UserResponseDto {

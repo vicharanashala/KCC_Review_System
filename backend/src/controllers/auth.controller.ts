@@ -14,6 +14,13 @@ const registerSchema = Joi.object({
   role: Joi.string().valid('agri_specialist', 'moderator', 'admin').required(),
   password: Joi.string().min(6).required(),
   specialization: Joi.array().items(Joi.string()).optional(),
+  specializationField:Joi.string().required(),
+  district:Joi.string().required(),
+  state:Joi.string().required(),
+ // coordinates:Joi.array().items(Joi.number()).required()
+  location:Joi.object({type:Joi.string().valid("Point").required(),coordinates:Joi.array().length(2)                 // exactly 2 items: [lng, lat]
+  .items(Joi.number().required())
+  .required()})
 });
 
 const loginSchema = Joi.object({

@@ -22,12 +22,22 @@ interface LoginCredentials {
   email: string;
   password: string;
 }
+interface IGeoPoint {
+  type: "Point";                // must always be "Point"
+  coordinates: [number, number] | null; // tuple: [longitude, latitude]
+}
 
 interface RegisterCredentials {
   email: string;
   password: string;
   name: string;
   role?: string;
+  specialization:string,
+   // coordinates: number[] | null,
+    state:string,
+    district:string,
+    location:IGeoPoint
+
 }
 
 interface AuthResponse {
@@ -108,11 +118,16 @@ login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
 
     register: async (credentials: RegisterCredentials): Promise<any> => {
       try {
+       // console.log("the register Details===",credentials)
         const registerData = {
           email: credentials.email,
           password: credentials.password,
           name: credentials.name,
-          role: credentials.role || 'agri_specialist'
+          role: credentials.role || 'agri_specialist',
+          specializationField:credentials.specialization,
+          district:credentials.district,
+          state:credentials.state,
+          location:credentials.location
         };
         
         const response = await axios.post(`${API_URL}/auth/register`, registerData);

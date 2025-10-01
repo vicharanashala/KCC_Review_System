@@ -17,4 +17,12 @@ export interface IUser extends Document {
   created_at: Date;
   updated_at: Date;
   comparePassword(password: string): boolean;
+  specializationField:string,
+  district:string,
+  state:string,
+  //coordinates:number[],
+  location: {
+    type: "Point";
+    coordinates: [number, number]; // [longitude, latitude]
+  };
 }

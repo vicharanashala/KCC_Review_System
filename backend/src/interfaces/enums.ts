@@ -31,3 +31,6 @@ export enum NotificationType {
   VALIDATION_REQUEST = 'validation_request',
   READY_FOR_GOLDEN_FAQ = 'ready_for_golden_faq',
 }
+export enum Location{
+POINT="Point"
+}

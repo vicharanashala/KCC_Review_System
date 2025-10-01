@@ -12,7 +12,7 @@ const createSchema = Joi.object({
   question_id: Joi.string().required(),
   answer_text: Joi.string().required(),
   userId:Joi.string().optional(),
-  sources: Joi.array().items(Joi.object({ name: Joi.string().required(), link: Joi.string().required(),id:Joi.number().required(),errorsList:Joi.object().required(),_id:Joi.string().optional() })).required(),
+  sources: Joi.array().items(Joi.object({ name: Joi.string().required(), link: Joi.string().required(),id:Joi.number().required(),errorsList:Joi.object().optional(),_id:Joi.string().optional() })).required(),
   RejectedUser:Joi.string().optional(),
   status:Joi.string().optional()
 

@@ -15,7 +15,7 @@ const createSchema = Joi.object({
   state: Joi.string().optional(),
   district: Joi.string().optional(),
   block_name: Joi.string().optional(),
-  query_type: Joi.string().optional(),
+  query_type: Joi.string().required(),
   season: Joi.string().optional(),
   sector: Joi.string().optional(),
   original_query_text: Joi.string().required(),

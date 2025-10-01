@@ -19,7 +19,7 @@ export default class WorkflowService {
     if (!specialists.length) return null;
     const minWorkload = Math.min(...specialists.map((s: any) => s.workload_count));
     const candidates = specialists.filter((s: any) => s.workload_count === minWorkload);
-    return candidates[Math.floor(Math.random() * candidates.length)];
+    return candidates[0];
   }
 
   static async getRandomAvailableModerator(currentUserObj?: any,questionObj?: any): Promise<any | null> {
@@ -27,7 +27,7 @@ export default class WorkflowService {
     if (!moderators.length) return null;
     const minWorkload = Math.min(...moderators.map((m: any) => m.workload_count));
     const candidates = moderators.filter((m: any) => m.workload_count === minWorkload);
-    return candidates[Math.floor(Math.random() * candidates.length)];
+    return candidates[0];
   }
 
   static async assignQuestionToSpecialist(questionId: string,currentUserId?: string): Promise<boolean> {
@@ -98,7 +98,7 @@ export default class WorkflowService {
 
     const minWorkload = Math.min(...available.map((s: any) => s.workload_count));
     const candidates = available.filter((s: any) => s.workload_count === minWorkload);
-    const reviewer = candidates[Math.floor(Math.random() * candidates.length)];
+    const reviewer = candidates[0];
     if(!reviewer){
       throw new Error("Reviewer not found")
     }

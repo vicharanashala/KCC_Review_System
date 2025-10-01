@@ -3,12 +3,19 @@ import type { ReactNode } from 'react';
 import { Snackbar, Alert } from '@mui/material';
 import type { AlertColor } from '@mui/material';
 
+interface Specilization{
+  
+  value: string;
+  label:string;
+}
 interface ToastContextType {
   showToast: (message: string, severity?: AlertColor) => void;
   showSuccess: (message: string) => void;
   showError: (message: string) => void;
   showWarning: (message: string) => void;
   showInfo: (message: string) => void;
+  specialization: Specilization[];          // match your state variable
+  setSpecialization: React.Dispatch<React.SetStateAction<Specilization[]>>;
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
@@ -19,12 +26,22 @@ interface ToastState {
   severity: AlertColor;
 }
 
+
 export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [toast, setToast] = useState<ToastState>({
     open: false,
     message: '',
     severity: 'info'
   });
+  const [specialization,setSpecialization]=useState<Specilization[] >(
+    [
+      { value: 'Crop Production & Management', label: 'Crop Production & Management' },
+      { value: 'Plant Protection', label: 'Plant Protection' },
+      { value: 'Water & Irrigation Management', label: 'Water & Irrigation Management' },
+      // { value: 'admin', label: 'Admin' }
+    ]
+  )
+ 
 
   const showToast = useCallback((message: string, severity: AlertColor = 'info') => {
     setToast({
@@ -53,6 +70,7 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const handleClose = () => {
     setToast(prev => ({ ...prev, open: false }));
   };
+  
 
   return (
     <ToastContext.Provider value={{
@@ -60,7 +78,9 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       showSuccess,
       showError,
       showWarning,
-      showInfo
+      showInfo,
+      specialization,        // matches interface
+      setSpecialization,
     }}>
       {children}
       <Snackbar

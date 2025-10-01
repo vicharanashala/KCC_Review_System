@@ -18,7 +18,25 @@ const userSchema = new Schema<IUser>({
   incentive_points:{type:Number,default:0},
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now },
+ specializationField:{type:String,required:true},
+ district:{type:String,required:true},
+ state:{type:String,required:true},
+
+ location: {
+  type: {
+    type: String,
+    enum: ["Point"], // must be "Point"
+    required: true,
+  },
+  coordinates: {
+    type: [Number], // array of numbers [lng, lat]
+    required: true,
+  },
+},
+         
 });
+// Important: create 2dsphere index for geospatial queries
+userSchema.index({ location: "2dsphere" });
 
 userSchema.pre('save', function (next) {
   if (this.isModified('hashed_password')) {
