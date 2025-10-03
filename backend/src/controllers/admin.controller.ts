@@ -15,6 +15,7 @@ const usersSchema = Joi.object({
   role: Joi.string()
     .valid("agri_specialist", "moderator", "admin", "all")
     .optional(),
+    specializationField:Joi.string().optional()
 });
 
 const statusSchema = Joi.object({
@@ -83,6 +84,36 @@ export const updateUserStatus: Middleware[] = [
         user_id as string,
         is_active,
         is_available
+      );
+      res.json(result);
+    } catch (error: any) {
+      logger.error(error);
+      res
+        .status(error.message.includes("404") ? 404 : 400)
+        .json({ detail: error.message });
+    }
+  },
+];
+export const updateUserDetails: Middleware[] = [
+  authenticateToken,
+  restrictTo(UserRole.ADMIN),
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const { error } = usersSchema.validate(req.body);
+      if (error) {
+        const errorMessage =
+          error.details && error.details.length > 0
+            ? error.details[0]!.message
+            : "Invalid request body";
+        res.status(400).json({ detail: errorMessage });
+        return;
+      }
+      const { user_id } = req.params;
+      const { role, specializationField } = req.body;
+      const result = await adminService.updateUserDetails(
+        user_id as string,
+        role,
+        specializationField
       );
       res.json(result);
     } catch (error: any) {

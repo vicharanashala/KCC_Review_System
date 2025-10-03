@@ -28,6 +28,16 @@ export default class AdminService {
     return { message: `User ${user.name} status updated successfully` };
   }
 
+  async updateUserDetails(
+    userId: string,
+    role: string,
+    specializationField: string
+  ): Promise<any> {
+    const user = await userRepo.updateDetails(userId, role, specializationField);
+    if (!user) throw new Error("User not found");
+    return { message: `User ${user.name} status updated successfully` };
+  }
+
   async getWorkflowPerformance(days: number = 30): Promise<any> {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
