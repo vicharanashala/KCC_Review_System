@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Table,
@@ -17,6 +17,7 @@ import {
   Select,
   MenuItem,
   TextField,
+  Button
 } from "@mui/material";
 
 export interface IUser {
@@ -31,6 +32,11 @@ export interface IUser {
   updated_at: string;
   workload_count: number;
   incentive_points: number;
+  isEditing: boolean;
+  backup: {
+    name: string;
+    email: string;
+  };
 }
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
@@ -68,6 +74,12 @@ const UserManagement: React.FC = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [role, setRole] = useState("all");
   const [search, setSearch] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [usersList, setUsersList] = useState<IUser[]>([]);
+  
+  
+
 
   const roleOptions = ["all", "moderator", "agri_specialist"];
 
@@ -86,6 +98,38 @@ const UserManagement: React.FC = () => {
   ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
+  };
+  useEffect(()=>{
+    if(data?.users)
+    {
+      const userwithEditField=data.users.map((userData)=>(
+       {...userData,isEditing:false,backup:{...userData}} 
+      ))
+      setUsersList(userwithEditField)
+      console.log("the userList coming===",usersList)
+    }
+//console.log("the userList coming===",usersList)
+
+  },[data])
+  const handleChange = (e) => {
+   // setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+  const toggleEdit = async (index:number) => {
+    const user=usersList[index]
+   
+    if (user.isEditing) 
+    {
+      
+    }
+    else{
+     // console.log()
+      const newUser=[...usersList]
+      
+      newUser[index].isEditing=true
+     // setIsEditing(false)
+     setUsersList(newUser)
+     //console.log("the user coming===",newUser)
+    }
   };
 
   if (isLoading) return <CircularProgress />;
@@ -156,10 +200,13 @@ const UserManagement: React.FC = () => {
               <TableCell>
                 <strong>Created At</strong>
               </TableCell>
+              <TableCell>
+                Edit/save
+                </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {data?.users?.map((user, index) => (
+            {usersList.map((user, index) => (
               <TableRow key={user._id}>
                 <TableCell>{index + 1}</TableCell>
                 <TableCell>{user.name}</TableCell>
@@ -181,6 +228,14 @@ const UserManagement: React.FC = () => {
                 <TableCell>
                   {new Date(user.created_at).toLocaleDateString()}
                 </TableCell>
+                <TableCell>
+                <Button
+                onClick={()=>toggleEdit(index)}
+              disabled={loading}
+                 >
+        {user.isEditing ?"Save":"Edit"}
+      </Button>
+      </TableCell>
               </TableRow>
             ))}
           </TableBody>
