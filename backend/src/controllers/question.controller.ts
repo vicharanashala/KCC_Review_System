@@ -24,6 +24,7 @@ const createSchema = Joi.object({
   longitude: Joi.string().optional(),
   priority: Joi.string().default('medium').optional(),
   user_id:Joi.string().optional(),
+  KccAns:Joi.string().optional()
   
 });
 

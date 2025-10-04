@@ -818,6 +818,37 @@ export const ReviewQueue = () => {
                                 border: "1px solid #ddd",
                             }}
                         >
+                            {task.KccAns?
+                            <Typography
+                            variant="subtitle1"
+                            fontWeight="500"
+                            sx={{ mb: 2 }}
+                        >
+                            KccAnswer
+                            <TextField
+                               
+                                multiline
+                                rows={5}
+                                fullWidth
+                                variant="outlined"
+                                value={task.KccAns}
+                                 sx={{
+                                    "& .MuiOutlinedInput-root": {
+                                       
+                                        borderRadius: "8px",
+                                        "& fieldset": { border: "1px solid #f0e0d0" },
+                                        "&:hover fieldset": { borderColor: "#e0c0a0" },
+                                    },
+                                }}
+                            />
+                        </Typography>
+                        
+                        
+                        :
+                        ''
+
+                            }
+
                             <Typography
                                 variant="subtitle1"
                                 fontWeight="500"

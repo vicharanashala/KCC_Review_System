@@ -89,6 +89,7 @@ const AgriSpecialistDashboard = () => {
   const { user } = useAuth();
   const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false);
   const [questionText, setQuestionText] = useState('');
+  const [kccAns,setKccAns]=useState('')
   const [specializationvalue,setSpecilizationValue]=useState('')
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFile,setSelectedFile] = useState<File | null>(null)
@@ -101,6 +102,7 @@ const AgriSpecialistDashboard = () => {
     setQuestionText('');
     setSelectedFile(null)
     setSpecilizationValue('')
+    setKccAns('')
   };
 
   const handleQuestionSubmit = async () => {
@@ -124,6 +126,10 @@ const AgriSpecialistDashboard = () => {
       }
       if (selectedFile) {
         formData.append('csvFile', selectedFile);
+      }
+      if(kccAns)
+      {
+        formData.append("KccAns",kccAns)
       }
       formData.append('query_type',specializationvalue)
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/questions`, {
@@ -313,21 +319,7 @@ const AgriSpecialistDashboard = () => {
                 </IconButton>
               </DialogTitle>
               <DialogContent dividers>
-                <TextField
-                  autoFocus
-                  margin="dense"
-                  id="question"
-                  label="Type your question"
-                  type="text"
-                  fullWidth
-                  variant="outlined"
-                  multiline
-                  rows={4}
-                  value={questionText}
-                  onChange={(e) => setQuestionText(e.target.value)}
-                  sx={{ mt: 1 }}
-                />
-                 <FormControl fullWidth margin="normal" sx={{ mb: 2 }}>
+              <FormControl fullWidth margin="normal" sx={{ mb: 2 }}>
               <InputLabel id="role-label">Question Type *</InputLabel>
               <Select
                 labelId="role-label"
@@ -348,6 +340,37 @@ const AgriSpecialistDashboard = () => {
                 ))}
               </Select>
             </FormControl>
+                <TextField
+                  autoFocus
+                  margin="dense"
+                  id="question"
+                  label="Type your question"
+                  type="text"
+                  fullWidth
+                  variant="outlined"
+                  multiline
+                  rows={4}
+                  value={questionText}
+                  onChange={(e) => setQuestionText(e.target.value)}
+                  sx={{ mt: 1 }}
+                />
+                
+
+            <TextField
+                  autoFocus
+                  margin="dense"
+                  id="question"
+                  label="Type your KccAns"
+                  type="text"
+                  fullWidth
+                  variant="outlined"
+                  multiline
+                  rows={4}
+                  placeholder="Write a detailed, accurate answer to this agricultural question. Include relevant information, best practices, and any important considerations..."
+                  value={kccAns}
+                  onChange={(e) => setKccAns(e.target.value)}
+                  sx={{ mt: 1 }}
+                />
               </DialogContent>
               
               <DialogContent>

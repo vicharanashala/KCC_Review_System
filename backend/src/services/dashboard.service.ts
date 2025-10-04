@@ -73,6 +73,7 @@ export default class DashboardService {
           status: question.status,
           valid_count: question.valid_count,
           created_at: question.created_at,
+          KccAns:question.KccAns
         });
       }
 
@@ -97,7 +98,8 @@ export default class DashboardService {
           : peerAnswer.answer_text,
       consecutive_approvals: q.consecutive_peer_approvals,
       created_at: notification.created_at,
-       sources:peerAnswer.sources
+       sources:peerAnswer.sources,
+       KccAns:q.KccAns
     });
   }
 }

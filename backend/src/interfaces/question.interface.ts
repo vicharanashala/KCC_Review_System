@@ -23,5 +23,6 @@ export interface IQuestion extends Document {
   reviewed_by_specialists: Types.ObjectId[];
   created_at: Date;
   updated_at: Date;
-  user_id:string
+  user_id:string;
+  KccAns:string;
 }
