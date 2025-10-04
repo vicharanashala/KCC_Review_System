@@ -284,7 +284,7 @@ const AgriSpecialistDashboard = () => {
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-          {user?.role === 'agri_specialist' && (
+          {user?.role === 'moderator' && (
             <Button
                 variant="outlined"
                 fullWidth
