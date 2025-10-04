@@ -16,8 +16,8 @@ export interface IAnswer extends Document {
   question: IQuestion;
   specialist: IUser;
   first_answered_person:Types.ObjectId | IQuestion
-  original_query_text:string
-  original_question_id:string;
+ // original_query_text:string
+ // original_question_id:string;
   RevisedAnswer: boolean;
   RevisionSuccess: boolean;
   

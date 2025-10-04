@@ -26,7 +26,8 @@ interface AnswerData {
     sourceLink?: string;
     userId?: string;
     RejectedUser?: string;
-    status?:string
+    status?:string;
+    questionObjId?:string
 }
 
 interface VersionHistory {
@@ -322,7 +323,8 @@ export const ReviewQueue = () => {
                 sources: sources,
                 userId:userId?.toString(),
                 RejectedUser:task?. RejectedUser,
-                status:task?.status
+                status:task?.status,
+                questionObjId:task?.questionObjId
                 
                 
 
@@ -818,7 +820,35 @@ export const ReviewQueue = () => {
                                 border: "1px solid #ddd",
                             }}
                         >
-                            {task.KccAns?
+                            {task.type==="Reject" && task.comments?
+                            <Typography
+                            variant="subtitle1"
+                            fontWeight="500"
+                            sx={{ mb: 2 }}
+                        >
+                           Comments
+                            <TextField
+                               
+                                multiline
+                                rows={3}
+                                fullWidth
+                                variant="outlined"
+                                value={task.comments}
+                                 sx={{
+                                    "& .MuiOutlinedInput-root": {
+                                       
+                                        borderRadius: "8px",
+                                        "& fieldset": { border: "1px solid #f0e0d0" },
+                                        "&:hover fieldset": { borderColor: "#e0c0a0" },
+                                    },
+                                }}
+                            />
+                        </Typography>
+                        
+                        
+                        :
+                        ''}
+                        {task.KccAns?
                             <Typography
                             variant="subtitle1"
                             fontWeight="500"
@@ -845,9 +875,7 @@ export const ReviewQueue = () => {
                         
                         
                         :
-                        ''
-
-                            }
+                        ''}
 
                             <Typography
                                 variant="subtitle1"
@@ -969,6 +997,35 @@ export const ReviewQueue = () => {
                                 border: "1px solid #ddd",
                             }}
                         >
+                            {task.KccAns?
+                            <Box>
+                            <Typography sx={{ my: 2 }}>KccAns</Typography>
+                            <Box>
+                                <TextField
+                                    placeholder={!selectedStatus ? "Select a status first" : selectedStatus === 'approved' ? "No changes needed for approval" : user?.role === 'moderator' ? "Answer text (read-only for moderators)" : "Edit the answer if needed (only for revisions)"}
+                                    multiline
+                                    rows={2}
+                                    fullWidth
+                                    variant="outlined"
+                                    value={task.KccAns}
+                                   
+                                    disabled={!selectedStatus || selectedStatus === 'approved' || user?.role === 'moderator'}
+                                    sx={{
+                                        "& .MuiOutlinedInput-root": {
+                                            bgcolor: selectedStatus === 'approved' || user?.role === 'moderator' ? "#f5f5f5" : "#fff8f0",
+                                            borderRadius: "8px",
+                                            "& fieldset": {
+                                                border: "1px solid #f0e0d0",
+                                            },
+                                            "&:hover fieldset": {
+                                                borderColor: selectedStatus === 'approved' || user?.role === 'moderator' ? "#f0e0d0" : "#e0c0a0"
+                                            },
+                                        },
+                                    }}
+                                />
+                            </Box>
+                            </Box>
+                            :''}
                             <Typography sx={{ my: 2 }}>Answer</Typography>
                             <Box>
                                 <TextField

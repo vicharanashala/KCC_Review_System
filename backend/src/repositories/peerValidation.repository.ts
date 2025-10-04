@@ -11,9 +11,9 @@ export default class PeerValidationRepository {
     return PeerValidation.findOne({ peer_validation_id: peerValidationId }).populate('answer reviewer');
   }
   
-  // async findByAnswerId(answerId: string): Promise<IPeerValidation[]> {
-  //   return PeerValidation.find({ answer_id: answerId }).populate('answer reviewer').sort({ created_at: -1 });
-  // }
+   async findByAnswerObjId(answerId:any): Promise<IPeerValidation[]> {
+     return PeerValidation.find({ answer_id: answerId, status: 'revised' })
+   }
 
   async findByAnswerId(answerId: string): Promise<IPeerValidation[]> {
     let answerObjectId = answerId;

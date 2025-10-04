@@ -113,8 +113,8 @@ const question = await questionRepo.findById(questionId);
           version: answer.version + 1,
           answer_id: `A_${uuidv4().slice(0, 8).toUpperCase()}`,
           first_answered_person:question.assigned_specialist_id,
-          original_query_text:question. original_query_text,
-          original_question_id:question.question_id
+          //original_query_text:question. original_query_text,
+         // original_question_id:question.question_id
         });
 
         question.status = QuestionStatus.PENDING_PEER_REVIEW;

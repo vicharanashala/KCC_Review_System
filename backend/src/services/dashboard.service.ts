@@ -1,6 +1,7 @@
 import UserRepository from '../repositories/user.repository';
 import QuestionRepository from '../repositories/question.repository';
 import GoldenFAQRepository from '../repositories/goldenFAQ.repository';
+import PeerValidationRepository from '../repositories/peerValidation.repository';
 import NotificationRepository from '../repositories/notification.repository';
 import { NotificationType, QuestionStatus, UserRole } from '../interfaces/enums';
 import AnswerRepository from '../repositories/answer.repository';
@@ -13,6 +14,7 @@ const questionRepo = new QuestionRepository();
 const goldenFAQRepo = new GoldenFAQRepository();
 const notificationRepo = new NotificationRepository();
 const answerRepo = new AnswerRepository()
+const peerValidation=new PeerValidationRepository()
 export default class DashboardService {
   async getStats(currentUserId: string): Promise<any> {
     const totalSpecialists = await userRepo.findAll(0, 0, UserRole.AGRI_SPECIALIST).then(u => u.length);
@@ -135,29 +137,41 @@ export default class DashboardService {
     const rejectedAnswers= await answerRepo.findRejectedQuestions(currentUserId,status,revisionSuccess)
     if(rejectedAnswers)
     {
-      rejectedAnswers.map(async (question)=>{
-       
-        let answer_text=''
-      //  console.log("questionObj====",questionObj)
-        if(question.specialist_id?.toString()=== question.first_answered_person.toString())
-        {
-          answer_text= question.answer_text
-        }
+      await Promise.all(
+        rejectedAnswers.map(async (answer) => {
+          const questionObj = await questionRepo.findByQuestionObjectId(answer.question_id);
+          const peerValidationObj=await peerValidation.findByAnswerObjId(answer._id)
+          
+          const comments = peerValidationObj?.[0]?.comments;
+          
+      if(questionObj)
+      {
         tasks.push({
           type: "Reject",
-          question_id: question.original_question_id,
-          question_text: question.original_query_text?.length > 100 ? question.original_query_text.slice(0, 100) + '...' : question.original_query_text,
-          status:"Rejected",
+          question_id: questionObj.question_id,
+          question_text:
+            questionObj.original_query_text?.length > 100
+              ? questionObj.original_query_text.slice(0, 100) + '...'
+              : questionObj.original_query_text,
+          status: "Rejected",
           valid_count: 0,
-          created_at: question.created_at,
-          answer_text:answer_text,
-          sources:question.sources,
-          RejectedUser:question.specialist_id
+          created_at: questionObj.created_at,
+          answer_text:answer.answer_text,
+          sources: answer.sources,
+          RejectedUser: answer.specialist_id,
+          questionObjId:answer.question_id,
+          KccAns:questionObj.KccAns,
+          comments:comments
         });
-      })
+      }
+         
+        })
+      );
+      
+     
 
     }
-   // console.log("the rejected anserw====",rejectedAnswers)
+  
 
     return { tasks };
   }
