@@ -250,7 +250,7 @@ const AgriSpecialistDashboard = () => {
       });
       if (!res.ok) throw new Error('Failed to fetch tasks');
       const data = await res.json();
-     // console.log("the performance====",data)
+     
       setPerformance(data || []);
      
     } catch (error) {
