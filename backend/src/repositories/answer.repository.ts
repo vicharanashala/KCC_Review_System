@@ -56,8 +56,9 @@ export default class AnswerRepository {
      
     });
   }
-  async findByExactQuestionId(original_question_id : string ):Promise<IAnswer[]>{
-    return Answer.find({ original_question_id:original_question_id});
+  async findByExactQuestionId(question_id : any ):Promise<IAnswer[]>{
+   
+    return Answer.find({ question_id:question_id});
   }
   async findByQuestion(original_question_id : string ):Promise<IAnswer[]>{
     return Answer.find({ question_id:original_question_id});

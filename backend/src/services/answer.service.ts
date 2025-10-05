@@ -12,7 +12,7 @@ const questionRepo = new QuestionRepository();
 const userRepo = new UserRepository()
 export default class AnswerService {
   async create(answerData: AnswerCreateDto, currentUserId: string): Promise<any> {
-   // console.log("currentAns====*******",answerData)
+    
     const currentUser = await userRepo.findById(currentUserId)
     const question = await questionRepo.findByQuestionId(answerData.question_id);
     if (!question) throw new Error('Question not found');
@@ -20,13 +20,13 @@ export default class AnswerService {
       if (question.assigned_specialist_id!.toString() !== currentUserId) throw new Error('You are not assigned to this question');
     } else if (question.status === QuestionStatus.NEEDS_REVISION) {
       const currentAns = await answerRepo.findCurrentByQuestionId(question._id.toString());
-   //  console.log("currentAns====",currentAns)
+  
       if (!currentAns || currentAns.specialist_id.toString() !== currentUserId) throw new Error('You are not authorized to revise this answer');
     } 
     else if(answerData.status==='Rejected'){
       // const currentAns = await answerRepo.findByAnswerId(question._id.toString());
-       let currentAnswer=await answerRepo.findByExactQuestionId(answerData. question_id)
-     //  console.log("currentAns====",currentAnswer)
+       let currentAnswer=await answerRepo.findByExactQuestionId(answerData.questionObjId)
+     
        currentAnswer.map(async (answer)=>{
         answer.RevisedAnswer = true;
         //  answer.sendBackToRevision="Revesion"
@@ -54,8 +54,8 @@ export default class AnswerService {
       version,
       answer_id: `A_${require('uuid').v4().slice(0, 8).toUpperCase()}`,
       first_answered_person:question.assigned_specialist_id,
-      original_query_text:question. original_query_text,
-      original_question_id:question.question_id
+     // original_query_text:question. original_query_text,
+     // original_question_id:question.question_id
     });
 
     // Update question for peer review
@@ -88,7 +88,7 @@ export default class AnswerService {
     }
 
    // await answerRepo.markPreviousNotCurrent(question._id.toString());
-   let currentAnswer=await answerRepo.findByExactQuestionId(answerData. question_id)
+   let currentAnswer=await answerRepo.findByExactQuestionId(answerData. questionObjId)
   
    currentAnswer.map((answer)=>{
     answer.RevisionSuccess = true
@@ -106,8 +106,8 @@ export default class AnswerService {
       version,
       answer_id: `A_${require('uuid').v4().slice(0, 8).toUpperCase()}`,
       first_answered_person:question.assigned_specialist_id,
-      original_query_text:question. original_query_text,
-      original_question_id:question.question_id,
+     // original_query_text:question. original_query_text,
+     // original_question_id:question.question_id,
      
     });
 

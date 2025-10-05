@@ -68,6 +68,27 @@ export default class UserRepository {
     if (isAvailable !== undefined) update["is_available"] = isAvailable;
     return User.findByIdAndUpdate(userId, update, { new: true });
   }
+  async updateDetails(
+    userId: string,
+    role : string,
+    specializationField: string
+  ): Promise<IUser | null> {
+    if(role==='agri_specialist')
+    {
+    
+      const update: Partial<IUser> = { role: UserRole.AGRI_SPECIALIST};
+    if (specializationField !== undefined) update["specializationField"] = specializationField;
+    return User.findByIdAndUpdate(userId, update, { new: true });
+    }
+    else{
+     
+      const update: Partial<IUser> = { role: UserRole.MODERATOR};
+      if (specializationField !== undefined) update["specializationField"] = specializationField;
+      return User.findByIdAndUpdate(userId, update, { new: true });
+    }
+    
+    
+  }
 
   async getAvailableSpecialists(currentUserObj?: any,questionObj?: any,answerData?: any): Promise<IUser[]> {
   //console.log("the questionObject===",questionObj)

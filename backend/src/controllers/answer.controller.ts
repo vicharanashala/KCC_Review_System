@@ -14,7 +14,8 @@ const createSchema = Joi.object({
   userId:Joi.string().optional(),
   sources: Joi.array().items(Joi.object({ name: Joi.string().required(), link: Joi.string().required(),id:Joi.number().required(),errorsList:Joi.object().optional(),_id:Joi.string().optional() })).required(),
   RejectedUser:Joi.string().optional(),
-  status:Joi.string().optional()
+  status:Joi.string().optional(),
+  questionObjId:Joi.string().optional(),
 
 });
 

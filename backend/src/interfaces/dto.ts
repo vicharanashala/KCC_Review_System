@@ -61,6 +61,7 @@ export interface AnswerCreateDto {
   answer_text: string;
   sources: { name: string; link: string }[];
   status:string;
+  questionObjId:string;
 }
 
 export interface ValidationCreateDto {

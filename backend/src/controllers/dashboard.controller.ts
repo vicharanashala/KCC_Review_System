@@ -47,3 +47,18 @@ export const getMyTasks: Middleware[] = [
     }
   },
 ];
+export const getUserPerformance: Middleware[] = [
+  authenticateToken,
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+     
+      const currentUserId = req.user._id.toString();
+      const currentRole = req.user.role;
+      const tasks = await dashboardService.getUserPerformance(currentUserId, currentRole);
+      res.json(tasks);
+    } catch (error: any) {
+      logger.error(error);
+      res.status(400).json({ detail: error.message });
+    }
+  },
+];

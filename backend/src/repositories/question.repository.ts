@@ -15,6 +15,9 @@ export default class QuestionRepository {
   async findByQuestionId(questionId: string): Promise<IQuestion | null> {
     return Question.findOne({ question_id: questionId });
   }
+  async findByQuestionObjectId(Id:any): Promise<IQuestion | null> {
+    return Question.findOne({ _id: Id});
+  }
 
   async findById(id: string): Promise<IQuestion | null> {
     return Question.findById(id);

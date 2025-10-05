@@ -16,6 +16,8 @@ interface ToastContextType {
   showInfo: (message: string) => void;
   specialization: Specilization[];          // match your state variable
   setSpecialization: React.Dispatch<React.SetStateAction<Specilization[]>>;
+  roles:Specilization[]
+  setRoles:React.Dispatch<React.SetStateAction<Specilization[]>>;
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
@@ -41,6 +43,12 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       // { value: 'admin', label: 'Admin' }
     ]
   )
+  const [roles,setRoles]=useState<Specilization[]>([
+    { value: 'agri_specialist', label: 'Agriculture Specialist' },
+    { value: 'moderator', label: 'Moderator' }
+    // { value: 'admin', label: 'Admin' }
+  ])
+ 
  
 
   const showToast = useCallback((message: string, severity: AlertColor = 'info') => {
@@ -81,6 +89,8 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       showInfo,
       specialization,        // matches interface
       setSpecialization,
+      roles,
+      setRoles
     }}>
       {children}
       <Snackbar

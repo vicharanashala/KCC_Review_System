@@ -3,6 +3,7 @@ import { IQuestion } from '../interfaces/question.interface';
 import { QuestionStatus } from '../interfaces/enums';
 import { v4 as uuidv4 } from 'uuid';
 
+
 const questionSchema = new Schema<IQuestion>({
   question_id: { type: String, unique: true, required: true, default: () => `Q_${uuidv4().slice(0, 8).toUpperCase()}` },
   crop: { type: String },
@@ -24,7 +25,8 @@ const questionSchema = new Schema<IQuestion>({
   reviewed_by_specialists: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now },
-  user_id: { type: String }
+  user_id: { type: String },
+  KccAns:{type:String}
 });
 
 questionSchema.pre('save', function (next) {
