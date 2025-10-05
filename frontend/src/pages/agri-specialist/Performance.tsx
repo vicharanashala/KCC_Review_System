@@ -12,12 +12,41 @@ import BarChartIcon from "@mui/icons-material/BarChart";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
-import { useNavigate } from "react-router-dom";
+import { useNavigate ,useLocation} from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 
+interface LatestQuestion {
+    status: string;
+    createdAt: string;
+    questionId: string;
+    questionText: string;
+    answerId: string;
+  }
+interface Performance {
+    totalAssigned: number;
+    approvedCount: number;
+    revisedCount: number;
+    rejectedCount: number;
+    approvalRate: number;
+    latestApprovedQuestion: LatestQuestion | null;
+    latestRevisedQuestion: LatestQuestion | null;
+  }
+  
+  interface PerformanceProps {
+    performance: Performance;
+  }
 export const Performance = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
+    const location = useLocation();
+
+  // Get query param "data"
+  const query = new URLSearchParams(location.search);
+  const performanceString = query.get('data');
+
+  // Parse JSON
+  const performance = performanceString ? JSON.parse(performanceString) : null;
+    //console.log("the performane====*************",performance)
     return (
         <Box sx={{ p: 3, maxWidth: 1200, mx: "auto" }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 4 }}>
@@ -77,30 +106,30 @@ export const Performance = () => {
                 {[
                     {
                         title: "Total Reviews",
-                        value: "147",
-                        progress: 75,
-                        subtitle: "75% towards next milestone",
+                        value: performance.totalAssigned,
+                        progress: performance.milestoneProgress,
+                        subtitle: `${ performance.milestoneProgress}% towards next milestone`,
                         icon: <BarChartIcon fontSize="small" sx={{ color: "#6b7280" }} />,
                     },
                     {
                         title: "Approval Rate",
-                        value: "78.2%",
-                        progress: 78,
+                        value: performance ? `${performance.approvalRate}%` : '--',
+                        progress: performance.approvalRate,
                         subtitle: "Above team average (72%)",
                         icon: <CheckCircleIcon fontSize="small" sx={{ color: "#6b7280" }} />,
                     },
                     {
                         title: "Avg Review Time",
-                        value: "12.5m",
-                        progress: 60,
+                        value: performance ? `${performance.averageReviewHours}H` : '--',
+                        progress: performance.averageReviewHours,
                         subtitle: "40% faster than average",
                         icon: <AccessTimeIcon fontSize="small" sx={{ color: "#6b7280" }} />,
                     },
                     {
                         title: "Current Ranking",
-                        value: "#3",
-                        progress: 80,
-                        subtitle: "Out of 12 reviewers",
+                        value: performance ? `#${performance.currentRank}` : '--',
+                        progress:performance.currentRank,
+                        subtitle: `Out of ${performance.totalUsers} reviewers`,
                         icon: <EmojiEventsIcon fontSize="small" sx={{ color: "#6b7280" }} />,
                     },
                 ].map((stat, i) => (
@@ -163,13 +192,13 @@ export const Performance = () => {
 
                         <Box sx={{ display: "flex", gap: 3, mb: 2 }}>
                             <Box sx={{ fontWeight: 500, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                <Typography sx={{ color: "green" }}>+32</Typography> <Typography>Incentives</Typography>
+                                <Typography sx={{ color: "green" }}>{performance.approvedCount}</Typography> <Typography>Incentives</Typography>
                             </Box>
                             <Box sx={{ fontWeight: 500, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                <Typography sx={{ color: "red" }}>-8</Typography> <Typography>Penalties</Typography>
+                                <Typography sx={{ color: "red" }}>{performance.revisedCount}</Typography> <Typography>Penalties</Typography>
                             </Box>
                             <Box sx={{ fontWeight: 500, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                <Typography>24</Typography> <Typography> Net Score</Typography>
+                                <Typography>{performance.approvedCount-performance.revisedCount}</Typography> <Typography> Net Score</Typography>
                             </Box>
                         </Box>
 
@@ -178,7 +207,7 @@ export const Performance = () => {
                         </Typography>
                         <LinearProgress
                             variant="determinate"
-                            value={80}
+                            value={performance.approvedCount}
                             sx={{
                                 height: 10,
                                 borderRadius: 5,
@@ -193,7 +222,7 @@ export const Performance = () => {
                         </Typography>
                         <LinearProgress
                             variant="determinate"
-                            value={20}
+                            value={performance.revisedCount}
                             sx={{
                                 height: 10,
                                 borderRadius: 5,
@@ -227,7 +256,7 @@ export const Performance = () => {
                                 }}
                             >
                                 <Typography variant="h6" sx={{ color: "green", fontWeight: 600 }}>
-                                    115
+                                    {performance.approvedCount}
                                 </Typography>
                                 <Typography variant="body2">Approved</Typography>
                             </Box>
@@ -241,7 +270,7 @@ export const Performance = () => {
                                 }}
                             >
                                 <Typography variant="h6" sx={{ color: "red", fontWeight: 600 }}>
-                                    32
+                                    {performance.revisedCount}
                                 </Typography>
                                 <Typography variant="body2">Rejected</Typography>
                             </Box>
@@ -249,13 +278,13 @@ export const Performance = () => {
 
                         <Box sx={{ display: "grid", gap: 1 }}>
                             <Typography variant="body2">
-                                <strong>Questions per day:</strong> ~4.2
+                                <strong>Questions per day:</strong> {performance.QperDay}
                             </Typography>
                             <Typography variant="body2">
-                                <strong>Peak review hour:</strong> 10:00 AM
+                                <strong>Peak review hour:</strong> {performance.peakReviewHour} Hours
                             </Typography>
                             <Typography variant="body2">
-                                <strong>Fastest review:</strong> 3.5 min
+                                <strong>Fastest review:</strong> {performance.fastestReviewMinutes} min
                             </Typography>
                             <Typography variant="body2">
                                 <strong>Most reviewed category:</strong> Crop Management

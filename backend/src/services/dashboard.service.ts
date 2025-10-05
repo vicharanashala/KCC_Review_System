@@ -175,4 +175,11 @@ export default class DashboardService {
 
     return { tasks };
   }
+  async getUserPerformance(currentUserId: string, currentRole: string): Promise<any> {
+
+    const userPerformance=await peerValidation.findByReviewerId(currentUserId)
+    
+    return userPerformance
+  }
+
 }

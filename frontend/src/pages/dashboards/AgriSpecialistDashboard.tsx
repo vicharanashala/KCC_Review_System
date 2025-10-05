@@ -155,7 +155,9 @@ const AgriSpecialistDashboard = () => {
         showSuccess('Question created successfully!');
       }
       handleCloseQuestionModal();
+      await fetchMyPerformance()
       await fetchMyTasks();
+     
     } catch (err) {
       console.error('Error creating question:', err);
       showError(err instanceof Error ? err.message : 'Failed to create question');
@@ -175,12 +177,45 @@ const AgriSpecialistDashboard = () => {
     created_at: string;
     sources: any[];
   }
+  interface Performance {
+    totalAssigned: number;
+    approvedCount: number;
+    revisedCount: number;
+    rejectedCount: number;
+    approvalRate: number; // %
+    activeDays: number;
+    QperDay: number;
+    peakReviewHour: number; // 0–23
+    fastestReviewMinutes: number;
+    averageReviewHours: number;
+    milestoneTarget: number;
+    milestoneProgress: number; // %
+    currentRank: number;
+    totalUsers: number;
+    incentivePoints: number;
+    rankingPercentage: number; // %
+    rankMessage?: string;
+    latestApprovedQuestion?: ReviewQuestion | null;
+    latestRevisedQuestion?: ReviewQuestion | null;
+  }
+  
+  interface ReviewQuestion {
+    status: 'approved' | 'revised' | 'rejected';
+    createdAt: string; // ISO date string
+    questionId: string;
+    questionText: string;
+    answerId: string;
+  }
+  
+  
+  
 
   const [tasks, setTasks] = useState<Task[]>([]);
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [notifications, setNotifications] = useState<any[]>([]);
+  const[performance,setPerformance]= useState<Performance | null>(null);
 
   const fetchMyTasks = async () => {
     try {
@@ -203,6 +238,30 @@ const AgriSpecialistDashboard = () => {
       setLoading(false);
     }
   };
+  const fetchMyPerformance = async () => {
+    try {
+      console.log("fect perfor")
+      const token = localStorage.getItem('access_token');
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/dashboard/getUserPerformance`, {
+        headers: {
+          Accept: 'application/json, text/plain, */*',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!res.ok) throw new Error('Failed to fetch tasks');
+      const data = await res.json();
+     // console.log("the performance====",data)
+      setPerformance(data || []);
+     
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+      setPerformance(null);
+     
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   const fetchNotifications = async () => {
     try {
@@ -222,6 +281,7 @@ const AgriSpecialistDashboard = () => {
   };
 
   useEffect(() => {
+    fetchMyPerformance()
     fetchMyTasks();
     fetchNotifications();
   }, []);
@@ -256,14 +316,14 @@ const AgriSpecialistDashboard = () => {
     },
     {
       title: 'Approval Rate',
-      value: '78.2%',
-      description: 'Of 147 reviews',
+      value: performance ? `${performance.approvalRate}%` : '--',
+  description: performance ? `Of ${performance.totalAssigned} reviews` : 'Loading...',
       icon: <AssessmentIcon />,
-      path: `${getBasePath()}/performance`,
+      path: `${getBasePath()}/performance?data=${encodeURIComponent(JSON.stringify(performance))}`,
     },
     {
       title: 'Performance Score',
-      value: notifications.filter(n => !n.is_read).length,
+      value: performance?.approvedCount ,
       description: `+2 / -0`,
       icon: <NotificationsIcon />,
       path: `${getBasePath()}/notifications`,
@@ -405,7 +465,7 @@ const AgriSpecialistDashboard = () => {
               variant="outlined"
               fullWidth
               startIcon={<TrendingUpIcon fontSize="small" sx={{ color: '#000' }} />}
-              onClick={() => navigate(`${getBasePath()}/performance`)}
+              onClick={() => navigate(`${getBasePath()}/performance?data=${encodeURIComponent(JSON.stringify(performance))}`)}
               sx={{
                 borderRadius: 2,
                 textTransform: 'none',
@@ -623,9 +683,13 @@ const AgriSpecialistDashboard = () => {
                     Approved
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    Sustainable farming practices for wheat
+                  {performance?.latestApprovedQuestion?.questionText
+  ? performance.latestApprovedQuestion.questionText
+  : 'N/A'}
                     <br />
-                    9/17/2025 03:16 AM
+                    {performance?.latestApprovedQuestion?.createdAt
+  ? new Date(performance.latestApprovedQuestion.createdAt).toLocaleString()
+  : 'N/A'}
                   </Typography>
                 </Box>
               </Box>
@@ -637,26 +701,19 @@ const AgriSpecialistDashboard = () => {
                     Rejected
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    Dairy cattle nutrition guidelines
+                  {performance?.latestRevisedQuestion?.questionText
+  ? performance.latestRevisedQuestion.questionText
+  : 'N/A'}
                     <br />
-                    9/16/2025 10:16 PM
+                    {performance?.latestRevisedQuestion?.createdAt
+  ? new Date(performance.latestRevisedQuestion.createdAt).toLocaleString()
+  : 'N/A'}
                   </Typography>
                 </Box>
               </Box>
 
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <CheckCircleOutlineIcon fontSize="small" color="success" sx={{ mr: 1 }} />
-                <Box>
-                  <Typography variant="body2" fontWeight={500}>
-                    Approved
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Greenhouse climate control systems
-                    <br />
-                    9/16/2025 06:16 PM
-                  </Typography>
-                </Box>
-              </Box>
+              
+             
             </Paper>
 
             <Paper
@@ -678,7 +735,7 @@ const AgriSpecialistDashboard = () => {
                 <Box sx={{ height: 6, borderRadius: 5, bgcolor: '#e0e0e0', position: 'relative' }}>
                   <Box
                     sx={{
-                      width: '78.2%',
+                      width: `${performance?.approvalRate ?? 0}%`,
                       height: '100%',
                       bgcolor: '#000',
                       borderRadius: 5,
@@ -689,19 +746,19 @@ const AgriSpecialistDashboard = () => {
                   />
                 </Box>
                 <Typography variant="body2" fontWeight={500} sx={{ mt: 1 }}>
-                  78.2%
+                {performance?.approvalRate}%
                 </Typography>
               </Box>
 
               <Box sx={{ display: 'flex', justifyContent: 'space-around', mt: 2, borderTop: '1px solid #e0e0e0', pt: 2 }}>
                 <Typography variant="body2" color="success.main">
-                  +32 <br />
+                  {performance?.approvedCount} <br />
                   <Typography variant="caption" color="text.secondary">
                     Incentives
                   </Typography>
                 </Typography>
                 <Typography variant="body2" color="error.main">
-                  -8 <br />
+                  {performance?.revisedCount} <br />
                   <Typography variant="caption" color="text.secondary">
                     Penalties
                   </Typography>

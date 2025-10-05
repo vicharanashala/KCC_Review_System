@@ -9,6 +9,7 @@ interface User {
   email: string;
   name: string;
   role: string;
+  incentive_points:number
   // Add other user properties as needed
 }
 
@@ -37,6 +38,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     
     const token = localStorage.getItem('access_token');
     const role = localStorage.getItem('user_role');
+    const incentive_points = parseInt(localStorage.getItem('incentive_points') || '0');
     
     if (!token || !role) {
       setLoading(false);
@@ -49,7 +51,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         id: localStorage.getItem('user_id') || 'temp-id',
         email: localStorage.getItem('user_email') || '',
         name: localStorage.getItem('user_name') || 'User',
-        role: role
+        role: role,
+        incentive_points:incentive_points
+
       };
       
       setUser(userData);
@@ -79,15 +83,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     
     try {
       // 1. Perform login (this will store data in localStorage)
-      await authApi.login({ email, password });
-      
+     let res= await authApi.login({ email, password });
+     // console.log("user data coming in auth====",res)
       // 2. Get user data from localStorage
       const role = localStorage.getItem('user_role') || '';
+      const incentive_points = parseInt(localStorage.getItem('incentive_points') || '0');
       const userData: User = {
         id: localStorage.getItem('user_id') || '',
         email: localStorage.getItem('user_email') || email,
         name: localStorage.getItem('user_name') || '',
-        role: role
+        role: role,
+        incentive_points:incentive_points
+
       };
       
       setUser(userData);
@@ -139,6 +146,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       localStorage.removeItem('user_email');
       localStorage.removeItem('user_name');
       localStorage.removeItem('user_id');
+      localStorage.removeItem('incentive_points')
       
       // Redirect to login page
       navigate('/login', { replace: true });
