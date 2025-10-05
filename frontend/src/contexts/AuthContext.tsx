@@ -83,8 +83,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     
     try {
       // 1. Perform login (this will store data in localStorage)
-     let res= await authApi.login({ email, password });
-     // console.log("user data coming in auth====",res)
+      await authApi.login({ email, password });
       // 2. Get user data from localStorage
       const role = localStorage.getItem('user_role') || '';
       const incentive_points = parseInt(localStorage.getItem('incentive_points') || '0');
