@@ -5,6 +5,7 @@ import { Box, Typography, Tabs, Tab, Paper, Container } from "@mui/material";
 // import type { Question } from "../../types/index";
 import UserManagement from "../../components/admin/UserManagement";
 import WorkflowPerformance from "../../components/admin/WorkflowPerformance";
+import { QuestionList } from "../../components/admin";
 
 // const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -90,7 +91,7 @@ const AdminDashboard = () => {
 
           <Tab label="Analytics" />
           <Tab label="User Management" />
-          {/* <Tab label="Manage Questions" /> */}
+           <Tab label="Manage Questions" /> 
           {/* <Tab label="System Settings" /> */}
         </Tabs>
 
@@ -105,6 +106,9 @@ const AdminDashboard = () => {
 
         <TabPanel value={tabValue} index={1}>
           <UserManagement />
+        </TabPanel>
+        <TabPanel value={tabValue} index={2}>
+          <QuestionList/>
         </TabPanel>
 
         {/* <TabPanel value={tabValue} index={3}>
