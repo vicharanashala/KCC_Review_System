@@ -190,5 +190,18 @@ export default class DashboardService {
     }
     
   }
+  async updateUserState(currentUserId: string,locationDetails:any): Promise<any> {
+
+    const userPerformance=await userRepo.updateUserState(currentUserId,locationDetails)
+  // console.log("userper===",userPerformance)
+    if(userPerformance)
+    {
+      return{state:userPerformance.state}
+    }
+    else{
+      return null
+    }
+    
+  }
 
 }

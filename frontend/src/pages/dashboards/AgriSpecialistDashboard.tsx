@@ -286,7 +286,7 @@ const AgriSpecialistDashboard = () => {
   };
   const fetchMyPerformance = async () => {
     try {
-      console.log("fect perfor")
+      
       const token = localStorage.getItem('access_token');
       const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/dashboard/getUserPerformance`, {
         headers: {

@@ -9,7 +9,10 @@ interface User {
   email: string;
   name: string;
   role: string;
-  incentive_points:number
+  incentive_points:number,
+  state:string,
+  district:string,
+  
   // Add other user properties as needed
 }
 
@@ -52,8 +55,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         email: localStorage.getItem('user_email') || '',
         name: localStorage.getItem('user_name') || 'User',
         role: role,
-        incentive_points:incentive_points
-
+        incentive_points:incentive_points,
+        state: localStorage.getItem('state') || 'state',
+        district: localStorage.getItem('district') || 'district'
       };
       
       setUser(userData);
@@ -93,7 +97,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         email: localStorage.getItem('user_email') || email,
         name: localStorage.getItem('user_name') || '',
         role: role,
-        incentive_points:incentive_points
+        incentive_points:incentive_points,
+        state: localStorage.getItem('state') || 'state',
+        district: localStorage.getItem('district') || 'district'
 
       };
       
@@ -147,6 +153,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       localStorage.removeItem('user_name');
       localStorage.removeItem('user_id');
       localStorage.removeItem('incentive_points')
+      localStorage.removeItem('state')
       
       // Redirect to login page
       navigate('/login', { replace: true });

@@ -67,9 +67,12 @@ login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
           localStorage.setItem('user_email', credentials.email);
           
           if (response.data.user) {
+           // console.log(response.data)
             localStorage.setItem('user_id', response.data.user.user_id || '');
             localStorage.setItem('user_name', response.data.user.name || '');
             localStorage.setItem('incentive_points',response.data.user.incentive_points)
+            localStorage.setItem('state',response.data.user.state)
+            localStorage.setItem('district',response.data.user.district)
           }
         }
         

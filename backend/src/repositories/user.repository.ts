@@ -12,6 +12,20 @@ export default class UserRepository {
   async findByEmail(email: string): Promise<IUser | null> {
     return User.findOne({ email });
   }
+  async updateUserState(id: string,locationDetails:any): Promise<IUser | null> {
+   // console.log("location details===",locationDetails)
+    //return null
+  const  longitude=locationDetails.location.coordinates[0]
+  const  latitude=locationDetails.location.coordinates[1]
+    return await User.findByIdAndUpdate(
+      id,
+      {
+        state:locationDetails.state,
+        location: { type: 'Point', coordinates: [longitude, latitude] }
+      },
+      { new: true }
+    );
+  }
 
   async findById(id: string): Promise<IUser | null> {
     return User.findById(id);
