@@ -85,12 +85,17 @@ const DashboardCard = ({
 
 const AgriSpecialistDashboard = () => {
   const navigate = useNavigate();
-  const { showSuccess, showError,specialization } = useToast();
+  const { showSuccess, showError,specialization,season,sector,states} = useToast();
   const { user } = useAuth();
   const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false);
   const [questionText, setQuestionText] = useState('');
   const [kccAns,setKccAns]=useState('')
   const [specializationvalue,setSpecilizationValue]=useState('')
+  const [seasonvalue,setSeasonValue]=useState('')
+  const [sectorValue,setSectorValue]=useState('')
+  const [statevalue,setStateValue]=useState('')
+  const [cropName,setCropName]=useState('')
+  const [region,setRegion]=useState('')
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFile,setSelectedFile] = useState<File | null>(null)
   const handleOpenQuestionModal = () => {
@@ -103,13 +108,43 @@ const AgriSpecialistDashboard = () => {
     setSelectedFile(null)
     setSpecilizationValue('')
     setKccAns('')
+    setStateValue('')
+    setSeasonValue('')
+    setSectorValue('')
+    setCropName('')
+    setRegion('')
   };
 
   const handleQuestionSubmit = async () => {
+  
      if (!specializationvalue.trim()) {
      showError('Please enter question type');
     return;
      }
+     
+      
+        if (!seasonvalue.trim()) {
+          showError('Please enter season');
+         return;
+          }
+          if (!sectorValue.trim()) {
+            showError('Please enter sector type');
+           return;
+            }
+            if (!statevalue.trim()) {
+              showError('Please enter state');
+             return;
+              }
+              if (!cropName.trim()) {
+                showError('Please enter crop name');
+               return;
+                }
+          if (!region.trim()) {
+            showError('Please enter  region');
+           return;
+            }
+            
+
 
     setIsSubmitting(true);
     try {
@@ -132,6 +167,11 @@ const AgriSpecialistDashboard = () => {
         formData.append("KccAns",kccAns)
       }
       formData.append('query_type',specializationvalue)
+      formData.append('season',seasonvalue)
+      formData.append('state',statevalue)
+      formData.append('sector',sectorValue)
+      formData.append('crop',cropName)
+      formData.append('district',region)
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/questions`, {
         method: 'POST',
         headers: {
@@ -164,6 +204,12 @@ const AgriSpecialistDashboard = () => {
     } finally {
       setIsSubmitting(false);
       setSpecilizationValue('')
+      setKccAns('')
+    setStateValue('')
+    setSeasonValue('')
+    setSectorValue('')
+    setCropName('')
+    setRegion('')
     }
   };
 
@@ -400,6 +446,97 @@ const AgriSpecialistDashboard = () => {
                 ))}
               </Select>
             </FormControl>
+            <FormControl fullWidth margin="normal" sx={{ mb: 2 }}>
+              <InputLabel id="role-label">Season Type *</InputLabel>
+              <Select
+                labelId="role-label"
+                id="role"
+                name="role"
+                value={seasonvalue}
+                label="Season Type *"
+                onChange={(e) => setSeasonValue( e.target.value)}
+                required
+              >
+                <MenuItem value="">
+                  <em>Select Season Type *</em>
+                </MenuItem>
+                {season.map((role) => (
+                  <MenuItem key={role.value} value={role.value}>
+                    {role.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth margin="normal" sx={{ mb: 2 }}>
+              <InputLabel id="role-label">State *</InputLabel>
+              <Select
+                labelId="role-label"
+                id="role"
+                name="role"
+                value={statevalue}
+                label="State *"
+                onChange={(e) => setStateValue( e.target.value)}
+                required
+              >
+                <MenuItem value="">
+                  <em>Select State *</em>
+                </MenuItem>
+                {states.map((role) => (
+                  <MenuItem key={role.value} value={role.value}>
+                    {role.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth margin="normal" sx={{ mb: 2 }}>
+              <InputLabel id="role-label">Sector Type *</InputLabel>
+              <Select
+                labelId="role-label"
+                id="role"
+                name="role"
+                value={sectorValue}
+                label="Sector Type *"
+                onChange={(e) => setSectorValue( e.target.value)}
+                required
+              >
+                <MenuItem value="">
+                  <em>Select Sector Type *</em>
+                </MenuItem>
+                {sector.map((role) => (
+                  <MenuItem key={role.value} value={role.value}>
+                    {role.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <TextField
+                  autoFocus
+                  margin="dense"
+                  id="question"
+                  label="Type Crop Name"
+                  type="text"
+                  fullWidth
+                  variant="outlined"
+                  multiline
+                  rows={1}
+                  value={cropName}
+                  onChange={(e) => setCropName(e.target.value)}
+                  sx={{ mt: 1 }}
+                />
+                <TextField
+                  autoFocus
+                  margin="dense"
+                  id="question"
+                  label="Type Your Region"
+                  type="text"
+                  fullWidth
+                  variant="outlined"
+                  multiline
+                  rows={1}
+                  value={region}
+                  onChange={(e) => setRegion(e.target.value)}
+                  sx={{ mt: 1 }}
+                />
                 <TextField
                   autoFocus
                   margin="dense"
