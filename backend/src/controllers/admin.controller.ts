@@ -124,6 +124,35 @@ export const updateUserDetails: Middleware[] = [
     }
   },
 ];
+export const deleteUserDetails: Middleware[] = [
+  authenticateToken,
+  restrictTo(UserRole.ADMIN),
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const { error } = usersSchema.validate(req.body);
+      if (error) {
+        const errorMessage =
+          error.details && error.details.length > 0
+            ? error.details[0]!.message
+            : "Invalid request body";
+        res.status(400).json({ detail: errorMessage });
+        return;
+      }
+      const { user_id } = req.params;
+   
+      const result = await adminService.deleteUserDetails(
+        user_id as string,
+        
+      );
+      res.json(result);
+    } catch (error: any) {
+      logger.error(error);
+      res
+        .status(error.message.includes("404") ? 404 : 400)
+        .json({ detail: error.message });
+    }
+  },
+];
 
 export const getWorkflowPerformance: Middleware[] = [
   authenticateToken,

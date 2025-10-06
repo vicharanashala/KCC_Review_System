@@ -89,6 +89,18 @@ export default class UserRepository {
     
     
   }
+  async deleteUser(
+    userId: string,
+   
+  ): Promise<IUser | null> {
+    
+      const deleteUser=await  User.findByIdAndDelete(userId);
+     // console.log("the deleteUser====",deleteUser)
+      return deleteUser
+     
+    
+    
+  }
 
   async getAvailableSpecialists(currentUserObj?: any,questionObj?: any,answerData?: any): Promise<IUser[]> {
   //console.log("the questionObject===",questionObj)

@@ -135,4 +135,12 @@ export default class AdminService {
       specialist_performance: specialistPerformance,
     };
   }
+  async deleteUserDetails(
+    userId: string,
+    
+  ): Promise<any> {
+    const user = await userRepo.deleteUser(userId);
+    if (!user) throw new Error("User not found");
+    return { message: `User ${user.name} deleted successfully` };
+  }
 }
