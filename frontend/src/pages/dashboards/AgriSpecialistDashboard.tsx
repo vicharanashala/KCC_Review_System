@@ -316,14 +316,14 @@ const AgriSpecialistDashboard = () => {
     },
     {
       title: 'Approval Rate',
-      value: performance ? `${performance.approvalRate}%` : '--',
-  description: performance ? `Of ${performance.totalAssigned} reviews` : 'Loading...',
+      value: performance ? `${performance.approvalRate||0}%` : '--',
+  description: performance ? `Of ${performance.totalAssigned || 0} reviews` : 'Loading...',
       icon: <AssessmentIcon />,
       path: `${getBasePath()}/performance?data=${encodeURIComponent(JSON.stringify(performance))}`,
     },
     {
       title: 'Performance Score',
-      value: performance?.approvedCount ,
+      value: performance?.approvedCount ||0 ,
       description: `+2 / -0`,
       icon: <NotificationsIcon />,
       path: `${getBasePath()}/notifications`,

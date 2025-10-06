@@ -178,8 +178,17 @@ export default class DashboardService {
   async getUserPerformance(currentUserId: string, currentRole: string): Promise<any> {
 
     const userPerformance=await peerValidation.findByReviewerId(currentUserId)
+   // console.log("userPerformance====",userPerformance)
+    const userCount=await userRepo.getAllUsersList(currentUserId)
+   
+    if(userPerformance)
+    {
+      return userPerformance
+    }
+    else{
+      return userCount[0]
+    }
     
-    return userPerformance
   }
 
 }

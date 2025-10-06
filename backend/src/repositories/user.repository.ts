@@ -190,4 +190,62 @@ const results= this.getAvailableUserList(currentUserObj,questionObj,UserRole.AGR
     
     }
   }
+
+  
+ 
+  async getAllUsersList(currentUserId:string): Promise<any> {
+   
+  const result=  await User.aggregate([
+      // 1. Rank all users by incentive_points (descending)
+      {
+        $setWindowFields: {
+          sortBy: { incentive_points: -1 },
+          output: {
+            rank: { $rank: {} }
+          }
+        }
+      },
+    
+      // 2. Match the specific user
+      {
+        $match: {
+          _id:  mongoose.Types.ObjectId.createFromHexString(currentUserId)
+        }
+      },
+    
+      // 3. Count total users (via a lookup)
+      {
+        $lookup: {
+          from: "users",
+          pipeline: [
+            { $match: {} },
+            { $count: "totalUsers" }
+          ],
+          as: "userCount"
+        }
+      },
+    
+      // 4. Flatten total user count
+      {
+        $addFields: {
+          totalUsers: { $ifNull: [{ $arrayElemAt: ["$userCount.totalUsers", 0] }, 0] }
+        }
+      },
+    
+      // 5. Project final output
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          email: 1,
+          incentive_points: 1,
+          rank: 1,
+          totalUsers: 1
+        }
+      }
+    ]);
+    return result
+   
+  }
+    
 }
