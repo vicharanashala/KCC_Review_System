@@ -183,7 +183,7 @@ const results= this.getAvailableUserList(currentUserObj,questionObj,UserRole.AGR
        {
          $match: { 
           _id: { $nin: totalReviewedUserList },
-         specializationField:questionObj.query_type,
+       //  specializationField:questionObj.query_type,
          role: type,
          is_active: true,
          is_available: true } // filter by username
@@ -193,8 +193,18 @@ const results= this.getAvailableUserList(currentUserObj,questionObj,UserRole.AGR
        },
       
      ]);
-    
-    return nearestUser
+    if(nearestUser)
+    {
+      return nearestUser
+    }
+    else{
+      return User.find({
+        role: type,
+        is_active: true,
+        is_available: true,
+      }).sort({ workload_count: 1 });
+    }
+   
    }
    else{
      let userList= await User.find({
