@@ -243,6 +243,7 @@ const AgriSpecialistDashboard = () => {
     rankMessage?: string;
     latestApprovedQuestion?: ReviewQuestion | null;
     latestRevisedQuestion?: ReviewQuestion | null;
+    penality:number
   }
   
   interface ReviewQuestion {
@@ -351,6 +352,7 @@ const AgriSpecialistDashboard = () => {
   const getBasePath = () => {
     return user?.role === 'moderator' ? '/moderator' : '/agri-specialist';
   };
+  const performanceScore = (performance?.incentivePoints ?? 0) - (performance?.penality ?? 0);
 
   const quickActions = [
     {
@@ -369,7 +371,7 @@ const AgriSpecialistDashboard = () => {
     },
     {
       title: 'Performance Score',
-      value: performance?.approvedCount ||0 ,
+      value:performanceScore,
       description: `+2 / -0`,
       icon: <NotificationsIcon />,
       path: `${getBasePath()}/notifications`,
@@ -890,13 +892,13 @@ const AgriSpecialistDashboard = () => {
 
               <Box sx={{ display: 'flex', justifyContent: 'space-around', mt: 2, borderTop: '1px solid #e0e0e0', pt: 2 }}>
                 <Typography variant="body2" color="success.main">
-                  {performance?.approvedCount} <br />
+                  {performance?.incentivePoints||0} <br />
                   <Typography variant="caption" color="text.secondary">
                     Incentives
                   </Typography>
                 </Typography>
                 <Typography variant="body2" color="error.main">
-                  {performance?.revisedCount} <br />
+                  {performance?.penality||0} <br />
                   <Typography variant="caption" color="text.secondary">
                     Penalties
                   </Typography>

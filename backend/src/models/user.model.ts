@@ -16,6 +16,7 @@ const userSchema = new Schema<IUser>({
   is_available: { type: Boolean, default: true },
   workload_count: { type: Number, default: 0 },
   incentive_points:{type:Number,default:0},
+  penality:{type:Number,default:0},
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now },
  specializationField:{type:String,required:true},

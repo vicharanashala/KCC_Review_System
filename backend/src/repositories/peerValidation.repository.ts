@@ -52,7 +52,7 @@ export default class PeerValidationRepository {
       // Filter by reviewer
       { $match: { reviewer_id: new mongoose.Types.ObjectId(reviewer_id) } },
   
-      // Join with Answers (to get assignment time)
+      // Join with Answers
       {
         $lookup: {
           from: 'answers',
@@ -86,7 +86,7 @@ export default class PeerValidationRepository {
         }
       },
   
-      // Calculate helper fields
+      // Helper fields
       {
         $addFields: {
           reviewDiffSeconds: {
@@ -130,7 +130,7 @@ export default class PeerValidationRepository {
         }
       },
   
-      // Compute latest approved and revised questions
+      // Compute latest approved and revised
       {
         $addFields: {
           latestApprovedQuestion: {
@@ -242,7 +242,7 @@ export default class PeerValidationRepository {
         }
       },
   
-      // Ranking info
+      // Ranking info + include penality field
       {
         $lookup: {
           from: 'users',
@@ -257,6 +257,7 @@ export default class PeerValidationRepository {
               $project: {
                 rank: 1,
                 incentive_points: 1,
+                penality: 1, // ✅ include penality field
                 totalUsers: '$userCount.totalUsers'
               }
             }
@@ -331,6 +332,7 @@ export default class PeerValidationRepository {
           currentRank: '$rankInfo.rank',
           totalUsers: '$rankInfo.totalUsers',
           incentivePoints: { $round: ['$rankInfo.incentive_points', 2] },
+          penality: '$rankInfo.penality', // ✅ added to final output
           rankingPercentage: 1,
           latestApprovedQuestion: 1,
           latestRevisedQuestion: 1
@@ -348,6 +350,7 @@ export default class PeerValidationRepository {
   
     return null;
   }
+  
   
  
 }
