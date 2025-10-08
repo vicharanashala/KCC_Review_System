@@ -32,9 +32,6 @@ interface Performance {
     latestRevisedQuestion: LatestQuestion | null;
   }
   
-  interface PerformanceProps {
-    performance: Performance;
-  }
 export const Performance = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
