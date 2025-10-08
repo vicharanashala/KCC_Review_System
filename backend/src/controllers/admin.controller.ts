@@ -12,6 +12,7 @@ const usersSchema = Joi.object({
   skip: Joi.number().integer().default(0).optional(),
   limit: Joi.number().integer().default(100).optional(),
   search: Joi.string().allow("").optional(),
+  questionsSearch: Joi.string().allow("").optional(),
   role: Joi.string()
     .valid("agri_specialist", "moderator", "admin", "all")
     .optional(),
@@ -124,6 +125,35 @@ export const updateUserDetails: Middleware[] = [
     }
   },
 ];
+export const deleteUserDetails: Middleware[] = [
+  authenticateToken,
+  restrictTo(UserRole.ADMIN),
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const { error } = usersSchema.validate(req.body);
+      if (error) {
+        const errorMessage =
+          error.details && error.details.length > 0
+            ? error.details[0]!.message
+            : "Invalid request body";
+        res.status(400).json({ detail: errorMessage });
+        return;
+      }
+      const { user_id } = req.params;
+   
+      const result = await adminService.deleteUserDetails(
+        user_id as string,
+        
+      );
+      res.json(result);
+    } catch (error: any) {
+      logger.error(error);
+      res
+        .status(error.message.includes("404") ? 404 : 400)
+        .json({ detail: error.message });
+    }
+  },
+];
 
 export const getWorkflowPerformance: Middleware[] = [
   authenticateToken,
@@ -144,6 +174,36 @@ export const getWorkflowPerformance: Middleware[] = [
         parseInt(days as string)
       );
       res.json(performance);
+    } catch (error: any) {
+      logger.error(error);
+      res.status(400).json({ detail: error.message });
+    }
+  },
+];
+export const getAlQuestions : Middleware[] = [
+  authenticateToken,
+  restrictTo(UserRole.ADMIN),
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+     
+      const { error } = usersSchema.validate(req.query);
+      if (error) {
+        // Safely handle error.details
+        const errorMessage =
+          error.details && error.details.length > 0
+            ? error.details[0]!.message
+            : "Invalid request parameters";
+        res.status(400).json({ detail: errorMessage });
+        return;
+      }
+      const { skip = 0, limit = 100, questionsSearch="", search = "" } = req.query;
+      const result = await adminService.getAllQuestions(
+        parseInt(skip as string),
+        parseInt(limit as string),
+        search as string,
+        questionsSearch as string
+      );
+      res.json(result);
     } catch (error: any) {
       logger.error(error);
       res.status(400).json({ detail: error.message });

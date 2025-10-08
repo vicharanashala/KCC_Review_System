@@ -103,29 +103,31 @@ export const Performance = () => {
                 {[
                     {
                         title: "Total Reviews",
-                        value: performance.totalAssigned,
-                        progress: performance.milestoneProgress,
-                        subtitle: `${ performance.milestoneProgress}% towards next milestone`,
+                        value: performance.totalAssigned ||0,
+                        progress: performance.milestoneProgress||0,
+                        subtitle: `${ performance.milestoneProgress||0}% towards next milestone`,
                         icon: <BarChartIcon fontSize="small" sx={{ color: "#6b7280" }} />,
                     },
                     {
                         title: "Approval Rate",
-                        value: performance ? `${performance.approvalRate}%` : '--',
-                        progress: performance.approvalRate,
+                        value: performance ? `${performance.approvalRate||0}%` : '--',
+                        progress: performance.approvalRate||0,
                         subtitle: "Above team average (72%)",
                         icon: <CheckCircleIcon fontSize="small" sx={{ color: "#6b7280" }} />,
                     },
                     {
                         title: "Avg Review Time",
-                        value: performance ? `${performance.averageReviewHours}H` : '--',
-                        progress: performance.averageReviewHours,
+                        value: performance ? `${performance.averageReviewHours||0}H` : '--',
+                        progress: performance.averageReviewHours||0,
                         subtitle: "40% faster than average",
                         icon: <AccessTimeIcon fontSize="small" sx={{ color: "#6b7280" }} />,
                     },
                     {
                         title: "Current Ranking",
-                        value: performance ? `#${performance.currentRank}` : '--',
-                        progress:performance.currentRank,
+                        value: performance ? `#${performance.currentRank||performance.
+                            rank
+                            }` : '--',
+                        progress:performance.currentRank||0,
                         subtitle: `Out of ${performance.totalUsers} reviewers`,
                         icon: <EmojiEventsIcon fontSize="small" sx={{ color: "#6b7280" }} />,
                     },
@@ -189,13 +191,13 @@ export const Performance = () => {
 
                         <Box sx={{ display: "flex", gap: 3, mb: 2 }}>
                             <Box sx={{ fontWeight: 500, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                <Typography sx={{ color: "green" }}>{performance.approvedCount}</Typography> <Typography>Incentives</Typography>
+                                <Typography sx={{ color: "green" }}>{performance.approvedCount || 0}</Typography> <Typography>Incentives</Typography>
                             </Box>
                             <Box sx={{ fontWeight: 500, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                <Typography sx={{ color: "red" }}>{performance.revisedCount}</Typography> <Typography>Penalties</Typography>
+                                <Typography sx={{ color: "red" }}>{performance.revisedCount || 0}</Typography> <Typography>Penalties</Typography>
                             </Box>
                             <Box sx={{ fontWeight: 500, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                <Typography>{performance.approvedCount-performance.revisedCount}</Typography> <Typography> Net Score</Typography>
+                                <Typography>{performance.approvedCount-performance.revisedCount|| 0}</Typography> <Typography> Net Score</Typography>
                             </Box>
                         </Box>
 
@@ -204,7 +206,7 @@ export const Performance = () => {
                         </Typography>
                         <LinearProgress
                             variant="determinate"
-                            value={performance.approvedCount}
+                            value={performance.approvedCount|| 0}
                             sx={{
                                 height: 10,
                                 borderRadius: 5,
@@ -219,7 +221,7 @@ export const Performance = () => {
                         </Typography>
                         <LinearProgress
                             variant="determinate"
-                            value={performance.revisedCount}
+                            value={performance.revisedCount|| 0}
                             sx={{
                                 height: 10,
                                 borderRadius: 5,
@@ -253,7 +255,7 @@ export const Performance = () => {
                                 }}
                             >
                                 <Typography variant="h6" sx={{ color: "green", fontWeight: 600 }}>
-                                    {performance.approvedCount}
+                                    {performance.approvedCount|| 0}
                                 </Typography>
                                 <Typography variant="body2">Approved</Typography>
                             </Box>
@@ -267,7 +269,7 @@ export const Performance = () => {
                                 }}
                             >
                                 <Typography variant="h6" sx={{ color: "red", fontWeight: 600 }}>
-                                    {performance.revisedCount}
+                                    {performance.revisedCount|| 0}
                                 </Typography>
                                 <Typography variant="body2">Rejected</Typography>
                             </Box>
@@ -275,13 +277,13 @@ export const Performance = () => {
 
                         <Box sx={{ display: "grid", gap: 1 }}>
                             <Typography variant="body2">
-                                <strong>Questions per day:</strong> {performance.QperDay}
+                                <strong>Questions per day:</strong> {performance.QperDay||'N/A'}
                             </Typography>
                             <Typography variant="body2">
-                                <strong>Peak review hour:</strong> {performance.peakReviewHour} Hours
+                                <strong>Peak review hour:</strong> {performance.peakReviewHour||'N/A'} Hours
                             </Typography>
                             <Typography variant="body2">
-                                <strong>Fastest review:</strong> {performance.fastestReviewMinutes} min
+                                <strong>Fastest review:</strong> {performance.fastestReviewMinutes||'N/A'} min
                             </Typography>
                             <Typography variant="body2">
                                 <strong>Most reviewed category:</strong> Crop Management

@@ -12,6 +12,20 @@ export default class UserRepository {
   async findByEmail(email: string): Promise<IUser | null> {
     return User.findOne({ email });
   }
+  async updateUserState(id: string,locationDetails:any): Promise<IUser | null> {
+   // console.log("location details===",locationDetails)
+    //return null
+  const  longitude=locationDetails.location.coordinates[0]
+  const  latitude=locationDetails.location.coordinates[1]
+    return await User.findByIdAndUpdate(
+      id,
+      {
+        state:locationDetails.state,
+        location: { type: 'Point', coordinates: [longitude, latitude] }
+      },
+      { new: true }
+    );
+  }
 
   async findById(id: string): Promise<IUser | null> {
     return User.findById(id);
@@ -89,6 +103,18 @@ export default class UserRepository {
     
     
   }
+  async deleteUser(
+    userId: string,
+   
+  ): Promise<IUser | null> {
+    
+      const deleteUser=await  User.findByIdAndDelete(userId);
+     // console.log("the deleteUser====",deleteUser)
+      return deleteUser
+     
+    
+    
+  }
 
   async getAvailableSpecialists(currentUserObj?: any,questionObj?: any,answerData?: any): Promise<IUser[]> {
   //console.log("the questionObject===",questionObj)
@@ -157,7 +183,7 @@ const results= this.getAvailableUserList(currentUserObj,questionObj,UserRole.AGR
        {
          $match: { 
           _id: { $nin: totalReviewedUserList },
-         specializationField:questionObj.query_type,
+       //  specializationField:questionObj.query_type,
          role: type,
          is_active: true,
          is_available: true } // filter by username
@@ -167,8 +193,18 @@ const results= this.getAvailableUserList(currentUserObj,questionObj,UserRole.AGR
        },
       
      ]);
-    
-    return nearestUser
+    if(nearestUser)
+    {
+      return nearestUser
+    }
+    else{
+      return User.find({
+        role: type,
+        is_active: true,
+        is_available: true,
+      }).sort({ workload_count: 1 });
+    }
+   
    }
    else{
      let userList= await User.find({
@@ -190,4 +226,62 @@ const results= this.getAvailableUserList(currentUserObj,questionObj,UserRole.AGR
     
     }
   }
+
+  
+ 
+  async getAllUsersList(currentUserId:string): Promise<any> {
+   
+  const result=  await User.aggregate([
+      // 1. Rank all users by incentive_points (descending)
+      {
+        $setWindowFields: {
+          sortBy: { incentive_points: -1 },
+          output: {
+            rank: { $rank: {} }
+          }
+        }
+      },
+    
+      // 2. Match the specific user
+      {
+        $match: {
+          _id:  mongoose.Types.ObjectId.createFromHexString(currentUserId)
+        }
+      },
+    
+      // 3. Count total users (via a lookup)
+      {
+        $lookup: {
+          from: "users",
+          pipeline: [
+            { $match: {} },
+            { $count: "totalUsers" }
+          ],
+          as: "userCount"
+        }
+      },
+    
+      // 4. Flatten total user count
+      {
+        $addFields: {
+          totalUsers: { $ifNull: [{ $arrayElemAt: ["$userCount.totalUsers", 0] }, 0] }
+        }
+      },
+    
+      // 5. Project final output
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          email: 1,
+          incentive_points: 1,
+          rank: 1,
+          totalUsers: 1
+        }
+      }
+    ]);
+    return result
+   
+  }
+    
 }

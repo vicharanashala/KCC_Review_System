@@ -13,15 +13,21 @@ export interface Question {
   crop: string;
   state: string;
   district: string;
-  originalQuery: string;
+  original_query_text: string;
   season: string;
   priority: 'low' | 'medium' | 'high';
   status: 'pending_assignment' | 'in_review' | 'approved' | 'rejected';
-  createdAt: string;
+  created_at: string;
   updatedAt: string;
   submittedBy?: string;
   assignedTo?: string[];
   reviews?: Review[];
+  question_id:string;
+  user:{
+    email:string,
+    name:string,
+    role:string
+  }
 }
 
 export interface Review {

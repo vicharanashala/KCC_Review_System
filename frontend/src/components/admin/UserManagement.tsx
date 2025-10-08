@@ -177,6 +177,34 @@ const UserManagement: React.FC = () => {
 
     setUsersList(newUsers);
   };
+  const handleDelete = async (userId: string) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this user?");
+    if (!confirmDelete) return;
+  
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("access_token");
+      const res = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      if (!res.ok) throw new Error("Failed to delete user");
+  
+      // Remove user from local state
+      setUsersList((prev) => prev.filter((user) => user._id !== userId));
+  
+      alert("User deleted successfully");
+      setLoading(false);
+    } catch (error) {
+      console.error(error);
+      alert("Error deleting user");
+      setLoading(false);
+    }
+  };
+  
 
   if (isLoading) return <CircularProgress />;
   if (isError)
@@ -257,8 +285,9 @@ const UserManagement: React.FC = () => {
                 <strong>Created At</strong>
               </TableCell>
               <TableCell>
-                Edit/save
+                Edit/Delete
                 </TableCell>
+                
             </TableRow>
           </TableHead>
           <TableBody>
@@ -338,27 +367,44 @@ const UserManagement: React.FC = () => {
                   {new Date(user.created_at).toLocaleDateString()}
                 </TableCell>
                 <TableCell>
-                <Button
-                onClick={()=>toggleEdit(index)}
-              disabled={loading}
-                 >
-        {user.isEditing ?"Save":"Edit"}
+  <Box display="flex" gap={1}>
+    {/* Edit / Save button */}
+    <Button
+      variant="outlined"
+      size="small"
+      onClick={() => toggleEdit(index)}
+      disabled={loading}
+    >
+      {user.isEditing ? "Save" : "Edit"}
+    </Button>
+
+    {/* Cancel button only when editing */}
+    {user.isEditing && (
+      <Button
+        variant="outlined"
+        size="small"
+        color="secondary"
+        onClick={() => handleCancel(index)}
+      >
+        Cancel
       </Button>
+    )}
+
+    {/* Delete button */}
+    <Button
+      variant="outlined"
+      size="small"
+      color="error"
+      onClick={() => handleDelete(user._id)}
+      disabled={loading}
+    >
+      Delete
+    </Button>
+  </Box>
+</TableCell>
+
       
-      </TableCell>
-      <TableCell>
-      {user.isEditing && (
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      color="secondary"
-                      onClick={() => handleCancel(index)}
-                      sx={{ ml: 1 }}
-                    >
-                      Cancel
-                    </Button>
-)}
-      </TableCell>
+      
               </TableRow>
             ))}
           </TableBody>

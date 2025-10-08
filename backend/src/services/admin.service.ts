@@ -135,4 +135,25 @@ export default class AdminService {
       specialist_performance: specialistPerformance,
     };
   }
+  async deleteUserDetails(
+    userId: string,
+    
+  ): Promise<any> {
+    const user = await userRepo.deleteUser(userId);
+    if (!user) throw new Error("User not found");
+    return { message: `User ${user.name} deleted successfully` };
+  }
+  async getAllQuestions(
+    skip: number = 0,
+    limit: number = 100,
+    search?: string,
+    questionsSearch?:string
+  ): Promise<{ questions: any[]; total: number }> {
+   
+    // Your repo function already returns { data, total }
+    const { data, total } = await questionRepo.findAll(skip, limit, questionsSearch, search);
+  
+    return { questions: data, total };
+  }
+
 }

@@ -30,7 +30,9 @@ export default class AuthService {
         is_active: user?.is_active,
         is_available: user?.is_available,
         workload_count: user?.workload_count,
-        incentive_points:user?.incentive_points
+        incentive_points:user?.incentive_points,
+        state:user?.state,
+        district:user?.district
     }
     if (!user || !user.comparePassword(loginData.password)) {
       throw new Error('Incorrect email or password');
