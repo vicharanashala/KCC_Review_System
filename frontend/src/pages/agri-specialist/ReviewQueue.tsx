@@ -803,7 +803,10 @@ export const ReviewQueue = () => {
                                 <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
                                     Answer Preview:
                                 </Typography>
-                                <Typography variant="body1" sx={{ lineHeight: 1.6 }}>
+                                <Typography variant="body1" sx={{ lineHeight: 1.6,maxHeight: 150,            // set height limit
+                                overflowY: "auto",         // enable vertical scroll
+                                 display: "block",
+                                scrollbarWidth: "thin",}}>
                                     {task.answer_preview}
                                 </Typography>
                             </Box>

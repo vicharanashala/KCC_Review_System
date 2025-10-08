@@ -71,7 +71,7 @@ export default class DashboardService {
         tasks.push({
           type: taskType,
           question_id: question.question_id,
-          question_text: question.original_query_text.length > 100 ? question.original_query_text.slice(0, 100) + '...' : question.original_query_text,
+          question_text: question.original_query_text,
           status: question.status,
           valid_count: question.valid_count,
           created_at: question.created_at,
@@ -91,13 +91,9 @@ export default class DashboardService {
       answer_id: peerAnswer.answer_id,
       question_id: q.question_id,
       question_text:
-        q.original_query_text.length > 100
-          ? q.original_query_text.slice(0, 100) + "..."
-          : q.original_query_text,
+        q.original_query_text ,
       answer_preview:
-        peerAnswer.answer_text.length > 200
-          ? peerAnswer.answer_text.slice(0, 200) + "..."
-          : peerAnswer.answer_text,
+        peerAnswer.answer_text,
       consecutive_approvals: q.consecutive_peer_approvals,
       created_at: notification.created_at,
        sources:peerAnswer.sources,
@@ -118,13 +114,9 @@ export default class DashboardService {
               answer_id: answer.answer_id,
               question_id: q.question_id,
               question_text:
-                q.original_query_text.length > 100
-                  ? q.original_query_text.slice(0, 100) + "..."
-                  : q.original_query_text,
+                q.original_query_text,
               answer_preview:
-                answer.answer_text.length > 200
-                  ? answer.answer_text.slice(0, 200) + "..."
-                  : answer.answer_text,
+                answer.answer_text,
               current_valid_count: q.valid_count,
               created_at: notification.created_at,
             });
@@ -150,9 +142,7 @@ export default class DashboardService {
           type: "Reject",
           question_id: questionObj.question_id,
           question_text:
-            questionObj.original_query_text?.length > 100
-              ? questionObj.original_query_text.slice(0, 100) + '...'
-              : questionObj.original_query_text,
+            questionObj.original_query_text ,
           status: "Rejected",
           valid_count: 0,
           created_at: questionObj.created_at,
