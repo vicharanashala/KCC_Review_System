@@ -426,6 +426,27 @@ const AgriSpecialistDashboard = () => {
               </DialogTitle>
               <DialogContent dividers>
               <FormControl fullWidth margin="normal" sx={{ mb: 2 }}>
+              <InputLabel id="role-label">Sector Type *</InputLabel>
+              <Select
+                labelId="role-label"
+                id="role"
+                name="role"
+                value={sectorValue}
+                label="Sector Type *"
+                onChange={(e) => setSectorValue( e.target.value)}
+                required
+              >
+                <MenuItem value="">
+                  <em>Select Sector Type *</em>
+                </MenuItem>
+                {sector.map((role) => (
+                  <MenuItem key={role.value} value={role.value}>
+                    {role.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+              <FormControl fullWidth margin="normal" sx={{ mb: 2 }}>
               <InputLabel id="role-label">Question Type *</InputLabel>
               <Select
                 labelId="role-label"
@@ -488,27 +509,7 @@ const AgriSpecialistDashboard = () => {
                 ))}
               </Select>
             </FormControl>
-            <FormControl fullWidth margin="normal" sx={{ mb: 2 }}>
-              <InputLabel id="role-label">Sector Type *</InputLabel>
-              <Select
-                labelId="role-label"
-                id="role"
-                name="role"
-                value={sectorValue}
-                label="Sector Type *"
-                onChange={(e) => setSectorValue( e.target.value)}
-                required
-              >
-                <MenuItem value="">
-                  <em>Select Sector Type *</em>
-                </MenuItem>
-                {sector.map((role) => (
-                  <MenuItem key={role.value} value={role.value}>
-                    {role.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            
             <TextField
                   autoFocus
                   margin="dense"

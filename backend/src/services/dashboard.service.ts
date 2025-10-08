@@ -75,7 +75,13 @@ export default class DashboardService {
           status: question.status,
           valid_count: question.valid_count,
           created_at: question.created_at,
-          KccAns:question.KccAns
+          KccAns:question.KccAns,
+          question_type:question.query_type||'N/A',
+        season:question.season||'N/A',
+        state:question.state||'N/A',
+        sector:question.sector||'N/A',
+        crop:question.crop||'N/A',
+        district:question.district||'N/A'
         });
       }
 
@@ -97,7 +103,14 @@ export default class DashboardService {
       consecutive_approvals: q.consecutive_peer_approvals,
       created_at: notification.created_at,
        sources:peerAnswer.sources,
-       KccAns:q.KccAns
+       KccAns:q.KccAns,
+       question_type:q.query_type||'N/A',
+        season:q.season||'N/A',
+        state:q.state||'N/A',
+        sector:q.sector||'N/A',
+        crop:q.crop||'N/A',
+        district:q.district||'N/A',
+             
     });
   }
 }
@@ -119,6 +132,12 @@ export default class DashboardService {
                 answer.answer_text,
               current_valid_count: q.valid_count,
               created_at: notification.created_at,
+              question_type:q.query_type||'N/A',
+              season:q.season||'N/A',
+              state:q.state||'N/A',
+              sector:q.sector||'N/A',
+              crop:q.crop||'N/A',
+              district:q.district||'N/A',
             });
           }
         }
@@ -151,7 +170,13 @@ export default class DashboardService {
           RejectedUser: answer.specialist_id,
           questionObjId:answer.question_id,
           KccAns:questionObj.KccAns,
-          comments:comments
+          comments:comments,
+          question_type:questionObj.query_type||'N/A',
+        season:questionObj.season||'N/A',
+        state:questionObj.state||'N/A',
+        sector:questionObj.sector||'N/A',
+        crop:questionObj.crop||'N/A',
+        district:questionObj.district||'N/A',
         });
       }
          
