@@ -17,7 +17,8 @@ import {
   Select,
   MenuItem,
   TextField,
-  Button
+  Button,
+  SelectChangeEvent
 } from "@mui/material";
 import { useToast } from "../../contexts/ToastContext";
 
@@ -161,18 +162,14 @@ const UserManagement: React.FC = () => {
     newUsers[index].isEditing = false;
     setUsersList(newUsers);
   };
-  const handleInputChange = (
+
+  const handleSelectChange = (
     index: number,
-    e: React.ChangeEvent<HTMLInputElement>
+    e: SelectChangeEvent<string>
   ) => {
     const newUsers = [...usersList];
     const key = e.target.name as keyof IUser;
-    let value: any = e.target.value;
-    if (key === "workload_count" || key === "incentive_points") {
-      value = Number(value);
-    } else if (key === "is_active") {
-      value = value === "true"; // convert string to boolean
-    }
+    const value = e.target.value;
     newUsers[index] = { 
       ...newUsers[index], 
       [key]: value 
@@ -311,7 +308,7 @@ const UserManagement: React.FC = () => {
                   name="role"
                   value={user?.role}
                   label="Role *"
-                  onChange={(e) => handleInputChange(index, e) }
+                  onChange={(e) => handleSelectChange(index, e) }
                   required
                 >
                   <MenuItem value="">
@@ -338,7 +335,7 @@ const UserManagement: React.FC = () => {
                     specializationField
                     ||''}
                   label="specializationField *"
-                  onChange={(e) => handleInputChange(index, e) }
+                  onChange={(e) => handleSelectChange(index, e) }
                   required
                 >
                   <MenuItem value="">

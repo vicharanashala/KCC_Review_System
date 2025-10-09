@@ -371,7 +371,7 @@ const AgriSpecialistDashboard = () => {
     },
     {
       title: 'Performance Score',
-      value:performanceScore,
+      value: performance?.approvedCount ?? 0,
       description: `+2 / -0`,
       icon: <NotificationsIcon />,
       path: `${getBasePath()}/notifications`,
@@ -574,8 +574,15 @@ const AgriSpecialistDashboard = () => {
               </DialogContent>
               
               <DialogContent>
-                <label >Add Your CSV here</label> <br/>
-                <input type="file" accept='.csv' onChange={(e) => setSelectedFile(e.target.files ? e.target.files[0] : null)}/>
+                <label htmlFor="csv-upload">Add Your CSV here</label> <br/>
+                <input
+                  id="csv-upload"
+                  type="file"
+                  accept=".csv"
+                  title="Upload CSV file"
+                  placeholder="Choose a CSV file"
+                  onChange={(e) => setSelectedFile(e.target.files ? e.target.files[0] : null)}
+                />
               </DialogContent>
               <DialogActions sx={{ p: 2 }}>
                 <Button 
