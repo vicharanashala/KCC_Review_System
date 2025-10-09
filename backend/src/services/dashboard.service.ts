@@ -71,11 +71,17 @@ export default class DashboardService {
         tasks.push({
           type: taskType,
           question_id: question.question_id,
-          question_text: question.original_query_text.length > 100 ? question.original_query_text.slice(0, 100) + '...' : question.original_query_text,
+          question_text: question.original_query_text,
           status: question.status,
           valid_count: question.valid_count,
           created_at: question.created_at,
-          KccAns:question.KccAns
+          KccAns:question.KccAns,
+          question_type:question.query_type||'N/A',
+        season:question.season||'N/A',
+        state:question.state||'N/A',
+        sector:question.sector||'N/A',
+        crop:question.crop||'N/A',
+        district:question.district||'N/A'
         });
       }
 
@@ -91,17 +97,20 @@ export default class DashboardService {
       answer_id: peerAnswer.answer_id,
       question_id: q.question_id,
       question_text:
-        q.original_query_text.length > 100
-          ? q.original_query_text.slice(0, 100) + "..."
-          : q.original_query_text,
+        q.original_query_text ,
       answer_preview:
-        peerAnswer.answer_text.length > 200
-          ? peerAnswer.answer_text.slice(0, 200) + "..."
-          : peerAnswer.answer_text,
+        peerAnswer.answer_text,
       consecutive_approvals: q.consecutive_peer_approvals,
       created_at: notification.created_at,
        sources:peerAnswer.sources,
-       KccAns:q.KccAns
+       KccAns:q.KccAns,
+       question_type:q.query_type||'N/A',
+        season:q.season||'N/A',
+        state:q.state||'N/A',
+        sector:q.sector||'N/A',
+        crop:q.crop||'N/A',
+        district:q.district||'N/A',
+             
     });
   }
 }
@@ -118,15 +127,17 @@ export default class DashboardService {
               answer_id: answer.answer_id,
               question_id: q.question_id,
               question_text:
-                q.original_query_text.length > 100
-                  ? q.original_query_text.slice(0, 100) + "..."
-                  : q.original_query_text,
+                q.original_query_text,
               answer_preview:
-                answer.answer_text.length > 200
-                  ? answer.answer_text.slice(0, 200) + "..."
-                  : answer.answer_text,
+                answer.answer_text,
               current_valid_count: q.valid_count,
               created_at: notification.created_at,
+              question_type:q.query_type||'N/A',
+              season:q.season||'N/A',
+              state:q.state||'N/A',
+              sector:q.sector||'N/A',
+              crop:q.crop||'N/A',
+              district:q.district||'N/A',
             });
           }
         }
@@ -150,9 +161,7 @@ export default class DashboardService {
           type: "Reject",
           question_id: questionObj.question_id,
           question_text:
-            questionObj.original_query_text?.length > 100
-              ? questionObj.original_query_text.slice(0, 100) + '...'
-              : questionObj.original_query_text,
+            questionObj.original_query_text ,
           status: "Rejected",
           valid_count: 0,
           created_at: questionObj.created_at,
@@ -161,7 +170,13 @@ export default class DashboardService {
           RejectedUser: answer.specialist_id,
           questionObjId:answer.question_id,
           KccAns:questionObj.KccAns,
-          comments:comments
+          comments:comments,
+          question_type:questionObj.query_type||'N/A',
+        season:questionObj.season||'N/A',
+        state:questionObj.state||'N/A',
+        sector:questionObj.sector||'N/A',
+        crop:questionObj.crop||'N/A',
+        district:questionObj.district||'N/A',
         });
       }
          

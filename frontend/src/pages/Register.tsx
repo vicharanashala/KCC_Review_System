@@ -89,6 +89,11 @@ const Register: React.FC = () => {
       showError('Passwords do not match');
       return;
     }
+    const validEmail = /^[a-zA-Z0-9._%+-]+@annam\.ai$/;
+  if (!validEmail.test(formData.email)) {
+    showError("Only @annam.ai email addresses are allowed");
+    return;
+  }
 
     setLoading(true);
     

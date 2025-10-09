@@ -191,13 +191,13 @@ export const Performance = () => {
 
                         <Box sx={{ display: "flex", gap: 3, mb: 2 }}>
                             <Box sx={{ fontWeight: 500, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                <Typography sx={{ color: "green" }}>{performance.approvedCount || 0}</Typography> <Typography>Incentives</Typography>
+                                <Typography sx={{ color: "green" }}>{performance.incentivePoints || 0}</Typography> <Typography>Incentives</Typography>
                             </Box>
                             <Box sx={{ fontWeight: 500, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                <Typography sx={{ color: "red" }}>{performance.revisedCount || 0}</Typography> <Typography>Penalties</Typography>
+                                <Typography sx={{ color: "red" }}>{performance.penality || 0}</Typography> <Typography>Penalties</Typography>
                             </Box>
                             <Box sx={{ fontWeight: 500, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                <Typography>{performance.approvedCount-performance.revisedCount|| 0}</Typography> <Typography> Net Score</Typography>
+                                <Typography>{performance.incentivePoints-performance.penality|| 0}</Typography> <Typography> Net Score</Typography>
                             </Box>
                         </Box>
 
@@ -206,7 +206,7 @@ export const Performance = () => {
                         </Typography>
                         <LinearProgress
                             variant="determinate"
-                            value={performance.approvedCount|| 0}
+                            value={performance.incentivePoints|| 0}
                             sx={{
                                 height: 10,
                                 borderRadius: 5,
@@ -221,7 +221,7 @@ export const Performance = () => {
                         </Typography>
                         <LinearProgress
                             variant="determinate"
-                            value={performance.revisedCount|| 0}
+                            value={performance.penality|| 0}
                             sx={{
                                 height: 10,
                                 borderRadius: 5,
