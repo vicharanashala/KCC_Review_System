@@ -249,8 +249,64 @@ export const ReviewQueue = () => {
             setIsLoadingVersionHistory(false);
         }
     };
+    const renderField = (label: string, value: string) => (
+        <Box
+      key={label}
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: 2,
+        mb: 2,
+      }}
+    >
+      <Typography
+        variant="subtitle1"
+        fontWeight="500"
+        sx={{ width: "30%", color: "#333" }}
+      >
+        {label}
+      </Typography>
 
-
+      <TextField
+        fullWidth
+        multiline
+        rows={1}
+        size="small"
+        variant="outlined"
+        value={value}
+        sx={{
+          "& .MuiOutlinedInput-root": {
+            borderRadius: "8px",
+            "& fieldset": { border: "1px solid #f0e0d0" },
+            "&:hover fieldset": { borderColor: "#e0c0a0" },
+          },
+        }}
+      />
+    </Box>
+      );
+    const MetaDataComponent = () => (
+        <Paper
+            sx={{
+                p: 3,
+                 mb: 3,
+                borderRadius: 2,
+                boxShadow: "0px 2px 6px rgba(0,0,0,0.05)",
+                 border: "1px solid #ddd",
+            }}
+        >
+            <Typography>
+                Meta Data
+            </Typography>
+          {renderField("sector", task?.sector)}
+      {renderField("season", task?.season)}
+      {renderField("specialization", task?.question_type)}
+      {renderField("state", task?.state)}
+      {renderField("crop", task?.crop)}
+      {renderField("region", task?.district)}
+           
+         </Paper>
+    );
    /* const isValidURL = (url: string,id:number) => {
 
                 try {
@@ -803,12 +859,16 @@ export const ReviewQueue = () => {
                                 <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
                                     Answer Preview:
                                 </Typography>
-                                <Typography variant="body1" sx={{ lineHeight: 1.6 }}>
+                                <Typography variant="body1" sx={{ lineHeight: 1.6,maxHeight: 150,            // set height limit
+                                overflowY: "auto",         // enable vertical scroll
+                                 display: "block",
+                                scrollbarWidth: "thin",}}>
                                     {task.answer_preview}
                                 </Typography>
                             </Box>
                         )}
                     </Paper>
+                    <MetaDataComponent/>
 
                     {task?.type === 'create_answer'||task?.type === 'Reject' ? (
                         <Paper
@@ -816,6 +876,7 @@ export const ReviewQueue = () => {
                                 p: 3,
                                 mb: 3,
                                 borderRadius: 2,
+                                top:20,
                                 boxShadow: "0px 2px 6px rgba(0,0,0,0.05)",
                                 border: "1px solid #ddd",
                             }}
@@ -872,10 +933,9 @@ export const ReviewQueue = () => {
                                 }}
                             />
                         </Typography>
-                        
-                        
-                        :
+                         :
                         ''}
+                        
 
                             <Typography
                                 variant="subtitle1"

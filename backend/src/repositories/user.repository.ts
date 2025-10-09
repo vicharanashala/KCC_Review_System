@@ -142,6 +142,11 @@ const results= this.getAvailableUserList(currentUserObj,questionObj,UserRole.AGR
       $inc: { incentive_points: increment },
     });
   }
+  async updatePenality(userId: string, increment: number): Promise<void> {
+    await User.findByIdAndUpdate(userId, {
+      $inc: { penality: increment },
+    });
+  }
   async getAvailableUserList(currentUserObj?: any,questionObj?: any,type?:string): Promise<IUser[]>{
     let reviewed_by_specialist_array= []
     if(currentUserObj &&questionObj )

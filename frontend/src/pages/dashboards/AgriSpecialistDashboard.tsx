@@ -243,6 +243,7 @@ const AgriSpecialistDashboard = () => {
     rankMessage?: string;
     latestApprovedQuestion?: ReviewQuestion | null;
     latestRevisedQuestion?: ReviewQuestion | null;
+    penality:number
   }
   
   interface ReviewQuestion {
@@ -351,6 +352,7 @@ const AgriSpecialistDashboard = () => {
   const getBasePath = () => {
     return user?.role === 'moderator' ? '/moderator' : '/agri-specialist';
   };
+  const performanceScore = (performance?.incentivePoints ?? 0) - (performance?.penality ?? 0);
 
   const quickActions = [
     {
@@ -426,6 +428,27 @@ const AgriSpecialistDashboard = () => {
               </DialogTitle>
               <DialogContent dividers>
               <FormControl fullWidth margin="normal" sx={{ mb: 2 }}>
+              <InputLabel id="role-label">Sector Type *</InputLabel>
+              <Select
+                labelId="role-label"
+                id="role"
+                name="role"
+                value={sectorValue}
+                label="Sector Type *"
+                onChange={(e) => setSectorValue( e.target.value)}
+                required
+              >
+                <MenuItem value="">
+                  <em>Select Sector Type *</em>
+                </MenuItem>
+                {sector.map((role) => (
+                  <MenuItem key={role.value} value={role.value}>
+                    {role.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+              <FormControl fullWidth margin="normal" sx={{ mb: 2 }}>
               <InputLabel id="role-label">Question Type *</InputLabel>
               <Select
                 labelId="role-label"
@@ -488,27 +511,7 @@ const AgriSpecialistDashboard = () => {
                 ))}
               </Select>
             </FormControl>
-            <FormControl fullWidth margin="normal" sx={{ mb: 2 }}>
-              <InputLabel id="role-label">Sector Type *</InputLabel>
-              <Select
-                labelId="role-label"
-                id="role"
-                name="role"
-                value={sectorValue}
-                label="Sector Type *"
-                onChange={(e) => setSectorValue( e.target.value)}
-                required
-              >
-                <MenuItem value="">
-                  <em>Select Sector Type *</em>
-                </MenuItem>
-                {sector.map((role) => (
-                  <MenuItem key={role.value} value={role.value}>
-                    {role.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            
             <TextField
                   autoFocus
                   margin="dense"
@@ -896,13 +899,13 @@ const AgriSpecialistDashboard = () => {
 
               <Box sx={{ display: 'flex', justifyContent: 'space-around', mt: 2, borderTop: '1px solid #e0e0e0', pt: 2 }}>
                 <Typography variant="body2" color="success.main">
-                  {performance?.approvedCount} <br />
+                  {performance?.incentivePoints||0} <br />
                   <Typography variant="caption" color="text.secondary">
                     Incentives
                   </Typography>
                 </Typography>
                 <Typography variant="body2" color="error.main">
-                  {performance?.revisedCount} <br />
+                  {performance?.penality||0} <br />
                   <Typography variant="caption" color="text.secondary">
                     Penalties
                   </Typography>
