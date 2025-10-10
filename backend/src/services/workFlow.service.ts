@@ -4,7 +4,9 @@ import QuestionRepository from '../repositories/question.repository';
 import AnswerRepository from '../repositories/answer.repository';
 import ValidationRepository from '../repositories/validation.repository';
 import NotificationRepository from '../repositories/notification.repository';
-import { QuestionStatus, NotificationType, ValidationStatus } from '../interfaces/enums';
+import PeerValidationRepository from '../repositories/peerValidation.repository';
+import mongoose from "mongoose";
+import { QuestionStatus, NotificationType, ValidationStatus,PeerStatus } from '../interfaces/enums';
 import logger from '../utils/logger.utils';
 
 const userRepo = new UserRepository();
@@ -12,6 +14,7 @@ const questionRepo = new QuestionRepository();
 const answerRepo = new AnswerRepository();
 const validationRepo = new ValidationRepository();
 const notificationRepo = new NotificationRepository();
+const peerValidationRepo = new PeerValidationRepository();
 
 export default class WorkflowService {
   static async getRandomAvailableSpecialist(currentUserObj?:any,questionObj?:any): Promise<any | null> {
@@ -173,6 +176,91 @@ export default class WorkflowService {
       setImmediate(() => this.assignToPeerReviewer(answer.answer_id))
     // }
 
+    return true;
+  }
+  static async assignQuestionToModerator(questionId: string,questionData:any): Promise<boolean> {
+    const question = await questionRepo.findByQuestionId(questionId);
+    let currentUser
+    let specialist
+    if(questionData.user_id)
+    {
+       currentUser = await userRepo.findById(questionData.user_id)
+       specialist = await this.getRandomAvailableModerator(currentUser,question);
+    }
+    else{
+      specialist = await this.getRandomAvailableModerator();
+    }
+    
+    if (!question) return false;
+   
+   // const specialist = await this.getRandomAvailableSpecialist();
+    if (!specialist) {
+      logger.warning('No available specialists for assignment');
+      return false;
+    }
+if(questionData.status=="revised")
+{
+ // const user_id = mongoose.Types.ObjectId.createFromHexString(question.user_id)
+  question.assigned_specialist_id = mongoose.Types.ObjectId.createFromHexString(question.user_id);
+    question.status = QuestionStatus.ASSIGNED_TO_MODERATION;
+    question.reviewed_by_Moderators=[]
+    await question.save();
+
+    await userRepo.updateWorkload(question.user_id.toString(), 1);
+
+    await notificationRepo.create({
+      user_id: mongoose.Types.ObjectId.createFromHexString(question.user_id),
+      type: NotificationType.QUESTION_REJECTED,
+      title: 'Your Question Need Corrections',
+      message: `Question ${questionId} has been assigned to you.`,
+      related_entity_type: 'question',
+      related_entity_id: questionId,
+    });
+    const newPeerVal = await peerValidationRepo.create({
+     
+      quetion_id: questionId,
+      reviewer_id: mongoose.Types.ObjectId.createFromHexString(question.user_id),
+      status: PeerStatus.QUESTION_SENDBACK_TO_OWNER,
+      comments:questionData. comments || '',
+      peer_validation_id: `PV_${uuidv4().slice(0, 8).toUpperCase()}`,
+    });
+    console.log("the revised answer====",newPeerVal)
+    logger.info(`Question ${questionId} assigned to original user ${currentUser?.name}`);
+}
+else{
+    question.assigned_specialist_id = specialist._id;
+    question.status = QuestionStatus.ASSIGNED_TO_MODERATION;
+    question.reviewed_by_Moderators=specialist._id
+    await question.save();
+
+    await userRepo.updateWorkload(specialist._id.toString(), 1);
+
+    await notificationRepo.create({
+      user_id: specialist._id,
+      type: NotificationType.QUESTION_VALIDATION,
+      title: 'New Question Assigned',
+      message: `Question ${questionId} has been assigned to you.`,
+      related_entity_type: 'question',
+      related_entity_id: questionId,
+    });
+    const newPeerVal = await peerValidationRepo.create({
+     
+      quetion_id: questionId,
+      reviewer_id: specialist._id,
+      status: PeerStatus.ASSIGNED_TO_MODERATION,
+      comments:questionData. comments || '',
+      peer_validation_id: `PV_${uuidv4().slice(0, 8).toUpperCase()}`,
+    });
+    //console.log("new peer validation created====",newPeerVal)
+    logger.info(`Question ${questionId} assigned to Modirator ${specialist.name}`);
+  }
+
+  
+  
+
+    
+
+   
     return true;
   }
 }

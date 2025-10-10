@@ -2,7 +2,7 @@
 import { Response, NextFunction } from 'express';
 import QuestionService from '../services/question.service';
 import { QuestionCreateDto } from '../interfaces/dto';
-import Joi from 'joi';
+import Joi, { string } from 'joi';
 import logger from '../utils/logger.utils';
 import { authenticateToken, AuthRequest } from '../middleware/auth.middleware';
 import multer from 'multer'
@@ -24,7 +24,12 @@ const createSchema = Joi.object({
   longitude: Joi.string().optional(),
   priority: Joi.string().default('medium').optional(),
   user_id:Joi.string().optional(),
-  KccAns:Joi.string().optional()
+  KccAns:Joi.string().optional(),
+  status:Joi.string().optional(),
+  question_id:Joi.string().optional(),
+  comments:Joi.string().optional(),
+  peer_validation_id:Joi.string().optional()
+
   
 });
 
