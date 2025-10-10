@@ -17,6 +17,7 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import { TextField } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { useNotifications } from "../../contexts/NotificationContext";
 
 const DashboardCard = ({
   title,
@@ -98,6 +99,7 @@ const AgriSpecialistDashboard = () => {
   const [region,setRegion]=useState('')
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFile,setSelectedFile] = useState<File | null>(null)
+  const { notifications, markAsRead, markAllAsRead,taskAdded } = useNotifications();
   const handleOpenQuestionModal = () => {
     setIsQuestionModalOpen(true);
   };
@@ -261,7 +263,7 @@ const AgriSpecialistDashboard = () => {
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [notifications, setNotifications] = useState<any[]>([]);
+  //const [notifications, setNotifications] = useState<any[]>([]);
   const[performance,setPerformance]= useState<Performance | null>(null);
 
   const fetchMyTasks = async () => {
@@ -310,7 +312,7 @@ const AgriSpecialistDashboard = () => {
   };
 
 
-  const fetchNotifications = async () => {
+ /* const fetchNotifications = async () => {
     try {
       const token = localStorage.getItem('access_token');
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/notifications`, {
@@ -325,13 +327,20 @@ const AgriSpecialistDashboard = () => {
       console.error('Error fetching notifications:', error);
       setNotifications([]);
     }
-  };
-
+  };*/
+  useEffect(() => {
+    const latest = notifications[0];
+    if (latest?.type === "task_assigned") {
+      //console.log(" Reloading tasks after assignment");
+      fetchMyTasks();
+      fetchMyPerformance()
+    }
+  } ,[taskAdded]);
   useEffect(() => {
     fetchMyPerformance()
     fetchMyTasks();
-    fetchNotifications();
-  }, []);
+   // fetchNotifications();
+   }, []);
   
   useEffect(() => {
     if (!searchQuery.trim()) {

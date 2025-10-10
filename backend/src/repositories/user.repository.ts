@@ -156,13 +156,14 @@ const results= this.getAvailableUserList(currentUserObj,questionObj,UserRole.AGR
     let questionOwner=currentUserObj._id.toString()
     let arr=result[0]?.reviewed_by_specialists|| []
    const userIdStr = result[0]?.user_id;
- 
- if (!userIdStr || !mongoose.Types.ObjectId.isValid(userIdStr)) {
-   throw new Error("Invalid or missing user_id");
+ let convertUserid
+ if (userIdStr ) {
+  // throw new Error("Invalid or missing user_id");
+   convertUserid = mongoose.Types.ObjectId.createFromHexString(userIdStr) || userIdStr
  }
- const convertUserid = mongoose.Types.ObjectId.createFromHexString(userIdStr)
+ // convertUserid = mongoose.Types.ObjectId.createFromHexString(userIdStr)
 
-   let actualOwner=convertUserid
+   let actualOwner=convertUserid 
    let assigned_specialist_id=result[0]?.assigned_specialist_id?.toString() 
    for await (const value of arr) {
      reviewed_by_specialist_array.push(value);
