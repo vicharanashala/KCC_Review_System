@@ -48,10 +48,50 @@ export default class QuestionRepository {
       },
     });
   }
+ 
+
+  
+ async  findAndUpdateQuestion(
+    question_id: string,
+    questionData: any,
+    status: QuestionStatus
+  ) {
+    try {
+      const updatedQuestion = await Question.findOneAndUpdate(
+        { question_id }, // ✅ make sure this matches your schema field name
+        {
+          $set: {
+            ...questionData,
+            status, // ensure status is stored as the enum value
+            updated_at: new Date(),
+            reviewed_by_Moderators:[]
+          }
+        },
+        {
+          new: true,          // ✅ return the *updated* document
+          runValidators: true // ✅ enforce schema validation
+        }
+      ).lean(); // optional for plain JS object
+  
+      if (!updatedQuestion) {
+        console.warn(`⚠️ No question found with ID ${question_id}`);
+        return null;
+      }
+  
+      console.log("✅ Question updated:", updatedQuestion.question_id);
+      return updatedQuestion;
+    } catch (err) {
+      console.error("❌ Error updating question:", err);
+      throw err;
+    }
+  }
+  
+
 
   async findAssignedToUser(userId: string, statuses: QuestionStatus[]): Promise<IQuestion[]> {
     return Question.find({ assigned_specialist_id: userId, status: { $in: statuses } });
   }
+  
 
   async updateStatus(questionId: string, status: QuestionStatus, updates: any): Promise<IQuestion | null> {
     return Question.findOneAndUpdate(

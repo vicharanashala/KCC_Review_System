@@ -83,6 +83,8 @@ export const ReviewQueue = () => {
     const [selectedStatus, setSelectedStatus] = useState<'approved' | 'revised' | null>(null);
     const [comments, setComments] = useState('');
     const [revisedAnswer, setRevisedAnswer] = useState(task?.answer_preview || '');
+    const [questiontext,setQuestionText]=useState(task.question_text||'')
+    const [questionStatus,setQuestionStatus]=useState('')
     // const [peerValidationHistory, setPeerValidationHistory] = useState<PeerValidationHistory[]>([]);
     // const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
     // const [isLoadingHistory, setIsLoadingHistory] = useState(false);
@@ -419,7 +421,76 @@ export const ReviewQueue = () => {
         }
     };
 
+const handleSubmitQuestion=async()=>{
+    console.log("the status====",selectedStatus)
+    const formData = new FormData()
+    let status=''
+    if(selectedStatus=='approved')
+    {
+        status="approved"
+    }
+    else{
+        status="revised"
+        if(comments.length<=1)
+        {showError('Please Enter Your Comments')
+          return
+        }
+        
+    }
+    if(comments.length>=1)
+    {
+        formData.append("comments",comments)
 
+    }
+    if(task.peer_validation_id)
+    {
+        formData.append('peer_validation_id',task.peer_validation_id)
+    }
+   // selectedStatus=='approved'?setQuestionStatus('approved'):setQuestionStatus('revised')
+    const token = localStorage.getItem('access_token');
+    
+    formData.append('question_id',task.question_id)
+    formData.append('status',status)
+    formData.append('query_type',task.specializationvalue)
+      formData.append('season',task.seasonvalue)
+      formData.append('state',task.statevalue)
+      formData.append('sector',task.sectorValue)
+      formData.append('crop',task.cropName)
+      formData.append('district',task.region)
+      formData.append('original_query_text', task.original_query_text)
+     
+    const userId=localStorage.getItem('user_id')
+    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/questions`, {
+        method: 'POST',
+        headers: {
+          // 'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        // body: JSON.stringify({
+        //   original_query_text: questionText.trim()
+        // }),
+        body:formData
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create question');
+      }
+      const data = await response.json()
+      // showSuccess('Question created successfully!');
+      if (Array.isArray(data)) {
+        showSuccess(`${data.length} questions created successfully!`);
+      } else {
+        if(selectedStatus=='approved')
+    {
+        showSuccess('Question created successfully!');
+    }
+    else{
+    showSuccess('Question Revised successfully!');
+       }
+       // showSuccess('Question created successfully!');
+      }
+      navigate(user?.role === 'moderator' ? "/moderator/dashboard" : "/agri-specialist/dashboard")
+}
 
     const handleStatusSelect = (status: 'approved' | 'revised') => {
         setSelectedStatus(status);
@@ -781,11 +852,232 @@ export const ReviewQueue = () => {
     }
 
     return (
+        
         <Box sx={{
             p: 3,
             maxWidth: task?.type === 'create_answer' ? 800 : 1400,
             mx: "auto"
         }}>
+            {task?.type === 'question_validation'
+
+            ?
+            <Box>
+                 <Button
+                startIcon={<ArrowBackIcon />}
+                onClick={() => navigate(user?.role === 'moderator' ? "/moderator/dashboard" : "/agri-specialist/dashboard")}
+                sx={{
+                    mb: 2,
+                    textTransform: "none",
+                    color: "#333",
+                    backgroundColor: "#fff",
+                    border: "1px solid #ddd",
+                    borderRadius: "8px",
+                    px: 2,
+                    "&:hover": {
+                        backgroundColor: "#f5f5f5",
+                    },
+                }}
+            >
+                Back to Dashboard
+            </Button>
+            <Box sx={{  gap:3, alignItems: 'flex-start', justifyContent: 'center' }}>
+                <Box sx={{
+                    flex: 1,
+                    maxWidth: 800
+                }}>
+
+                    <Paper
+                        sx={{
+                            p: 3,
+                            mb: 3,
+                            borderRadius: 2,
+                            boxShadow: "0px 2px 6px rgba(0,0,0,0.05)",
+                            border: "1px solid #ddd",
+                        }}
+                    >
+                        <Typography
+                            variant="h6"
+                            fontWeight="500"
+                            sx={{ display: "flex", alignItems: "center", mb: 1 }}
+                        >
+                            📄 {task.question_text || 'No title available'}
+                        </Typography>
+
+                        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 2 }}>
+                            <Typography variant="body2" sx={{ color: "#6d6d6d" }}>
+                                Type:{' '}
+                                <span style={{ color: "#2B7FFF", fontWeight: 500 }}>
+                                    {task.type==="Reject"?
+                                    "Revise Answer"
+                                    :
+                                    task.type?.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) || 'N/A'
+                                    }
+                                    
+                                </span>
+                            </Typography>
+
+                            <Typography variant="body2" sx={{ color: "#6d6d6d" }}>
+                                • Consecutive Approvals: <span style={{
+                                    color: task.consecutive_approvals > 0 ? '#00C950' : '#d32f2f',
+                                    fontWeight: 500
+                                }}>
+                                    {task.consecutive_approvals || 0}
+                                </span>
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: "#6d6d6d" }}>
+                                • ID: <span style={{ fontFamily: 'monospace' }}>{task.question_id || 'N/A'}</span>
+                            </Typography>
+                        </Box>
+                        </Paper>
+                        </Box>
+                        </Box>
+                        <MetaDataComponent/>
+                    <Paper  sx={{
+                        p: 3,
+                        mb: 3,
+                        borderRadius: 2,
+                        boxShadow: "0px 2px 6px rgba(0,0,0,0.05)",
+                        border: "1px solid #ddd",
+                    }}>
+                         <Typography sx={{ my: 2 }}>Question</Typography>
+                            <Box>
+                                <TextField
+                                    placeholder={!selectedStatus ? "Select a status first" : selectedStatus === 'approved' ? "No changes needed for approval" : user?.role === 'moderator' ? "Answer text (read-only for moderators)" : "Edit the answer if needed (only for revisions)"}
+                                    multiline
+                                    rows={2}
+                                    fullWidth
+                                    variant="outlined"
+                                    value={questiontext}
+                                    onChange={(e) => setQuestionText(e.target.value)}
+                                    disabled={!selectedStatus || selectedStatus === 'approved' || user?.role === 'moderator'}
+                                    sx={{
+                                        "& .MuiOutlinedInput-root": {
+                                            bgcolor: selectedStatus === 'approved' || user?.role === 'moderator' ? "#f5f5f5" : "#fff8f0",
+                                            borderRadius: "8px",
+                                            "& fieldset": {
+                                                border: "1px solid #f0e0d0",
+                                            },
+                                            "&:hover fieldset": {
+                                                borderColor: selectedStatus === 'approved' || user?.role === 'moderator' ? "#f0e0d0" : "#e0c0a0"
+                                            },
+                                        },
+                                    }}
+                                />
+                            </Box>
+                            <Box sx={{ my: 2 }}>
+                                <Typography sx={{ my: 2 }}>Add comments</Typography>
+                                <TextField
+                                    placeholder={!selectedStatus ? "Select a status first" : selectedStatus === 'approved' ? "Comments (optional)" : "Please provide comments for rejection"}
+                                    multiline
+                                    rows={2}
+                                    fullWidth
+                                    variant="outlined"
+                                    value={comments}
+                                    onChange={(e) => setComments(e.target.value)}
+                                    disabled={!selectedStatus || selectedStatus === 'approved'}
+                                    required={selectedStatus === 'revised'}
+                                    sx={{
+                                        "& .MuiOutlinedInput-root": {
+                                            bgcolor: selectedStatus === 'approved' ? "#f5f5f5" : "#fff8f0",
+                                            borderRadius: "8px",
+                                            "& fieldset": {
+                                                border: "1px solid #f0e0d0",
+                                            },
+                                            "&:hover fieldset": {
+                                                borderColor: selectedStatus === 'approved' ? "#f0e0d0" : "#e0c0a0"
+                                            },
+                                        },
+                                    }}
+                                />
+                            </Box>
+                            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 3 }}>
+                                <Button
+                                    variant="contained"
+                                    onClick={() => handlePeerValidation('revised')}
+                                    disabled={isSubmitting}
+                                    sx={{
+                                        color: '#ffffff',
+                                        borderColor: '#d32f2f',
+                                        textTransform: 'none',
+                                        px: 3,
+                                        py: 1,
+                                        borderRadius: '4px',
+                                        background: '#D4183D',
+                                        width: '100%',
+                                        '&:hover': {
+                                            backgroundColor: '#b2102f',
+                                            borderColor: '#b2102f',
+                                        },
+                                        '&.Mui-disabled': {
+                                            backgroundColor: '#f5f5f5',
+                                            color: '#9e9e9e'
+                                        }
+                                    }}
+                                >
+                                    {isSubmitting ? <CircularProgress size={24} color="inherit" /> : 'Reject'}
+                                </Button>
+                                <Button
+                                    variant={selectedStatus === 'approved' ? 'contained' : 'outlined'}
+                                    onClick={() => handleStatusSelect('approved')}
+                                    sx={{
+                                        color: selectedStatus === 'approved' ? '#ffffff' : '#4caf50',
+                                        borderColor: '#4caf50',
+                                        backgroundColor: selectedStatus === 'approved' ? '#4caf50' : 'transparent',
+                                        '&:hover': {
+                                            backgroundColor: selectedStatus === 'approved' ? '#388e3c' : 'rgba(76, 175, 80, 0.1)',
+                                            borderColor: '#388e3c',
+                                        },
+                                        '&.Mui-disabled': {
+                                            backgroundColor: '#f5f5f5',
+                                            color: '#9e9e9e',
+                                            borderColor: '#e0e0e0'
+                                        },
+                                        textTransform: 'none',
+                                        px: 3,
+                                        py: 1,
+                                        borderRadius: '4px',
+                                        width: '100%',
+                                    }}
+                                    disabled={isSubmitting}
+                                >
+                                    {isSubmitting ? <CircularProgress size={24} color="inherit" /> : 'Approve'}
+                                </Button>
+                            </Box>
+                            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 3 }}>
+                                <Button
+                                    variant="contained"
+                                    onClick={handleSubmitQuestion}
+                                    disabled={isSubmitting || !selectedStatus || (user?.role !== 'moderator' && selectedStatus === 'revised' && !revisedAnswer.trim())}
+                                    sx={{
+                                        mt: 2,
+                                        px: 4,
+                                        textTransform: "none",
+                                        borderRadius: "8px",
+                                        backgroundColor: "#00A63E",
+                                        "&:hover": { backgroundColor: "#008c35" },
+                                        "&.Mui-disabled": {
+                                            backgroundColor: "#f5f5f5",
+                                            color: "#9e9e9e"
+                                        }
+                                    }}
+                                >
+                                    {isSubmitting ? (
+                                        <CircularProgress size={24} color="inherit" />
+                                    ) : selectedStatus === 'approved' ? (
+                                        'Submit Approval'
+                                    ) : (
+                                        'Submit Revision'
+                                    )}
+                                </Button>
+                            </Box>
+                    </Paper>
+                    
+                    </Box>
+                    
+
+
+            :
+            <Box>
             <Button
                 startIcon={<ArrowBackIcon />}
                 onClick={() => navigate(user?.role === 'moderator' ? "/moderator/dashboard" : "/agri-specialist/dashboard")}
@@ -1220,13 +1512,16 @@ export const ReviewQueue = () => {
                         </Paper>
                     )}
                 </Box>
+               
 
-                {task?.type !== 'create_answer' && user?.role === 'moderator' && (
+                {task?.type !== 'create_answer' && user?.role === 'moderator'&& task?.type !== 'question_validation' && (
                     <Box sx={{ width: 400, flexShrink: 0 }}>
                         <VersionHistoryComponent />
                     </Box>
                 )}
+                </Box>
             </Box>
+}
         </Box>
     );
 };

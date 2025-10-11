@@ -25,4 +25,7 @@ export interface IQuestion extends Document {
   updated_at: Date;
   user_id:string;
   KccAns:string;
+  question_approval:number;
+  reviewed_by_Moderators: Types.ObjectId[];
+
 }

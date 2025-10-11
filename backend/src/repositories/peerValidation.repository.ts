@@ -2,6 +2,9 @@ import PeerValidation from '../models/peerValidation.model';
 import { IPeerValidation } from '../interfaces/peerValidation.interface';
 import answerModel from '../models/answer.model';
 import mongoose from "mongoose";
+import { QuestionStatus } from "../interfaces/enums";
+import { FilterQuery ,Types} from "mongoose";
+import { string } from 'joi';
 interface ReviewerStats {
   _id: string;
   totalAssigned: number;
@@ -350,7 +353,64 @@ export default class PeerValidationRepository {
   
     return null;
   }
+  async  updatePeerValidationByUserAndQuestion(
+    userId: string,
+    newType:string,
+    questionId: string,
+    
+  ): Promise<number> {
+    try {
+      const result = await PeerValidation.updateMany(
+        {
+          user_id: new mongoose.Types.ObjectId(userId), // filter by user
+          peer_validation_id: questionId,               // filter by question
+        },
+        { $set: { type: newType } }
+      );
   
-  
- 
+      console.log(`✅ Updated ${result.modifiedCount} peervalidation for user ${userId} and question ${questionId}`);
+      return result.modifiedCount;
+    } catch (err) {
+      console.error("❌ Error updating notifications:", err);
+      return 0;
+    }
+  }
+  async findByPeerValidation(peer_validation: string): Promise<IPeerValidation[]> {
+    const peervalidationObj= await PeerValidation.find({  peer_validation_id:peer_validation});
+    console.log("the first notificaj===",peervalidationObj)
+    return peervalidationObj
+  }
+  async findUnreadByUserId(
+    userId: string,
+    type?: QuestionStatus
+  ): Promise<IPeerValidation[]> {
+    const objectId = new Types.ObjectId(userId);
+    let query: FilterQuery<IPeerValidation> = { 
+      reviewer_id: userId};
+    if (type) query.status = type;
+    console.log("query====",query)
+    let result= await PeerValidation.find(query);
+    //console.log("the peervalidation===",result)
+    return result
+  }
+
+  async  updatePeerValidationBypeerId(peer_validation_id:string,questionStatus:string
+    ): Promise<number> {
+      try {
+        console.log("peer validation coming====",peer_validation_id)
+        const result = await PeerValidation.updateOne(
+          { peer_validation_id:peer_validation_id },
+          { $set: { status: questionStatus} }
+        );
+    
+        // ✅ result.modifiedCount tells how many docs were updated
+        console.log("✅ Update result:", result);
+    
+        return result.modifiedCount; 
+      } catch (err) {
+        console.error("❌ Error updating notifications:", err);
+        return 0;
+      }
+    }
 }
+

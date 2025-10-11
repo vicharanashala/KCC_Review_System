@@ -133,6 +133,7 @@ export default class DashboardService {
               answer_preview:
                 answer.answer_text,
               current_valid_count: q.valid_count,
+              consecutive_approvals: q.consecutive_peer_approvals,
               created_at: notification.created_at,
               question_type:q.query_type||'N/A',
               season:q.season||'N/A',
@@ -145,6 +146,83 @@ export default class DashboardService {
         }
       }
     }
+    
+      const validationNotifications = await peerValidation.findUnreadByUserId(currentUserId, QuestionStatus.ASSIGNED_TO_MODERATION);
+     // console.log("the notifications====",validationNotifications)
+      if (validationNotifications && validationNotifications.length > 0) {
+        const questionList = await Promise.all(
+          validationNotifications.map(async (notif) => {
+            if (!notif.quetion_id) return null; 
+            const questionObj = await questionRepo.findByQuestionId(notif.quetion_id);
+            if(questionObj&&questionObj.question_approval<2)
+            {
+              tasks.push({
+                
+              type: "question_validation",
+             // question: questionObj,
+              question_id: questionObj.question_id, 
+           question_text:questionObj.original_query_text,
+            consecutive_approvals:questionObj.question_approval,
+            created_at: notif.created_at,
+             comments:notif.comments,
+             question_type:questionObj.query_type||'',
+             season:questionObj.season||'',
+             state:questionObj.state,
+             sector:questionObj.sector,
+             crop:questionObj.crop,
+             district:questionObj.district,
+             kccAns:questionObj.KccAns,
+             peer_validation_id:notif.peer_validation_id
+               
+              });
+            }
+          })
+        );
+      
+        // You can now use `questionList` (e.g., send to frontend)
+       
+      
+      
+
+    }
+    const validationNotificationsRject = await peerValidation.findUnreadByUserId(currentUserId, QuestionStatus.QUESTION_SENDBACK_TO_OWNER);
+    
+    if (validationNotificationsRject && validationNotificationsRject.length > 0) {
+      const questionList = await Promise.all(
+        validationNotificationsRject.map(async (notif) => {
+          if (!notif.quetion_id) return null; 
+          const questionObj = await questionRepo.findByQuestionId(notif.quetion_id);
+          if(questionObj&&questionObj.question_approval<2)
+          {
+            tasks.push({
+              type: "question_rejected",
+             // question: questionObj,
+              question_id: questionObj.question_id, 
+           question_text:questionObj.original_query_text,
+            consecutive_approvals:questionObj.question_approval,
+            created_at: notif.created_at,
+             comments:notif.comments,
+             question_type:questionObj.query_type||'',
+             season:questionObj.season||'',
+             state:questionObj.state,
+             sector:questionObj.sector,
+             crop:questionObj.crop,
+             district:questionObj.district,
+             kccAns:questionObj.KccAns,
+             peer_validation_id:notif.peer_validation_id
+
+            });
+          }
+        })
+      );
+    
+      // You can now use `questionList` (e.g., send to frontend)
+     
+    
+    
+
+  }
+
     const status=false
     const revisionSuccess=true
     const rejectedAnswers= await answerRepo.findRejectedQuestions(currentUserId,status,revisionSuccess)
