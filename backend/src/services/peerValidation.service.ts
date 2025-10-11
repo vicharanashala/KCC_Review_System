@@ -86,6 +86,7 @@ const question = await questionRepo.findById(questionId);
       ? answer.specialist_id._id.toString()
       : answer.specialist_id;
       await userRepo.updatePenality(originalSpecialistId,1)
+      await userRepo.updateWorkload(originalSpecialistId, 1);
       logger.info(`Incentive -1 applied to specialist ${originalSpecialistId} for revised peer review`);
       const revisionMessage =peerData.comments ? `Peer review requires changes to your answer for question ${question.question_id}. Suggested changes: ${peerData.comments}` : `Peer review requires changes to your answer for question ${question.question_id}. Please revise based on feedback.`;
      // console.log("Question_id",question)
