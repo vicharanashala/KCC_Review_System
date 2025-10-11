@@ -39,7 +39,8 @@ const question = await questionRepo.findById(questionId);
       throw new Error("No question found")
     }
     
-    const notification = await notificationRepo.findUnreadByUserId(currentUserId, NotificationType.PEER_REVIEW_REQUEST).then(n => n.find(n => n.related_entity_id === peerData.answer_id));
+    // const notification = await notificationRepo.findUnreadByUserId(currentUserId, NotificationType.PEER_REVIEW_REQUEST).then(n => n.find(n => n.related_entity_id === peerData.answer_id));
+    const notification = await notificationRepo.findAllByUserId(currentUserId).then(n => n.find(n => n.related_entity_id === peerData.answer_id));
     if (!notification) throw new Error('You are not assigned to peer review this answer');
 
     await notificationRepo.markRead(notification.notification_id, currentUserId);

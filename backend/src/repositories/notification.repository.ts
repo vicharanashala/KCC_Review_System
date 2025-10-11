@@ -22,6 +22,13 @@ export default class NotificationRepository {
       .populate("user_id");
   }
 
+  async findAllByUserId(userId:string){
+    const notifications=await Notification.find({user_id:userId})
+    // console.log("Notificatons ",notifications)
+    return notifications
+
+  }
+
   async findUnreadByUserId(
     userId: string,
     type?: NotificationType
