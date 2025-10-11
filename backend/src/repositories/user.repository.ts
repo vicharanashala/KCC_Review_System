@@ -154,13 +154,17 @@ const results= this.getAvailableUserList(currentUserObj,questionObj,UserRole.AGR
     
      const result= await Question.find({question_id:questionObj.question_id} )
     let questionOwner=currentUserObj._id.toString()
-    let arr=result[0]?.reviewed_by_specialists|| []
+    let speArr=result[0]?.reviewed_by_specialists|| []
+    let modArr=result[0]?.reviewed_by_Moderators||[]
+    let arr=[...speArr,...modArr]
+
    const userIdStr = result[0]?.user_id;
- 
- if (!userIdStr || !mongoose.Types.ObjectId.isValid(userIdStr)) {
-   throw new Error("Invalid or missing user_id");
+ let convertUserid
+ if (userIdStr ) {
+  // throw new Error("Invalid or missing user_id");
+   convertUserid = mongoose.Types.ObjectId.createFromHexString(userIdStr)
  }
- const convertUserid = mongoose.Types.ObjectId.createFromHexString(userIdStr)
+ 
 
    let actualOwner=convertUserid
    let assigned_specialist_id=result[0]?.assigned_specialist_id?.toString() 
@@ -173,7 +177,7 @@ const results= this.getAvailableUserList(currentUserObj,questionObj,UserRole.AGR
  
    const currentUserfromDatabase=await User.findOne({_id:currentUserObj})
    
-   if(currentUserfromDatabase?.location)
+   if(currentUserfromDatabase?.location?.coordinates)
    {
      const latitude=currentUserfromDatabase.location.coordinates[0]
      const longitude=currentUserfromDatabase.location.coordinates[1]
@@ -200,6 +204,7 @@ const results= this.getAvailableUserList(currentUserObj,questionObj,UserRole.AGR
      ]);
     if(nearestUser)
     {
+     
       return nearestUser
     }
     else{
