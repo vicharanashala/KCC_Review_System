@@ -131,11 +131,23 @@ const results= this.getAvailableUserList(currentUserObj,questionObj,UserRole.AGR
     
 
 
-  async updateWorkload(userId: string, increment: number): Promise<void> {
-    await User.findByIdAndUpdate(userId, {
-      $inc: { workload_count: increment },
-    });
-  }
+  
+    async updateWorkload(userId: string, increment: number): Promise<void> {
+      if (increment < 0) {
+        // Only decrement if workload_count > 0
+        await User.updateOne(
+          { _id: userId, workload_count: { $gt: 0 } },
+          { $inc: { workload_count: increment } }
+        );
+      } else {
+        // Increment normally
+        await User.updateOne(
+          { _id: userId },
+          { $inc: { workload_count: increment } }
+        );
+      }
+    }
+  
 
   async updateIncentive(userId: string, increment: number): Promise<void> {
     await User.findByIdAndUpdate(userId, {
