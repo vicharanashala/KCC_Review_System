@@ -11,7 +11,7 @@ const answerRepo = new AnswerRepository();
 const questionRepo = new QuestionRepository();
 const userRepo = new UserRepository()
 export default class AnswerService {
-  async create(answerData: AnswerCreateDto, currentUserId: string): Promise<any> {
+  async create(answerData: AnswerCreateDto, currentUserId: string,skipPeerAssignment=false): Promise<any> {
     
     const currentUser = await userRepo.findById(currentUserId)
     const question = await questionRepo.findByQuestionId(answerData.question_id);
@@ -66,8 +66,10 @@ export default class AnswerService {
     question.status = QuestionStatus.PENDING_PEER_REVIEW;
     await question.save();
     await userRepo.updateWorkload(currentUserId,-1)
-   
-    setImmediate(() => WorkflowService.assignToPeerReviewer(newAnswer.answer_id,currentUser,question));
+    if(!skipPeerAssignment){
+      setImmediate(() => WorkflowService.assignToPeerReviewer(newAnswer.answer_id,currentUser,question));
+    }
+    
 
     logger.info(`Answer created: ${newAnswer.answer_id}, version: ${newAnswer.version}`);
     return { message: 'Answer created successfully', answer_id: newAnswer.answer_id, version: newAnswer.version };
