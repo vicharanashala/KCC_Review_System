@@ -13,6 +13,7 @@ const notificationSchema = new Schema<INotification>({
   related_entity_id: { type: String },
   is_read: { type: Boolean, default: false },
   created_at: { type: Date, default: Date.now },
+  comments:{type: String}
 });
 
 export default mongoose.model<INotification>('Notification', notificationSchema);

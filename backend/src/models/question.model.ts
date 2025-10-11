@@ -23,10 +23,12 @@ const questionSchema = new Schema<IQuestion>({
   valid_count: { type: Number, default: 0 },
   consecutive_peer_approvals: { type: Number, default: 0 },
   reviewed_by_specialists: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+  reviewed_by_Moderators: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now },
   user_id: { type: String },
-  KccAns:{type:String}
+  KccAns:{type:String},
+  question_approval: { type: Number, default: 0 },
 });
 
 questionSchema.pre('save', function (next) {

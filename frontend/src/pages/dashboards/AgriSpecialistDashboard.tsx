@@ -84,22 +84,66 @@ const DashboardCard = ({
 );
 
 const AgriSpecialistDashboard = () => {
+  interface Task {
+    type: string;
+    answer_id: string;
+    question_id: string;
+    question_text: string;
+    answer_preview: string;
+    consecutive_approvals: number;
+    created_at: string;
+    sources: any[];
+    comments:string,
+             question_type:string,
+             season:string,
+             state:string,
+             sector:string,
+             crop:string,
+             district:string,
+             kccAns:string,
+             peer_validation_id:string,
+  }
   const navigate = useNavigate();
   const { showSuccess, showError,specialization,season,sector,states} = useToast();
   const { user } = useAuth();
   const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false);
-  const [questionText, setQuestionText] = useState('');
-  const [kccAns,setKccAns]=useState('')
-  const [specializationvalue,setSpecilizationValue]=useState('')
-  const [seasonvalue,setSeasonValue]=useState('')
-  const [sectorValue,setSectorValue]=useState('')
-  const [statevalue,setStateValue]=useState('')
-  const [cropName,setCropName]=useState('')
-  const [region,setRegion]=useState('')
+  
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFile,setSelectedFile] = useState<File | null>(null)
-  const handleOpenQuestionModal = () => {
+  const [rejectedQuestion,setRejectedQuestion]=useState<Task[]>([])
+  const [questionText, setQuestionText] = useState(rejectedQuestion[0]?.question_text||'');
+  const [kccAns,setKccAns]=useState(rejectedQuestion[0]?.kccAns||'')
+  const [specializationvalue,setSpecilizationValue]=useState(rejectedQuestion[0]?.question_type||'')
+  const [seasonvalue,setSeasonValue]=useState(rejectedQuestion[0]?.season||'')
+  const [sectorValue,setSectorValue]=useState(rejectedQuestion[0]?.sector||'')
+  const [statevalue,setStateValue]=useState(rejectedQuestion[0]?.state||'')
+  const [cropName,setCropName]=useState(rejectedQuestion[0]?.crop||'')
+  const [region,setRegion]=useState(rejectedQuestion[0]?.district||'')
+  
+  useEffect(()=>{
+    if(rejectedQuestion && rejectedQuestion.length>=1)
+    {
+      setQuestionText(rejectedQuestion[0].question_text)
+      setKccAns(rejectedQuestion[0].kccAns)
+      setSpecilizationValue(rejectedQuestion[0].question_type)
+      setSeasonValue(rejectedQuestion[0].season)
+      setSectorValue(rejectedQuestion[0].sector)
+      setStateValue(rejectedQuestion[0].state)
+      setCropName(rejectedQuestion[0].crop)
+      setRegion(rejectedQuestion[0].district)
+      //setQuestionText(rejectedQuestion[0].question_type)
+    }
+   
+
+  },[rejectedQuestion])
+
+  const handleOpenQuestionModal = (task?: Task | Task[]) => {
     setIsQuestionModalOpen(true);
+    if (!task) return; // handle undefined safely
+
+  // Ensure we always store an array in state
+  setRejectedQuestion(Array.isArray(task) ? task : [task]);
+   
   };
 
   const handleCloseQuestionModal = () => {
@@ -166,12 +210,21 @@ const AgriSpecialistDashboard = () => {
       {
         formData.append("KccAns",kccAns)
       }
+      if(rejectedQuestion[0]?.question_id)
+      {
+        formData.append('question_id',rejectedQuestion[0].question_id)
+      }
+      if(rejectedQuestion[0]?.peer_validation_id)
+      {
+          formData.append('peer_validation_id',rejectedQuestion[0].peer_validation_id)
+      }
       formData.append('query_type',specializationvalue)
       formData.append('season',seasonvalue)
       formData.append('state',statevalue)
       formData.append('sector',sectorValue)
       formData.append('crop',cropName)
       formData.append('district',region)
+      formData.append('status',"assigned_to_moderation")
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/questions`, {
         method: 'POST',
         headers: {
@@ -213,16 +266,7 @@ const AgriSpecialistDashboard = () => {
     }
   };
 
-  interface Task {
-    type: string;
-    answer_id: string;
-    question_id: string;
-    question_text: string;
-    answer_preview: string;
-    consecutive_approvals: number;
-    created_at: string;
-    sources: any[];
-  }
+  
   interface Performance {
     totalAssigned: number;
     approvedCount: number;
@@ -397,7 +441,7 @@ const AgriSpecialistDashboard = () => {
                 variant="outlined"
                 fullWidth
                 startIcon={<AddIcon fontSize="small" sx={{ color: '#000' }} />}
-                onClick={handleOpenQuestionModal}
+                onClick={()=>handleOpenQuestionModal()}
                 sx={{
                   borderRadius: 2,
                   textTransform: 'none',
@@ -415,7 +459,7 @@ const AgriSpecialistDashboard = () => {
 
             <Dialog open={isQuestionModalOpen} onClose={handleCloseQuestionModal} maxWidth="sm" fullWidth>
               <DialogTitle sx={{ m: 0, p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="h6">Create Question</Typography>
+                <Typography variant="h6">{rejectedQuestion[0]?.type === "question_rejected"? "Please Correct Your Question" : "Create Question"}</Typography>
                 <IconButton
                   aria-label="close"
                   onClick={handleCloseQuestionModal}
@@ -427,6 +471,20 @@ const AgriSpecialistDashboard = () => {
                 </IconButton>
               </DialogTitle>
               <DialogContent dividers>
+              <TextField
+                  autoFocus
+                  margin="dense"
+                  id="question"
+                  label="Comments From Moderator"
+                  type="text"
+                  fullWidth
+                  variant="outlined"
+                  multiline
+                  rows={1}
+                  value={rejectedQuestion[0]?.comments}
+                 
+                  sx={{ mt: 1 }}
+                />
               <FormControl fullWidth margin="normal" sx={{ mb: 2 }}>
               <InputLabel id="role-label">Sector Type *</InputLabel>
               <Select
@@ -511,7 +569,7 @@ const AgriSpecialistDashboard = () => {
                 ))}
               </Select>
             </FormControl>
-            
+           
             <TextField
                   autoFocus
                   margin="dense"
@@ -784,7 +842,7 @@ const AgriSpecialistDashboard = () => {
                       <Button
                         variant="contained"
                         size="small"
-                        onClick={() => navigate(`${getBasePath()}/review-queue`, { state: { task } })}
+                        onClick={task.type === "question_rejected"?()=>handleOpenQuestionModal(task):() => navigate(`${getBasePath()}/review-queue`, { state: { task } })}
                         sx={{
                           backgroundColor: '#000',
                           textTransform: 'none',
@@ -796,9 +854,17 @@ const AgriSpecialistDashboard = () => {
                         }}
                       >
                        
-                        {task.type=="Reject"?" Revise Answer":
-                        task.type==='create_answer'?'Submit Answer':'Review Answer'
-                        }
+                       {
+    task.type === "Reject"
+    ? "Revise Answer"
+    : task.type === "question_validation"
+    ? "Question Review"
+    : task.type === "create_answer"
+    ? "Submit Answer"
+    : task.type === "question_rejected"
+    ? "Question Revised"
+    : "Review Answer"
+}
                       
                       </Button>
                     </Box>

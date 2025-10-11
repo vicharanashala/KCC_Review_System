@@ -14,4 +14,5 @@ export interface INotification extends Document {
   is_read: boolean;
   created_at: Date;
   user: IUser;
+  comments:string;
 }

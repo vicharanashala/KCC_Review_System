@@ -41,7 +41,13 @@ export interface QuestionCreateDto {
   longitude?: string;
   priority?: string;
   user_id?: string;
-  question_owner?:string
+  question_owner?:string,
+  questionStatus?:string,
+  question_id?:string,
+  question_approval?:number,
+  comments?:string,
+  peer_validation_id?:string,
+  status?:string
 }
 
 export interface QuestionResponseDto {
@@ -53,7 +59,9 @@ export interface QuestionResponseDto {
   consecutive_peer_approvals: number;
   created_at: Date;
   user_id?: string
-  question_owner?:string
+  question_owner?:string,
+  
+
 }
 
 export interface AnswerCreateDto {
