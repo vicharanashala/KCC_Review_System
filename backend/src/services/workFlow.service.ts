@@ -203,11 +203,12 @@ if(questionData.status=="revised")
  // const user_id = mongoose.Types.ObjectId.createFromHexString(question.user_id)
   question.assigned_specialist_id = mongoose.Types.ObjectId.createFromHexString(question.user_id);
     question.status = QuestionStatus.ASSIGNED_TO_MODERATION;
-    question.reviewed_by_Moderators=[]
+    question.reviewed_by_Moderators.push(mongoose.Types.ObjectId.createFromHexString(question.user_id))
     await question.save();
 
-    await userRepo.updateWorkload(question.user_id.toString(), 1);
-
+   await userRepo.updateWorkload(question.user_id.toString(), 1);
+   const userDetails= await userRepo.findById(question.user_id)
+  
     await notificationRepo.create({
       user_id: mongoose.Types.ObjectId.createFromHexString(question.user_id),
       type: NotificationType.QUESTION_REJECTED,
@@ -224,8 +225,8 @@ if(questionData.status=="revised")
       comments:questionData. comments || '',
       peer_validation_id: `PV_${uuidv4().slice(0, 8).toUpperCase()}`,
     });
-    console.log("the revised answer====",newPeerVal)
-    logger.info(`Question ${questionId} assigned to original user ${currentUser?.name}`);
+    
+    logger.info(`Question ${questionId} assigned to original user ${userDetails?.email}`);
 }
 else{
     question.assigned_specialist_id = specialist._id;

@@ -177,7 +177,7 @@ const results= this.getAvailableUserList(currentUserObj,questionObj,UserRole.AGR
  
    const currentUserfromDatabase=await User.findOne({_id:currentUserObj})
    
-   if(currentUserfromDatabase?.location)
+   if(currentUserfromDatabase?.location?.coordinates)
    {
      const latitude=currentUserfromDatabase.location.coordinates[0]
      const longitude=currentUserfromDatabase.location.coordinates[1]
@@ -204,6 +204,7 @@ const results= this.getAvailableUserList(currentUserObj,questionObj,UserRole.AGR
      ]);
     if(nearestUser)
     {
+     
       return nearestUser
     }
     else{

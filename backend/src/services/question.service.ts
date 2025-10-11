@@ -7,8 +7,8 @@ import logger from '../utils/logger.utils';
 import { QuestionStatus ,NotificationType} from '../interfaces/enums';
 import mongoose from "mongoose";
 import PeerValidationRepository from '../repositories/peerValidation.repository';
-
-
+import UserRepository from '../repositories/user.repository';
+const userRepo = new UserRepository();
 const questionRepo = new QuestionRepository();
 const notificationRepo = new NotificationRepository();
 const peerValidationRepo = new PeerValidationRepository();
@@ -32,33 +32,25 @@ export default class QuestionService {
        
           if(questionData.status=="approved")
           { 
+            await userRepo.updateWorkload(question.user_id, -1);
             question.question_approval=(question.question_approval|| 0) + 1
             await question.save()
             
           // console.log("the question approved====",questionData,question)
            // const convertUserid = mongoose.Types.ObjectId.createFromHexString(question.user_id)
-           console.log("?????***********peervalidation======",peervalidation)
+          
             if(peervalidation)
             {
-              console.log("***********peervalidation======",peervalidation)
+             
             const result=  await peerValidationRepo.updatePeerValidationBypeerId(peer_validation,QuestionStatus.PENDING_PEER_MODERATION_REVIEW)
-            console.log("the value is updated===",result)
-             // peervalidation.status=QuestionStatus.PENDING_PEER_MODERATION_REVIEW
-            // await peervalidation.save()
-             /* await Promise.all(
-                peervalidation.map(async(notify)=>{
-                  try {
-                   // await notificationRepo.updateNotificationsByUserAndQuestion(notify.reviewer_id.toString(),NotificationType.QUESTION_VALIDATION_SUCCESS,question.question_id);
-                     } catch (err) {
-                    console.error(`❌ Failed to update notification ${notify._id}:`, err);
-                  }
-                })
-               
-              )*/
+           
+             
             }
            if(question.question_approval>=2)
         {
           console.log("the question approved====********",question)
+          question.reviewed_by_Moderators=[]
+          await question.save();
           setImmediate(() => WorkflowService.assignQuestionToSpecialist(question.question_id,questionData.user_id));
         logger.info(`New question submitted To modarator: ${question.question_id}`);
         }
@@ -69,30 +61,33 @@ export default class QuestionService {
           }
           else if(questionData.status=="revised")
           {
-            
+            await userRepo.updateWorkload(question.user_id, -1);
             const convertUserid = mongoose.Types.ObjectId.createFromHexString(question.user_id)
             question.question_approval= 0 
+            question.reviewed_by_Moderators=[]
+         
             await question.save()
             logger.info(`Question Assigned back to original question creater ${question.question_id},${question.user_id}`);
            
             if(peervalidation)
             {
               const result=  await peerValidationRepo.updatePeerValidationBypeerId(peer_validation,QuestionStatus.QUESTION_REJECTED )
-            console.log("the value is updated===",result)
+           
             }
             setImmediate(() => WorkflowService.assignQuestionToModerator(question.question_id,questionData));
             }
        else {
-              console.log("second loop===")
+        await userRepo.updateWorkload(question.user_id, -1);
+              
            const updatedQuestion=   await questionRepo.findAndUpdateQuestion(question.question_id,questionData, questionData.status as QuestionStatus)
-           console.log("update question===",updatedQuestion)
+          
               if(peervalidation)
               {
                 const result=  await peerValidationRepo.updatePeerValidationBypeerId(peer_validation,QuestionStatus.QUESTION_CORRECTED)
-                console.log("the value is updated===",result)
+               
               }
               setImmediate(() => WorkflowService.assignQuestionToModerator(question.question_id,questionData));
-              console.log("the else is executing====")
+              
 
             }
            

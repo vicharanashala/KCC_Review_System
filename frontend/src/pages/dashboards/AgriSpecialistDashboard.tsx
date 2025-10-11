@@ -459,7 +459,7 @@ const AgriSpecialistDashboard = () => {
 
             <Dialog open={isQuestionModalOpen} onClose={handleCloseQuestionModal} maxWidth="sm" fullWidth>
               <DialogTitle sx={{ m: 0, p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="h6">{rejectedQuestion[0]?.type === "question_rejected"? "Validate Question" : "Create Question"}</Typography>
+                <Typography variant="h6">{rejectedQuestion[0]?.type === "question_rejected"? "Please Correct Your Question" : "Create Question"}</Typography>
                 <IconButton
                   aria-label="close"
                   onClick={handleCloseQuestionModal}
@@ -471,6 +471,20 @@ const AgriSpecialistDashboard = () => {
                 </IconButton>
               </DialogTitle>
               <DialogContent dividers>
+              <TextField
+                  autoFocus
+                  margin="dense"
+                  id="question"
+                  label="Comments From Moderator"
+                  type="text"
+                  fullWidth
+                  variant="outlined"
+                  multiline
+                  rows={1}
+                  value={rejectedQuestion[0]?.comments}
+                 
+                  sx={{ mt: 1 }}
+                />
               <FormControl fullWidth margin="normal" sx={{ mb: 2 }}>
               <InputLabel id="role-label">Sector Type *</InputLabel>
               <Select
@@ -498,7 +512,7 @@ const AgriSpecialistDashboard = () => {
                 labelId="role-label"
                 id="role"
                 name="role"
-                value={rejectedQuestion[0]?.type === "question_rejected"?rejectedQuestion[0].question_type:specializationvalue}
+                value={specializationvalue}
                 label="Question Type *"
                 onChange={(e) => setSpecilizationValue( e.target.value)}
                 required
@@ -519,7 +533,7 @@ const AgriSpecialistDashboard = () => {
                 labelId="role-label"
                 id="role"
                 name="role"
-                value={rejectedQuestion[0]?.type === "question_rejected"?rejectedQuestion[0].season:seasonvalue}
+                value={seasonvalue}
                 label="Season Type *"
                 onChange={(e) => setSeasonValue( e.target.value)}
                 required
@@ -540,7 +554,7 @@ const AgriSpecialistDashboard = () => {
                 labelId="role-label"
                 id="role"
                 name="role"
-                value={rejectedQuestion[0]?.type === "question_rejected"?rejectedQuestion[0].state:statevalue}
+                value={statevalue}
                 label="State *"
                 onChange={(e) => setStateValue( e.target.value)}
                 required

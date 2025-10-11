@@ -431,6 +431,11 @@ const handleSubmitQuestion=async()=>{
     }
     else{
         status="revised"
+        if(comments.length<=1)
+        {showError('Please Enter Your Comments')
+          return
+        }
+        
     }
     if(comments.length>=1)
     {
@@ -475,7 +480,14 @@ const handleSubmitQuestion=async()=>{
       if (Array.isArray(data)) {
         showSuccess(`${data.length} questions created successfully!`);
       } else {
+        if(selectedStatus=='approved')
+    {
         showSuccess('Question created successfully!');
+    }
+    else{
+    showSuccess('Question Revised successfully!');
+       }
+       // showSuccess('Question created successfully!');
       }
       navigate(user?.role === 'moderator' ? "/moderator/dashboard" : "/agri-specialist/dashboard")
 }
@@ -919,7 +931,7 @@ const handleSubmitQuestion=async()=>{
                         </Paper>
                         </Box>
                         </Box>
-                        
+                        <MetaDataComponent/>
                     <Paper  sx={{
                         p: 3,
                         mb: 3,
@@ -1148,6 +1160,7 @@ const handleSubmitQuestion=async()=>{
                             </Box>
                         )}
                     </Paper>
+                    <MetaDataComponent/>
 
                     {task?.type === 'create_answer'||task?.type === 'Reject' ? (
                         <Paper
@@ -1499,6 +1512,7 @@ const handleSubmitQuestion=async()=>{
                         </Paper>
                     )}
                 </Box>
+               
 
                 {task?.type !== 'create_answer' && user?.role === 'moderator'&& task?.type !== 'question_validation' && (
                     <Box sx={{ width: 400, flexShrink: 0 }}>
