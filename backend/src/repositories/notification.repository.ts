@@ -23,6 +23,10 @@ export default class NotificationRepository {
       .populate("user_id");
   }
 
+  async findAllByUserId(userId:string){
+    return Notification.find({ user_id: userId })
+  }
+
   async findUnreadByUserId(
     userId: string,
     type?: NotificationType
