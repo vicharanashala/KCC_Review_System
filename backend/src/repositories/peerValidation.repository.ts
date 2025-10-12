@@ -368,7 +368,7 @@ export default class PeerValidationRepository {
         { $set: { type: newType } }
       );
   
-      console.log(`✅ Updated ${result.modifiedCount} peervalidation for user ${userId} and question ${questionId}`);
+    //  console.log(`✅ Updated ${result.modifiedCount} peervalidation for user ${userId} and question ${questionId}`);
       return result.modifiedCount;
     } catch (err) {
       console.error("❌ Error updating notifications:", err);
@@ -376,8 +376,8 @@ export default class PeerValidationRepository {
     }
   }
   async findByPeerValidation(peer_validation: string): Promise<IPeerValidation[]> {
-    const peervalidationObj= await PeerValidation.find({  peer_validation_id:peer_validation});
-    console.log("the first notificaj===",peervalidationObj)
+    const peervalidationObj= await PeerValidation.find({  peer_validation_id:peer_validation})
+   // console.log("the first notificaj===",peervalidationObj)
     return peervalidationObj
   }
   async findUnreadByUserId(
@@ -388,7 +388,7 @@ export default class PeerValidationRepository {
     let query: FilterQuery<IPeerValidation> = { 
       reviewer_id: userId};
     if (type) query.status = type;
-    console.log("query====",query)
+   // console.log("query====",query)
     let result= await PeerValidation.find(query);
     //console.log("the peervalidation===",result)
     return result
@@ -397,14 +397,14 @@ export default class PeerValidationRepository {
   async  updatePeerValidationBypeerId(peer_validation_id:string,questionStatus:string
     ): Promise<number> {
       try {
-        console.log("peer validation coming====",peer_validation_id)
+       // console.log("peer validation coming====",peer_validation_id)
         const result = await PeerValidation.updateOne(
           { peer_validation_id:peer_validation_id },
           { $set: { status: questionStatus} }
         );
     
         // ✅ result.modifiedCount tells how many docs were updated
-        console.log("✅ Update result:", result);
+      //  console.log("✅ Update result:", result);
     
         return result.modifiedCount; 
       } catch (err) {

@@ -129,7 +129,7 @@ const question = await questionRepo.findById(questionId);
           const user= await userRepo.findById(question?.assigned_specialist_id.toString())
           logger.info(`Peer Review Submitted Successfully to---${user?.name} `);
 
-        logger.info(`Peer revised answer ${answer.answer_id} to new version ${newAnswer.version}`);
+       // logger.info(`Peer revised answer ${answer.answer_id} to new version ${newAnswer.version}`);
         }
        
         return { message: 'Peer Review Submitted Successfully', peer_validation_id: newPeerVal.peer_validation_id };
