@@ -245,6 +245,7 @@ const results= this.getAvailableUserList(currentUserObj,questionObj,UserRole.AGR
    // let speArr=result[0]?.reviewed_by_specialists|| []
     let modArr=result[0]?.reviewed_by_Moderators
    // let arr=[...speArr,...modArr]
+   
   // console.log("the reviewed by modertors===",modArr)
   const currentUserfromDatabase=await User.findOne({_id:currentUserObj})
   // console.log("total review id-====",totalReviewedUserList)
