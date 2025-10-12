@@ -24,7 +24,10 @@ export default class NotificationRepository {
   }
 
   async findAllByUserId(userId:string){
-    return Notification.find({ user_id: userId })
+    const notifications=await Notification.find({user_id:userId})
+    // console.log("Notificatons ",notifications)
+    return notifications
+
   }
 
   async findUnreadByUserId(

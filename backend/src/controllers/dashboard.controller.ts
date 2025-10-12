@@ -39,6 +39,7 @@ export const getMyTasks: Middleware[] = [
     try {
       const currentUserId = req.user._id.toString();
       const currentRole = req.user.role;
+      console.log("for commiting")
       const tasks = await dashboardService.getMyTasks(currentUserId, currentRole);
       res.json(tasks);
     } catch (error: any) {

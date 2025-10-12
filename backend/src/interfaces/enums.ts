@@ -37,7 +37,7 @@ export enum PeerStatus {
 }
 
 export enum NotificationType {
-  QUESTION_ASSIGNED = 'question_assigned',
+  QUESTION_ASSIGNED = 'question_assigned', 
   PEER_REVIEW_REQUEST = 'peer_review_request',
   REVISION_NEEDED = 'revision_needed',
   VALIDATION_REQUEST = 'validation_request',

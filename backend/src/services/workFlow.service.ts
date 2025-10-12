@@ -122,6 +122,7 @@ export default class WorkflowService {
       related_entity_type: 'answer',
       related_entity_id: answerId,
     });
+    logger.info(`[DEBUG] assignToPeerReviewer called for ${answerId} from stack:`, new Error().stack);
 
     logger.info(`Peer review assigned: answer ${answerId} to ${reviewer.name}`);
     return true;
