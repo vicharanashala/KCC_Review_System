@@ -65,7 +65,7 @@ export default class NotificationRepository {
 
   async findByQuestion(question_id: string): Promise<INotification[]> {
     const notification= await Notification.find({  related_entity_id:question_id});
-    console.log("the first notificaj===",notification)
+  //  console.log("the first notificaj===",notification)
     return notification
   }
   /*async findAndUpdateNotification(

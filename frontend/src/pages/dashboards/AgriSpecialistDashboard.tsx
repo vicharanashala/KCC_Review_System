@@ -119,6 +119,7 @@ const AgriSpecialistDashboard = () => {
   const [statevalue,setStateValue]=useState(rejectedQuestion[0]?.state||'')
   const [cropName,setCropName]=useState(rejectedQuestion[0]?.crop||'')
   const [region,setRegion]=useState(rejectedQuestion[0]?.district||'')
+
   
   useEffect(()=>{
     if(rejectedQuestion && rejectedQuestion.length>=1)
@@ -157,6 +158,7 @@ const AgriSpecialistDashboard = () => {
     setSectorValue('')
     setCropName('')
     setRegion('')
+  
   };
 
   const handleQuestionSubmit = async () => {
@@ -225,6 +227,7 @@ const AgriSpecialistDashboard = () => {
       formData.append('crop',cropName)
       formData.append('district',region)
       formData.append('status',"assigned_to_moderation")
+    
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/questions`, {
         method: 'POST',
         headers: {
@@ -471,7 +474,9 @@ const AgriSpecialistDashboard = () => {
                 </IconButton>
               </DialogTitle>
               <DialogContent dividers>
-              <TextField
+                {
+                  rejectedQuestion[0]?.type === "question_rejected"?
+                  <TextField
                   autoFocus
                   margin="dense"
                   id="question"
@@ -484,7 +489,9 @@ const AgriSpecialistDashboard = () => {
                   value={rejectedQuestion[0]?.comments}
                  
                   sx={{ mt: 1 }}
-                />
+                />:''
+                }
+              
               <FormControl fullWidth margin="normal" sx={{ mb: 2 }}>
               <InputLabel id="role-label">Sector Type *</InputLabel>
               <Select

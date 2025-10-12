@@ -177,9 +177,7 @@ export default class PeerValidationService {
           );
           logger.info(`Peer Review Submitted Successfully to---${user?.name} `);
 
-          logger.info(
-            `Peer revised answer ${answer.answer_id} to new version ${newAnswer.version}`
-          );
+       // logger.info(`Peer revised answer ${answer.answer_id} to new version ${newAnswer.version}`);
         }
 
         return {
