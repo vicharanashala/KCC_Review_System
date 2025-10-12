@@ -43,11 +43,12 @@ export default class NotificationRepository {
     notificationId: string,
     userId: string
   ): Promise<INotification | null> {
-    return Notification.findOneAndUpdate(
+    return null
+    /*Notification.findOneAndUpdate(
       { notification_id: notificationId, user_id: userId },
       { is_read: true },
       { new: true }
-    ).populate("user_id");
+    ).populate("user_id");*/
   }
 
   async markAllAsRead(userId: string): Promise<{ modifiedCount: number }> {
