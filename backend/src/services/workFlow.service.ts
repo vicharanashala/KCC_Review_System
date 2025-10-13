@@ -32,6 +32,13 @@ export default class WorkflowService {
     const candidates = moderators.filter((m: any) => m.workload_count === minWorkload);
     return candidates[0];
   }
+  static async getRandomAvailableModeratorList(currentUserObj?: any,questionObj?: any): Promise<any | null> {
+    const moderators = await userRepo.getAvailableModeratorList(currentUserObj,questionObj);
+    if (!moderators.length) return null;
+    const minWorkload = Math.min(...moderators.map((m: any) => m.workload_count));
+    const candidates = moderators.filter((m: any) => m.workload_count === minWorkload);
+    return candidates[0];
+  }
 
   static async assignQuestionToSpecialist(questionId: string,currentUserId?: string): Promise<boolean> {
     const question = await questionRepo.findByQuestionId(questionId);
@@ -115,6 +122,7 @@ export default class WorkflowService {
       related_entity_type: 'answer',
       related_entity_id: answerId,
     });
+    logger.info(`[DEBUG] assignToPeerReviewer called for ${answerId} from stack:`, new Error().stack);
 
     logger.info(`Peer review assigned: answer ${answerId} to ${reviewer.name}`);
     return true;
@@ -185,10 +193,10 @@ export default class WorkflowService {
     if(questionData.user_id)
     {
        currentUser = await userRepo.findById(questionData.user_id)
-       specialist = await this.getRandomAvailableModerator(currentUser,question);
+       specialist = await this.getRandomAvailableModeratorList(currentUser,question);
     }
     else{
-      specialist = await this.getRandomAvailableModerator();
+      specialist = await this.getRandomAvailableModeratorList();
     }
     
     if (!question) return false;
@@ -198,8 +206,10 @@ export default class WorkflowService {
       logger.warning('No available specialists for assignment');
       return false;
     }
+
 if(questionData.status=="revised")
 {
+ // console.log("the revised condition")
  // const user_id = mongoose.Types.ObjectId.createFromHexString(question.user_id)
   question.assigned_specialist_id = mongoose.Types.ObjectId.createFromHexString(question.user_id);
     question.status = QuestionStatus.ASSIGNED_TO_MODERATION;
@@ -225,15 +235,27 @@ if(questionData.status=="revised")
       comments:questionData. comments || '',
       peer_validation_id: `PV_${uuidv4().slice(0, 8).toUpperCase()}`,
     });
+  // console.log("the newPeervali=====",newPeerVal)
     
     logger.info(`Question ${questionId} assigned to original user ${userDetails?.email}`);
 }
 else{
+ // console.log("the condition approved")
     question.assigned_specialist_id = specialist._id;
     question.status = QuestionStatus.ASSIGNED_TO_MODERATION;
-    question.reviewed_by_Moderators=specialist._id
-    await question.save();
-
+   // question.reviewed_by_Moderators.push(specialist._id)
+    questionData.reviewed_by_Moderators = 
+    question.reviewed_by_Moderators.push(specialist._id)
+    
+   // question.reviewed_by_Moderators=specialist._id
+    //await question.save();
+    try {
+      await question.save();
+     // console.log('Saved successfully');
+    } catch (err) {
+     // console.error('Save failed:', err);
+    }
+   // console.log("the condition approved",specialist._id)
     await userRepo.updateWorkload(specialist._id.toString(), 1);
 
     await notificationRepo.create({
@@ -244,6 +266,7 @@ else{
       related_entity_type: 'question',
       related_entity_id: questionId,
     });
+   // question.reviewed_by_Moderators.push(specialist._id)
     const newPeerVal = await peerValidationRepo.create({
      
       quetion_id: questionId,

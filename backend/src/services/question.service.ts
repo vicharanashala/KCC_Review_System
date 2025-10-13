@@ -8,6 +8,7 @@ import { QuestionStatus ,NotificationType} from '../interfaces/enums';
 import mongoose from "mongoose";
 import PeerValidationRepository from '../repositories/peerValidation.repository';
 import UserRepository from '../repositories/user.repository';
+import { ILLMQuestion } from '../models/LlmQuestion.model';
 const userRepo = new UserRepository();
 const questionRepo = new QuestionRepository();
 const notificationRepo = new NotificationRepository();
@@ -46,7 +47,7 @@ export default class QuestionService {
            
              
             }
-           if(question.question_approval>=2)
+        if(question.question_approval>=2)
         {
           console.log("the question approved====********",question)
           question.reviewed_by_Moderators=[]
@@ -55,7 +56,9 @@ export default class QuestionService {
         logger.info(`New question submitted To modarator: ${question.question_id}`);
         }
         else{
+         // console.log("the else block is executing====")
             setImmediate(() => WorkflowService.assignQuestionToModerator(question.question_id,questionData));
+            logger.info(`second question review submitted To modarator: ${question.question_id}`);
         }
            
           }
@@ -64,7 +67,8 @@ export default class QuestionService {
             await userRepo.updateWorkload(question.user_id, -1);
             const convertUserid = mongoose.Types.ObjectId.createFromHexString(question.user_id)
             question.question_approval= 0 
-            question.reviewed_by_Moderators=[]
+           // question.reviewed_by_Moderators=[]
+            
          
             await question.save()
             logger.info(`Question Assigned back to original question creater ${question.question_id},${question.user_id}`);
@@ -77,6 +81,15 @@ export default class QuestionService {
             setImmediate(() => WorkflowService.assignQuestionToModerator(question.question_id,questionData));
             }
        else {
+        if (questionData.reviewed_by_Moderators) {
+          questionData.reviewed_by_Moderators.push(
+            new mongoose.Types.ObjectId(questionData.user_id)
+          );
+        } else {
+          questionData.reviewed_by_Moderators = [
+            new mongoose.Types.ObjectId(questionData.user_id)
+          ];
+        }
         await userRepo.updateWorkload(question.user_id, -1);
               
            const updatedQuestion=   await questionRepo.findAndUpdateQuestion(question.question_id,questionData, questionData.status as QuestionStatus)
@@ -110,7 +123,17 @@ export default class QuestionService {
       
     }
     else{ 
-      const question = await questionRepo.create({ ...questionData, status: questionData.status as QuestionStatus,question_id: `Q_${uuidv4().slice(0, 8).toUpperCase()}` });
+      if (questionData.reviewed_by_Moderators) {
+        questionData.reviewed_by_Moderators.push(
+          new mongoose.Types.ObjectId(questionData.user_id)
+        );
+      } else {
+        questionData.reviewed_by_Moderators = [
+          new mongoose.Types.ObjectId(questionData.user_id)
+        ];
+      }
+      
+      const question = await questionRepo.create({ ...questionData, status: questionData.status as QuestionStatus,question_id: `Q_${uuidv4().slice(0, 8).toUpperCase()}`, });
       setImmediate(() => WorkflowService.assignQuestionToModerator(question.question_id,questionData));
       return {
         question_id: question.question_id,
@@ -170,5 +193,9 @@ export default class QuestionService {
   async getAssignedToUser(userId: string): Promise<any[]> {
     const data = questionRepo.findAssignedToUser(userId, [QuestionStatus.ASSIGNED_TO_SPECIALIST, QuestionStatus.NEEDS_REVISION, QuestionStatus.READY_FOR_GOLDEN_FAQ]);
     return data
+  }
+
+  async createLLMQuestions(data:ILLMQuestion){
+    return await questionRepo.createLLmQuestion(data)
   }
 }

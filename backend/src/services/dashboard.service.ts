@@ -85,11 +85,10 @@ export default class DashboardService {
         });
       }
 
-      // const peerNotifications = await notificationRepo.findUnreadByUserId(currentUserId, NotificationType.PEER_REVIEW_REQUEST);
-      const peerNotifications = await notificationRepo.findAllByUserId(currentUserId)
+      const peerNotifications = await notificationRepo.findUnreadByUserId(currentUserId, NotificationType.PEER_REVIEW_REQUEST);
       for (const notification of peerNotifications) {
   const peerAnswer = await answerRepo.findByAnswerId(notification.related_entity_id as string);
-    
+
   if (peerAnswer && peerAnswer.question_id && !(peerAnswer.question_id instanceof Types.ObjectId)) {
     const q = peerAnswer.question_id as IQuestion;
 
@@ -116,8 +115,7 @@ export default class DashboardService {
   }
 }
     } else if (currentRole === UserRole.MODERATOR) {
-      // const validationNotifications = await notificationRepo.findUnreadByUserId(currentUserId, NotificationType.VALIDATION_REQUEST);
-      const validationNotifications = await notificationRepo.findAllByUserId(currentUserId);
+      const validationNotifications = await notificationRepo.findUnreadByUserId(currentUserId, NotificationType.VALIDATION_REQUEST);
       for (const notification of validationNotifications) {
         const answer = await answerRepo.findByAnswerId(notification.related_entity_id as string);
         if (answer && answer.question_id && !(answer.question_id instanceof Types.ObjectId)) {

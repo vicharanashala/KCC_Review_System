@@ -2,6 +2,7 @@ import Question from '../models/question.model';
 import { IQuestion } from '../interfaces/question.interface';
 import { QuestionStatus } from '../interfaces/enums';
 import { HydratedDocument } from 'mongoose';
+import LlmQuestionModel, { ILLMQuestion } from '../models/LlmQuestion.model';
 export type QuestionDocument = HydratedDocument<IQuestion>
 export default class QuestionRepository {
   async create(questionData: Partial<IQuestion>): Promise<IQuestion> {
@@ -64,7 +65,7 @@ export default class QuestionRepository {
             ...questionData,
             status, // ensure status is stored as the enum value
             updated_at: new Date(),
-            reviewed_by_Moderators:[]
+          // reviewed_by_Moderators:[]
           }
         },
         {
@@ -74,11 +75,11 @@ export default class QuestionRepository {
       ).lean(); // optional for plain JS object
   
       if (!updatedQuestion) {
-        console.warn(`⚠️ No question found with ID ${question_id}`);
+      //  console.warn(`⚠️ No question found with ID ${question_id}`);
         return null;
       }
   
-      console.log("✅ Question updated:", updatedQuestion.question_id);
+     // console.log("✅ Question updated:", updatedQuestion.question_id);
       return updatedQuestion;
     } catch (err) {
       console.error("❌ Error updating question:", err);
@@ -203,6 +204,12 @@ export default class QuestionRepository {
     };
   }
   
+
+  async createLLmQuestion(data:ILLMQuestion){
+    const result =await LlmQuestionModel.create(data)
+    console.log("result after creating from repo ",result)
+    return result._id
+  }
   
   
   

@@ -8,6 +8,7 @@ import { authenticateToken, AuthRequest } from '../middleware/auth.middleware';
 import multer from 'multer'
 import csv from 'csv-parser'
 import { Readable } from 'stream';
+import { ILLMQuestion } from '../models/LlmQuestion.model';
 const questionService = new QuestionService();
 
 const createSchema = Joi.object({
@@ -150,6 +151,7 @@ export const submitQuestion: Middleware[] = [
           res.status(400).json({ detail: errorMessage });
           return;
         }
+        console.log("Quetiom creating ",req.body)
         const questionData: QuestionCreateDto = req.body;
        const question = await questionService.create(questionData);
         res.status(201).json(question);
@@ -198,3 +200,19 @@ export const getMyQuestions: Middleware[] = [
     }
   },
 ];
+
+
+export const CreateLLmQuestions: Middleware[] = [
+  // authenticateToken,
+  async (req: AuthRequest, res: Response):Promise<void> => {
+    try {
+      const body:ILLMQuestion = req.body
+      const result = await questionService.createLLMQuestions(body)
+      res.status(200).json({ result });
+    } catch (error: any) {
+      logger.error(error);
+      res.status(400).json({ detail: error.message });
+    }
+  },
+];
+
