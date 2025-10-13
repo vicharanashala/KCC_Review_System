@@ -437,7 +437,7 @@ const AgriSpecialistDashboard = () => {
       path: `${getBasePath()}/notifications`,
     },
   ];
-
+ 
   return (
     <Box sx={{ display: "flex", minHeight: "100vh" }}>
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
