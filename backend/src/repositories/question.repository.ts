@@ -2,6 +2,7 @@ import Question from '../models/question.model';
 import { IQuestion } from '../interfaces/question.interface';
 import { QuestionStatus } from '../interfaces/enums';
 import { HydratedDocument } from 'mongoose';
+import LlmQuestionModel, { ILLMQuestion } from '../models/LlmQuestion.model';
 export type QuestionDocument = HydratedDocument<IQuestion>
 export default class QuestionRepository {
   async create(questionData: Partial<IQuestion>): Promise<IQuestion> {
@@ -203,6 +204,12 @@ export default class QuestionRepository {
     };
   }
   
+
+  async createLLmQuestion(data:ILLMQuestion){
+    const result =await LlmQuestionModel.create(data)
+    console.log("result after creating from repo ",result)
+    return result._id
+  }
   
   
   

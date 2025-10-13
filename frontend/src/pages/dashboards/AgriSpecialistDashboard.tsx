@@ -1,22 +1,39 @@
-import { Box, Typography, Paper, Grid, Card, CardContent, Button, IconButton, Badge, Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress, 
+import {
+  Box,
+  Typography,
+  Paper,
+  Grid,
+  Card,
+  CardContent,
+  Button,
+  IconButton,
+  Badge,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  CircularProgress,
   MenuItem,
   FormControl,
   InputLabel,
-  Select } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import { useToast } from '../../contexts/ToastContext';
-import { useAuth } from '../../contexts/AuthContext';
-import RateReviewIcon from '@mui/icons-material/RateReview';
-import AssessmentIcon from '@mui/icons-material/Assessment';
-import NotificationsIcon from '@mui/icons-material/Notifications';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import AddIcon from '@mui/icons-material/Add';
-import ReportProblemOutlinedIcon from '@mui/icons-material/ReportProblemOutlined';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
-import { TextField } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+  Select,
+} from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useToast } from "../../contexts/ToastContext";
+import { useAuth } from "../../contexts/AuthContext";
+import RateReviewIcon from "@mui/icons-material/RateReview";
+import AssessmentIcon from "@mui/icons-material/Assessment";
+import NotificationsIcon from "@mui/icons-material/Notifications";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+import AddIcon from "@mui/icons-material/Add";
+import { CallReceived } from "@mui/icons-material";
+import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
+import { TextField } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+import ViewLLMQuestionsModal from "../../components/ViewLLMQuestions";
 
 const DashboardCard = ({
   title,
@@ -37,46 +54,63 @@ const DashboardCard = ({
       borderRadius: 2,
       p: 3,
       minHeight: 140,
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'flex-start',
-      boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-      borderColor: '#e5e7eb',
-      cursor: onClick ? 'pointer' : 'default',
-      backgroundColor: '#ffffff',
-      '&:hover': onClick ? {
-        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-        transform: 'translateY(-1px)',
-        transition: 'all 0.2s ease-in-out'
-      } : {},
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "flex-start",
+      boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+      borderColor: "#e5e7eb",
+      cursor: onClick ? "pointer" : "default",
+      backgroundColor: "#ffffff",
+      "&:hover": onClick
+        ? {
+            boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+            transform: "translateY(-1px)",
+            transition: "all 0.2s ease-in-out",
+          }
+        : {},
     }}
     onClick={onClick}
   >
-    <CardContent sx={{ p: 0, '&:last-child': { pb: 0 } }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="body2" color="#6b7280" sx={{ fontWeight: 500, fontSize: '0.875rem' }}>
+    <CardContent sx={{ p: 0, "&:last-child": { pb: 0 } }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 2,
+        }}
+      >
+        <Typography
+          variant="body2"
+          color="#6b7280"
+          sx={{ fontWeight: 500, fontSize: "0.875rem" }}
+        >
           {title}
         </Typography>
-        <Box sx={{ color: '#9ca3af', fontSize: '1.25rem' }}>
-          {icon}
-        </Box>
+        <Box sx={{ color: "#9ca3af", fontSize: "1.25rem" }}>{icon}</Box>
       </Box>
 
-      <Typography variant="h3" sx={{ 
-        fontWeight: 700, 
-        color: '#111827', 
-        mb: 1,
-        fontSize: '1rem',
-        lineHeight: 1.2
-      }}>
+      <Typography
+        variant="h3"
+        sx={{
+          fontWeight: 700,
+          color: "#111827",
+          mb: 1,
+          fontSize: "1rem",
+          lineHeight: 1.2,
+        }}
+      >
         {value}
       </Typography>
 
-      <Typography variant="caption" sx={{ 
-        color: '#6b7280', 
-        fontSize: '0.75rem',
-        fontWeight: 400
-      }}>
+      <Typography
+        variant="caption"
+        sx={{
+          color: "#6b7280",
+          fontSize: "0.75rem",
+          fontWeight: 400,
+        }}
+      >
         {caption}
       </Typography>
     </CardContent>
@@ -93,21 +127,23 @@ const AgriSpecialistDashboard = () => {
     consecutive_approvals: number;
     created_at: string;
     sources: any[];
-    comments:string,
-             question_type:string,
-             season:string,
-             state:string,
-             sector:string,
-             crop:string,
-             district:string,
-             kccAns:string,
-             peer_validation_id:string,
+    comments: string;
+    question_type: string;
+    season: string;
+    state: string;
+    sector: string;
+    crop: string;
+    district: string;
+    kccAns: string;
+    peer_validation_id: string;
   }
   const navigate = useNavigate();
-  const { showSuccess, showError,specialization,season,sector,states} = useToast();
+  const { showSuccess, showError, specialization, season, sector, states } =
+    useToast();
   const { user } = useAuth();
   const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false);
-  
+  // const [viewQuestionModal,setViewQuestionModal] = useState(false)
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFile,setSelectedFile] = useState<File | null>(null)
   const [rejectedQuestion,setRejectedQuestion]=useState<Task[]>([])
@@ -134,17 +170,14 @@ const AgriSpecialistDashboard = () => {
       setRegion(rejectedQuestion[0].district)
       //setQuestionText(rejectedQuestion[0].question_type)
     }
-   
-
-  },[rejectedQuestion])
+  }, [rejectedQuestion]);
 
   const handleOpenQuestionModal = (task?: Task | Task[]) => {
     setIsQuestionModalOpen(true);
     if (!task) return; // handle undefined safely
 
-  // Ensure we always store an array in state
-  setRejectedQuestion(Array.isArray(task) ? task : [task]);
-   
+    // Ensure we always store an array in state
+    setRejectedQuestion(Array.isArray(task) ? task : [task]);
   };
 
   const handleCloseQuestionModal = () => {
@@ -162,63 +195,58 @@ const AgriSpecialistDashboard = () => {
   };
 
   const handleQuestionSubmit = async () => {
-  
-     if (!specializationvalue.trim()) {
-     showError('Please enter question type');
-    return;
-     }
-     
-      
-        if (!seasonvalue.trim()) {
-          showError('Please enter season');
-         return;
-          }
-          if (!sectorValue.trim()) {
-            showError('Please enter sector type');
-           return;
-            }
-            if (!statevalue.trim()) {
-              showError('Please enter state');
-             return;
-              }
-              if (!cropName.trim()) {
-                showError('Please enter crop name');
-               return;
-                }
-          if (!region.trim()) {
-            showError('Please enter  region');
-           return;
-            }
-            
+    if (!specializationvalue.trim()) {
+      showError("Please enter question type");
+      return;
+    }
 
+    if (!seasonvalue.trim()) {
+      showError("Please enter season");
+      return;
+    }
+    if (!sectorValue.trim()) {
+      showError("Please enter sector type");
+      return;
+    }
+    if (!statevalue.trim()) {
+      showError("Please enter state");
+      return;
+    }
+    if (!cropName.trim()) {
+      showError("Please enter crop name");
+      return;
+    }
+    if (!region.trim()) {
+      showError("Please enter  region");
+      return;
+    }
 
     setIsSubmitting(true);
     try {
-      const token = localStorage.getItem('access_token');
-      const formData = new FormData()
-      const userId=localStorage.getItem('user_id')
-      if(userId)
-      {
-        formData.append('user_id',userId.toString())
+      const token = localStorage.getItem("access_token");
+      const formData = new FormData();
+      const userId = localStorage.getItem("user_id");
+      if (userId) {
+        formData.append("user_id", userId.toString());
       }
-      
+
       if (questionText.trim()) {
-        formData.append('original_query_text', questionText.trim());
+        formData.append("original_query_text", questionText.trim());
       }
       if (selectedFile) {
-        formData.append('csvFile', selectedFile);
+        formData.append("csvFile", selectedFile);
       }
-      if(kccAns)
-      {
-        formData.append("KccAns",kccAns)
+      if (kccAns) {
+        formData.append("KccAns", kccAns);
       }
-      if(rejectedQuestion[0]?.question_id)
-      {
-        formData.append('question_id',rejectedQuestion[0].question_id)
+      if (rejectedQuestion[0]?.question_id) {
+        formData.append("question_id", rejectedQuestion[0].question_id);
       }
-      if(rejectedQuestion[0]?.peer_validation_id)
-      {
-          formData.append('peer_validation_id',rejectedQuestion[0].peer_validation_id)
+      if (rejectedQuestion[0]?.peer_validation_id) {
+        formData.append(
+          "peer_validation_id",
+          rejectedQuestion[0].peer_validation_id
+        );
       }
       formData.append('query_type',specializationvalue)
       formData.append('season',seasonvalue)
@@ -241,35 +269,35 @@ const AgriSpecialistDashboard = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create question');
+        throw new Error("Failed to create question");
       }
-      const data = await response.json()
+      const data = await response.json();
       // showSuccess('Question created successfully!');
       if (Array.isArray(data)) {
         showSuccess(`${data.length} questions created successfully!`);
       } else {
-        showSuccess('Question created successfully!');
+        showSuccess("Question created successfully!");
       }
       handleCloseQuestionModal();
-      await fetchMyPerformance()
+      await fetchMyPerformance();
       await fetchMyTasks();
-     
     } catch (err) {
-      console.error('Error creating question:', err);
-      showError(err instanceof Error ? err.message : 'Failed to create question');
+      console.error("Error creating question:", err);
+      showError(
+        err instanceof Error ? err.message : "Failed to create question"
+      );
     } finally {
       setIsSubmitting(false);
-      setSpecilizationValue('')
-      setKccAns('')
-    setStateValue('')
-    setSeasonValue('')
-    setSectorValue('')
-    setCropName('')
-    setRegion('')
+      setSpecilizationValue("");
+      setKccAns("");
+      setStateValue("");
+      setSeasonValue("");
+      setSectorValue("");
+      setCropName("");
+      setRegion("");
     }
   };
 
-  
   interface Performance {
     totalAssigned: number;
     approvedCount: number;
@@ -290,42 +318,42 @@ const AgriSpecialistDashboard = () => {
     rankMessage?: string;
     latestApprovedQuestion?: ReviewQuestion | null;
     latestRevisedQuestion?: ReviewQuestion | null;
-    penality:number
+    penality: number;
   }
-  
+
   interface ReviewQuestion {
-    status: 'approved' | 'revised' | 'rejected';
+    status: "approved" | "revised" | "rejected";
     createdAt: string; // ISO date string
     questionId: string;
     questionText: string;
     answerId: string;
   }
-  
-  
-  
 
   const [tasks, setTasks] = useState<Task[]>([]);
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [notifications, setNotifications] = useState<any[]>([]);
-  const[performance,setPerformance]= useState<Performance | null>(null);
+  const [performance, setPerformance] = useState<Performance | null>(null);
 
   const fetchMyTasks = async () => {
     try {
-      const token = localStorage.getItem('access_token');
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/dashboard/my-tasks`, {
-        headers: {
-          Accept: 'application/json, text/plain, */*',
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (!res.ok) throw new Error('Failed to fetch tasks');
+      const token = localStorage.getItem("access_token");
+      const res = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/dashboard/my-tasks`,
+        {
+          headers: {
+            Accept: "application/json, text/plain, */*",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (!res.ok) throw new Error("Failed to fetch tasks");
       const data = await res.json();
       setTasks(data?.tasks || []);
       setFilteredTasks(data?.tasks || []);
     } catch (error) {
-      console.error('Error fetching tasks:', error);
+      console.error("Error fetching tasks:", error);
       setTasks([]);
       setFilteredTasks([]);
     } finally {
@@ -334,135 +362,193 @@ const AgriSpecialistDashboard = () => {
   };
   const fetchMyPerformance = async () => {
     try {
-      
-      const token = localStorage.getItem('access_token');
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/dashboard/getUserPerformance`, {
-        headers: {
-          Accept: 'application/json, text/plain, */*',
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (!res.ok) throw new Error('Failed to fetch tasks');
+      const token = localStorage.getItem("access_token");
+      const res = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/dashboard/getUserPerformance`,
+        {
+          headers: {
+            Accept: "application/json, text/plain, */*",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (!res.ok) throw new Error("Failed to fetch tasks");
       const data = await res.json();
-     
+
       setPerformance(data || []);
-     
     } catch (error) {
-      console.error('Error fetching tasks:', error);
+      console.error("Error fetching tasks:", error);
       setPerformance(null);
-     
     } finally {
       setLoading(false);
     }
   };
 
-
   const fetchNotifications = async () => {
     try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/notifications`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
+      const token = localStorage.getItem("access_token");
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/notifications`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      });
-      if (!response.ok) throw new Error('Failed to fetch notifications');
+      );
+      if (!response.ok) throw new Error("Failed to fetch notifications");
       const data = await response.json();
       setNotifications(data.notifications || []);
     } catch (error) {
-      console.error('Error fetching notifications:', error);
+      console.error("Error fetching notifications:", error);
       setNotifications([]);
     }
   };
 
   useEffect(() => {
-    fetchMyPerformance()
+    fetchMyPerformance();
     fetchMyTasks();
     fetchNotifications();
   }, []);
-  
+
   useEffect(() => {
     if (!searchQuery.trim()) {
       setFilteredTasks(tasks);
       return;
     }
-    
+
     const query = searchQuery.toLowerCase().trim();
-    const filtered = tasks.filter(task => {
+    const filtered = tasks.filter((task) => {
       return (
-        (task.question_text?.toLowerCase().includes(query)) ||
-        (task.question_id?.toString().includes(query))
+        task.question_text?.toLowerCase().includes(query) ||
+        task.question_id?.toString().includes(query)
       );
     });
     setFilteredTasks(filtered);
   }, [searchQuery, tasks]);
 
   const getBasePath = () => {
-    return user?.role === 'moderator' ? '/moderator' : '/agri-specialist';
+    return user?.role === "moderator" ? "/moderator" : "/agri-specialist";
   };
-  const performanceScore = (performance?.incentivePoints ?? 0) - (performance?.penality ?? 0);
+  const performanceScore =
+    (performance?.incentivePoints ?? 0) - (performance?.penality ?? 0);
 
   const quickActions = [
     {
-      title: 'Current Workload',
+      title: "Current Workload",
       value: tasks.length,
-      description: 'Pending assignments',
+      // description: 'Pending assignments',
+      description: "",
       icon: <RateReviewIcon />,
       path: `${getBasePath()}/review-queue`,
     },
     {
-      title: 'Approval Rate',
-      value: performance ? `${performance.approvalRate||0}%` : '--',
-  description: performance ? `Of ${performance.totalAssigned || 0} reviews` : 'Loading...',
+      title: "Approval Rate",
+      value: performance ? `${performance.approvalRate || 0}%` : "--",
+      // description: performance ? `Of ${performance.totalAssigned || 0} reviews` : 'Loading...',
       icon: <AssessmentIcon />,
-      path: `${getBasePath()}/performance?data=${encodeURIComponent(JSON.stringify(performance))}`,
+      path: `${getBasePath()}/performance?data=${encodeURIComponent(
+        JSON.stringify(performance)
+      )}`,
     },
     {
-      title: 'Performance Score',
+      title: "Performance Score",
       value: performance?.approvedCount ?? 0,
-      description: `+2 / -0`,
+      // description: `+2 / -0`,
       icon: <NotificationsIcon />,
       path: `${getBasePath()}/notifications`,
     },
   ];
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+    <Box sx={{ display: "flex", minHeight: "100vh" }}>
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
           <Box>
             <Typography variant="h4" component="h1" gutterBottom>
-              
-              {user?.role === 'moderator' ? "Moderator Dashboard" : "Reviewer Dashboard"}
+              {user?.role === "moderator"
+                ? "Moderator Dashboard"
+                : "Reviewer Dashboard"}
             </Typography>
             <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
               Welcome back! You have {tasks.length} pending reviews.
             </Typography>
           </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-          {user?.role === 'moderator' && (
-            <Button
-                variant="outlined"
-                fullWidth
-                startIcon={<AddIcon fontSize="small" sx={{ color: '#000' }} />}
-                onClick={()=>handleOpenQuestionModal()}
-                sx={{
-                  borderRadius: 2,
-                  textTransform: 'none',
-                  color: '#000',
-                  width: '100%',
-                  borderColor: '#0000001A',
-                  '&:hover': {
-                    borderColor: '#0000001A',
-                  },
-                }}
-              >
-                Question
-              </Button>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
+            {user?.role === "moderator" && (
+              <>
+                <Button
+                  variant="outlined"
+                  fullWidth
+                  startIcon={<CallReceived fontSize="small" sx={{ color: '#000' }} />}
+                  onClick={() => setIsViewModalOpen(true)}
+                  sx={{
+                    borderRadius: 2,
+                    textTransform: "none",
+                    color: "#000",
+                    width: "100%",
+                    borderColor: "#0000001A",
+                    "&:hover": {
+                      borderColor: "#0000001A",
+                    },
+                  }}
+                >
+                  From LLM
+                </Button>
+
+                <Button
+                  variant="outlined"
+                  fullWidth
+                  startIcon={
+                    <AddIcon fontSize="small" sx={{ color: "#000" }} />
+                  }
+                  onClick={() => handleOpenQuestionModal()}
+                  sx={{
+                    borderRadius: 2,
+                    textTransform: "none",
+                    color: "#000",
+                    width: "100%",
+                    borderColor: "#0000001A",
+                    "&:hover": {
+                      borderColor: "#0000001A",
+                    },
+                  }}
+                >
+                  Question
+                </Button>
+              </>
             )}
 
-            <Dialog open={isQuestionModalOpen} onClose={handleCloseQuestionModal} maxWidth="sm" fullWidth>
-              <DialogTitle sx={{ m: 0, p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="h6">{rejectedQuestion[0]?.type === "question_rejected"? "Please Correct Your Question" : "Create Question"}</Typography>
+            <ViewLLMQuestionsModal
+            open={isViewModalOpen} 
+              onClose={() => setIsViewModalOpen(false)}
+            />
+
+            <Dialog
+              open={isQuestionModalOpen}
+              onClose={handleCloseQuestionModal}
+              maxWidth="sm"
+              fullWidth
+            >
+              <DialogTitle
+                sx={{
+                  m: 0,
+                  p: 2,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <Typography variant="h6">
+                  {rejectedQuestion[0]?.type === "question_rejected"
+                    ? "Please Correct Your Question"
+                    : "Create Question"}
+                </Typography>
                 <IconButton
                   aria-label="close"
                   onClick={handleCloseQuestionModal}
@@ -487,7 +573,6 @@ const AgriSpecialistDashboard = () => {
                   multiline
                   rows={1}
                   value={rejectedQuestion[0]?.comments}
-                 
                   sx={{ mt: 1 }}
                 />:''
                 }
@@ -619,9 +704,8 @@ const AgriSpecialistDashboard = () => {
                   onChange={(e) => setQuestionText(e.target.value)}
                   sx={{ mt: 1 }}
                 />
-                
 
-            <TextField
+                <TextField
                   autoFocus
                   margin="dense"
                   id="question"
@@ -637,38 +721,46 @@ const AgriSpecialistDashboard = () => {
                   sx={{ mt: 1 }}
                 />
               </DialogContent>
-              
+
               <DialogContent>
-                <label htmlFor="csv-upload">Add Your CSV here</label> <br/>
+                <label htmlFor="csv-upload">Add Your CSV here</label> <br />
                 <input
                   id="csv-upload"
                   type="file"
                   accept=".csv"
                   title="Upload CSV file"
                   placeholder="Choose a CSV file"
-                  onChange={(e) => setSelectedFile(e.target.files ? e.target.files[0] : null)}
+                  onChange={(e) =>
+                    setSelectedFile(e.target.files ? e.target.files[0] : null)
+                  }
                 />
               </DialogContent>
               <DialogActions sx={{ p: 2 }}>
-                <Button 
+                <Button
                   onClick={handleCloseQuestionModal}
-                  sx={{ textTransform: 'none' }}
+                  sx={{ textTransform: "none" }}
                 >
                   Cancel
                 </Button>
                 <Button
                   variant="contained"
                   onClick={handleQuestionSubmit}
-                  disabled={isSubmitting || (!questionText.trim() && !selectedFile)}
+                  disabled={
+                    isSubmitting || (!questionText.trim() && !selectedFile)
+                  }
                   sx={{
-                    textTransform: 'none',
-                    backgroundColor: '#00A63E',
-                    '&:hover': {
-                      backgroundColor: '#008c35',
+                    textTransform: "none",
+                    backgroundColor: "#00A63E",
+                    "&:hover": {
+                      backgroundColor: "#008c35",
                     },
                   }}
                 >
-                  {isSubmitting ? <CircularProgress size={24} color="inherit" /> : 'Create Question'}
+                  {isSubmitting ? (
+                    <CircularProgress size={24} color="inherit" />
+                  ) : (
+                    "Create Question"
+                  )}
                 </Button>
               </DialogActions>
             </Dialog>
@@ -676,15 +768,23 @@ const AgriSpecialistDashboard = () => {
             <Button
               variant="outlined"
               fullWidth
-              startIcon={<TrendingUpIcon fontSize="small" sx={{ color: '#000' }} />}
-              onClick={() => navigate(`${getBasePath()}/performance?data=${encodeURIComponent(JSON.stringify(performance))}`)}
+              startIcon={
+                <TrendingUpIcon fontSize="small" sx={{ color: "#000" }} />
+              }
+              onClick={() =>
+                navigate(
+                  `${getBasePath()}/performance?data=${encodeURIComponent(
+                    JSON.stringify(performance)
+                  )}`
+                )
+              }
               sx={{
                 borderRadius: 2,
-                textTransform: 'none',
-                color: '#000',
-                borderColor: '#0000001A',
-                '&:hover': {
-                  borderColor: '#0000001A',
+                textTransform: "none",
+                color: "#000",
+                borderColor: "#0000001A",
+                "&:hover": {
+                  borderColor: "#0000001A",
                 },
               }}
             >
@@ -692,22 +792,27 @@ const AgriSpecialistDashboard = () => {
             </Button>
 
             <Badge
-              badgeContent={notifications.filter(n => !n.is_read).length}
+              badgeContent={notifications.filter((n) => !n.is_read).length}
               color="error"
-              sx={{ '& .MuiBadge-badge': { top: 6, right: 6 } }}
+              sx={{ "& .MuiBadge-badge": { top: 6, right: 6 } }}
             >
               <Button
                 variant="outlined"
                 fullWidth
-                startIcon={<ReportProblemOutlinedIcon fontSize="small" sx={{ color: '#000' }} />}
+                startIcon={
+                  <ReportProblemOutlinedIcon
+                    fontSize="small"
+                    sx={{ color: "#000" }}
+                  />
+                }
                 onClick={() => navigate(`${getBasePath()}/notifications`)}
                 sx={{
                   borderRadius: 2,
-                  textTransform: 'none',
-                  color: '#000',
-                  borderColor: '#0000001A',
-                  '&:hover': {
-                    borderColor: '#0000001A',
+                  textTransform: "none",
+                  color: "#000",
+                  borderColor: "#0000001A",
+                  "&:hover": {
+                    borderColor: "#0000001A",
                   },
                 }}
               >
@@ -737,8 +842,8 @@ const AgriSpecialistDashboard = () => {
               sx={{
                 p: 3,
                 borderRadius: 3,
-                border: '1px solid #f0f0f0',
-                boxShadow: 'none',
+                border: "1px solid #f0f0f0",
+                boxShadow: "none",
               }}
             >
               <Typography variant="subtitle1" fontWeight={600} gutterBottom>
@@ -756,23 +861,23 @@ const AgriSpecialistDashboard = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 sx={{
-                  backgroundColor: '#fff8ef',
+                  backgroundColor: "#fff8ef",
                   borderRadius: 2,
                   mb: 3,
                   input: {
                     fontSize: 14,
-                    color: '#5f5f5f',
+                    color: "#5f5f5f",
                     paddingY: 1.5,
                     paddingX: 2,
                   },
-                  '& fieldset': {
-                    borderColor: '#fdebc8',
+                  "& fieldset": {
+                    borderColor: "#fdebc8",
                   },
-                  '&:hover fieldset': {
-                    borderColor: '#fcd89d',
+                  "&:hover fieldset": {
+                    borderColor: "#fcd89d",
                   },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#fcd89d',
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#fcd89d",
                   },
                 }}
               />
@@ -783,11 +888,12 @@ const AgriSpecialistDashboard = () => {
                 </Typography>
               ) : filteredTasks.length === 0 ? (
                 <Typography variant="body2" color="text.secondary">
-                  {searchQuery ? 'No tasks match your search.' : 'No tasks available.'}
+                  {searchQuery
+                    ? "No tasks match your search."
+                    : "No tasks available."}
                 </Typography>
               ) : (
                 filteredTasks.map((task, index) => (
-                  
                   <Paper
                     key={`${task.answer_id}-${index}`}
                     variant="outlined"
@@ -795,90 +901,118 @@ const AgriSpecialistDashboard = () => {
                       p: 2,
                       mb: 2,
                       borderRadius: 2,
-                      borderColor: '#eee',
-                      '&:hover': {
+                      borderColor: "#eee",
+                      "&:hover": {
                         boxShadow: 1,
-                        cursor: 'pointer'
-                      }
-                    }}>
-                    <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                        cursor: "pointer",
+                      },
+                    }}
+                  >
+                    <Typography
+                      variant="subtitle2"
+                      fontWeight={600}
+                      gutterBottom
+                    >
                       {task.question_text}
                     </Typography>
 
-                    
-                   
-                      {task.type==="Reject"?
-                       <Typography variant="caption" color="text.secondary" display="block">
-                      Rejected: {new Date(task.created_at).toLocaleDateString()}
+                    {task.type === "Reject" ? (
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        display="block"
+                      >
+                        Rejected:{" "}
+                        {new Date(task.created_at).toLocaleDateString()}
                       </Typography>
-                      :
-                      <Typography variant="caption" color="text.secondary" display="block">
-                      Approvals: {task.consecutive_approvals} • {new Date(task.created_at).toLocaleDateString()}
+                    ) : (
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        display="block"
+                      >
+                        Approvals: {task.consecutive_approvals} •{" "}
+                        {new Date(task.created_at).toLocaleDateString()}
                       </Typography>
-                      }
-                      
-                    
-                        <Box
-     
-    >
-                      {task.sources && task.sources.length>=1 &&task.sources.map(source => (
-                         <Box 
-                         sx={{
-                          width: 400,         // fixed width in px
-                          height: 20,        // fixed height in px
-                         
-                          display:'flex',
-                          justifyContent:'space-between'
-                        }}
-                           >
-                          <Typography variant="caption" color="text.secondary" display="block">
-                          SourceName:{source.name}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary" display="block">
-                          SourceUrl:<a href={source.link}>Open</a>
-                          </Typography>
-                         </Box>
-                          ))}
-                        </Box>
-                         
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    )}
+
+                    <Box>
+                      {task.sources &&
+                        task.sources.length >= 1 &&
+                        task.sources.map((source) => (
+                          <Box
+                            sx={{
+                              width: 400, // fixed width in px
+                              height: 20, // fixed height in px
+
+                              display: "flex",
+                              justifyContent: "space-between",
+                            }}
+                          >
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              display="block"
+                            >
+                              SourceName:{source.name}
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              display="block"
+                            >
+                              SourceUrl:<a href={source.link}>Open</a>
+                            </Typography>
+                          </Box>
+                        ))}
+                    </Box>
+
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
                       <Typography variant="caption" color="text.secondary">
                         Question ID: {task.question_id}
                       </Typography>
-                      
+
                       <Button
                         variant="contained"
                         size="small"
-                        onClick={task.type === "question_rejected"?()=>handleOpenQuestionModal(task):() => navigate(`${getBasePath()}/review-queue`, { state: { task } })}
+                        onClick={
+                          task.type === "question_rejected"
+                            ? () => handleOpenQuestionModal(task)
+                            : () =>
+                                navigate(`${getBasePath()}/review-queue`, {
+                                  state: { task },
+                                })
+                        }
                         sx={{
-                          backgroundColor: '#000',
-                          textTransform: 'none',
+                          backgroundColor: "#000",
+                          textTransform: "none",
                           borderRadius: 2,
                           px: 2,
                           py: 0.5,
                           fontSize: 13,
-                          '&:hover': { backgroundColor: '#222' },
+                          "&:hover": { backgroundColor: "#222" },
                         }}
                       >
-                       
-                       {
-    task.type === "Reject"
-    ? "Revise Answer"
-    : task.type === "question_validation"
-    ? "Question Review"
-    : task.type === "create_answer"
-    ? "Submit Answer"
-    : task.type === "question_rejected"
-    ? "Question Revised"
-    : "Review Answer"
-}
-                      
+                        {task.type === "Reject"
+                          ? "Revise Answer"
+                          : task.type === "question_validation"
+                          ? "Question Review"
+                          : task.type === "create_answer"
+                          ? "Submit Answer"
+                          : task.type === "question_rejected"
+                          ? "Question Revised"
+                          : "Review Answer"}
                       </Button>
                     </Box>
                   </Paper>
                 ))
               )}
-
             </Paper>
           </Grid>
 
@@ -887,8 +1021,8 @@ const AgriSpecialistDashboard = () => {
               sx={{
                 p: 3,
                 borderRadius: 3,
-                border: '1px solid #f0f0f0',
-                boxShadow: 'none',
+                border: "1px solid #f0f0f0",
+                boxShadow: "none",
                 mb: 3,
               }}
             >
@@ -896,52 +1030,61 @@ const AgriSpecialistDashboard = () => {
                 Recent Activity
               </Typography>
 
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <CheckCircleOutlineIcon fontSize="small" color="success" sx={{ mr: 1 }} />
+              <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                <CheckCircleOutlineIcon
+                  fontSize="small"
+                  color="success"
+                  sx={{ mr: 1 }}
+                />
                 <Box>
                   <Typography variant="body2" fontWeight={500}>
                     Approved
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                  {performance?.latestApprovedQuestion?.questionText
-  ? performance.latestApprovedQuestion.questionText
-  : 'N/A'}
+                    {performance?.latestApprovedQuestion?.questionText
+                      ? performance.latestApprovedQuestion.questionText
+                      : "N/A"}
                     <br />
                     {performance?.latestApprovedQuestion?.createdAt
-  ? new Date(performance.latestApprovedQuestion.createdAt).toLocaleString()
-  : 'N/A'}
+                      ? new Date(
+                          performance.latestApprovedQuestion.createdAt
+                        ).toLocaleString()
+                      : "N/A"}
                   </Typography>
                 </Box>
               </Box>
 
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <CancelOutlinedIcon fontSize="small" color="error" sx={{ mr: 1 }} />
+              <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                <CancelOutlinedIcon
+                  fontSize="small"
+                  color="error"
+                  sx={{ mr: 1 }}
+                />
                 <Box>
                   <Typography variant="body2" fontWeight={500}>
                     Rejected
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                  {performance?.latestRevisedQuestion?.questionText
-  ? performance.latestRevisedQuestion.questionText
-  : 'N/A'}
+                    {performance?.latestRevisedQuestion?.questionText
+                      ? performance.latestRevisedQuestion.questionText
+                      : "N/A"}
                     <br />
                     {performance?.latestRevisedQuestion?.createdAt
-  ? new Date(performance.latestRevisedQuestion.createdAt).toLocaleString()
-  : 'N/A'}
+                      ? new Date(
+                          performance.latestRevisedQuestion.createdAt
+                        ).toLocaleString()
+                      : "N/A"}
                   </Typography>
                 </Box>
               </Box>
-
-              
-             
             </Paper>
 
             <Paper
               sx={{
                 p: 3,
                 borderRadius: 3,
-                border: '1px solid #f0f0f0',
-                boxShadow: 'none',
+                border: "1px solid #f0f0f0",
+                boxShadow: "none",
               }}
             >
               <Typography variant="subtitle1" fontWeight={600} gutterBottom>
@@ -949,36 +1092,55 @@ const AgriSpecialistDashboard = () => {
               </Typography>
 
               <Box sx={{ mt: 2 }}>
-                <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ mb: 1, display: "block" }}
+                >
                   Approval Rate
                 </Typography>
-                <Box sx={{ height: 6, borderRadius: 5, bgcolor: '#e0e0e0', position: 'relative' }}>
+                <Box
+                  sx={{
+                    height: 6,
+                    borderRadius: 5,
+                    bgcolor: "#e0e0e0",
+                    position: "relative",
+                  }}
+                >
                   <Box
                     sx={{
                       width: `${performance?.approvalRate ?? 0}%`,
-                      height: '100%',
-                      bgcolor: '#000',
+                      height: "100%",
+                      bgcolor: "#000",
                       borderRadius: 5,
-                      position: 'absolute',
+                      position: "absolute",
                       top: 0,
                       left: 0,
                     }}
                   />
                 </Box>
                 <Typography variant="body2" fontWeight={500} sx={{ mt: 1 }}>
-                {performance?.approvalRate}%
+                  {performance?.approvalRate}%
                 </Typography>
               </Box>
 
-              <Box sx={{ display: 'flex', justifyContent: 'space-around', mt: 2, borderTop: '1px solid #e0e0e0', pt: 2 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-around",
+                  mt: 2,
+                  borderTop: "1px solid #e0e0e0",
+                  pt: 2,
+                }}
+              >
                 <Typography variant="body2" color="success.main">
-                  {performance?.incentivePoints||0} <br />
+                  {performance?.incentivePoints || 0} <br />
                   <Typography variant="caption" color="text.secondary">
                     Incentives
                   </Typography>
                 </Typography>
                 <Typography variant="body2" color="error.main">
-                  {performance?.penality||0} <br />
+                  {performance?.penality || 0} <br />
                   <Typography variant="caption" color="text.secondary">
                     Penalties
                   </Typography>
@@ -993,3 +1155,4 @@ const AgriSpecialistDashboard = () => {
 };
 
 export default AgriSpecialistDashboard;
+
