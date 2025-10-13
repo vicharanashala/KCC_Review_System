@@ -198,4 +198,12 @@ export default class QuestionService {
   async createLLMQuestions(data:ILLMQuestion){
     return await questionRepo.createLLmQuestion(data)
   }
+
+  async getAllLLMQuestions(){
+    return await questionRepo.getAllLLMQuestions()
+  }
+
+  async getLLmQuestionsByUserId(userId:string){
+    return await questionRepo.getLLMQuestionsBYUserId(userId)
+  }
 }

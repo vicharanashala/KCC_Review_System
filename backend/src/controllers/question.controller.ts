@@ -216,3 +216,34 @@ export const CreateLLmQuestions: Middleware[] = [
   },
 ];
 
+export const getAllLLmQuestions: Middleware[] = [
+  authenticateToken,
+  async (req: AuthRequest, res: Response):Promise<void> => {
+    try {
+      const result = await questionService.getAllLLMQuestions()
+      res.status(200).json( result );
+    } catch (error: any) {
+      logger.error(error);
+      res.status(400).json({ detail: error.message });
+    }
+  },
+];
+
+
+export const getLLmQuestionsByUserId: Middleware[] = [
+  authenticateToken,
+  async (req: AuthRequest, res: Response):Promise<void> => {
+    try {
+      const userId = req.user._id.toString()
+      const result = await questionService.getLLmQuestionsByUserId(userId)
+      res.status(200).json( result );
+    } catch (error: any) {
+      logger.error(error);
+      res.status(400).json({ detail: error.message });
+    }
+  },
+];
+
+
+
+

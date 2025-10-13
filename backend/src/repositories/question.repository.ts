@@ -210,7 +210,16 @@ export default class QuestionRepository {
     console.log("result after creating from repo ",result)
     return result._id
   }
+
+  async getAllLLMQuestions(){
+    return await LlmQuestionModel.find()
+  }
   
+  async getLLMQuestionsBYUserId(userId:string){
+    const questions = await LlmQuestionModel.find({assigned_moderator:userId})
+    console.log("Your questions from LLM ",questions)
+    return questions
+  }
   
   
 }

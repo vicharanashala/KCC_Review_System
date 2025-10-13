@@ -39,7 +39,7 @@ export const getMyTasks: Middleware[] = [
     try {
       const currentUserId = req.user._id.toString();
       const currentRole = req.user.role;
-      console.log("for commiting")
+      // console.log("for commiting")
       const tasks = await dashboardService.getMyTasks(currentUserId, currentRole);
       res.json(tasks);
     } catch (error: any) {
@@ -56,7 +56,7 @@ export const getUserPerformance: Middleware[] = [
       const currentUserId = req.user._id.toString();
       const currentRole = req.user.role;
       const tasks = await dashboardService.getUserPerformance(currentUserId, currentRole);
-      console.log("user performnace ",getUserPerformance)
+      // console.log("user performnace ",getUserPerformance)
       res.json(tasks);
     } catch (error: any) {
       logger.error(error);

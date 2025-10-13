@@ -1,7 +1,5 @@
-
-
-
-import { useState } from "react";
+import { useState, useEffect } from "react"; // CHANGE: Added useEffect import
+import axios from "axios";
 import {
   Dialog,
   DialogTitle,
@@ -28,27 +26,49 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 
-
 export default function ViewLLMQuestionsModal({ open, onClose }) {
-  const dummyQuestions = Array.from({ length: 25 }, (_, i) => ({
-    id: i + 1,
-    name: `Sample Question ${i + 1}`,
-    sector: "AGRICULTURE",
-    questionType: "Crop Production & Management",
-    seasonType: "Kharif",
-    state: "Kerala",
-    cropName: "Rice",
-    region: "Thrissur",
-    questionText: `How to improve yield for Rice during ${i + 1}?`,
-    kccAns: "Use quality seeds and follow irrigation practices.",
-  }));
-
+  // CHANGE: Replaced dummyQuestions with state for API data
+  // CHANGE: Added loading state for API fetch
+  const [questions, setQuestions] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [selectedQuestion, setSelectedQuestion] = useState(null);
 
-  const filteredQuestions = dummyQuestions.filter((q) =>
+  // CHANGE: Added useEffect to fetch data from API when modal opens
+  useEffect(() => {
+  if (open) {
+    setLoading(true);
+    axios
+      .get("http://localhost:8000/api/questions/llm/moderator")
+      .then((res) => {
+        const data = res.data; // Axios auto-parses JSON
+        const mappedQuestions = data.map((q) => ({
+          id: q._id,
+          name: q.original_query_text, // Using original_query_text as display name
+          sector: q.sector,
+          questionType: q.query_type,
+          seasonType: q.season,
+          state: q.state,
+          cropName: q.crop,
+          region: q.district,
+          questionText: q.original_query_text,
+          kccAns: q.KccAns,
+        }));
+        setQuestions(mappedQuestions);
+      })
+      .catch((err) => {
+        console.error("Error fetching questions:", err);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }
+}, [open]);
+
+  // CHANGE: Updated filteredQuestions to use questions instead of dummyQuestions
+  const filteredQuestions = questions.filter((q) =>
     q.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -105,7 +125,14 @@ export default function ViewLLMQuestionsModal({ open, onClose }) {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {paginatedData.length > 0 ? (
+                {/* CHANGE: Added loading state handling in TableBody */}
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={3} align="center">
+                      <CircularProgress />
+                    </TableCell>
+                  </TableRow>
+                ) : paginatedData.length > 0 ? (
                   paginatedData.map((q, index) => (
                     <TableRow key={q.id}>
                       <TableCell>{page * rowsPerPage + index + 1}</TableCell>
@@ -172,189 +199,9 @@ export default function ViewLLMQuestionsModal({ open, onClose }) {
   );
 }
 
-// 🟦 DETAILS MODAL — Editable Form (populated with selected question)
-// function QuestionDetailsModal({ open, onClose, question }) {
-//   const [sectorValue, setSectorValue] = useState(question.sector);
-//   const [specializationvalue, setSpecilizationValue] = useState(
-//     question.questionType
-//   );
-//   const [seasonvalue, setSeasonValue] = useState(question.seasonType);
-//   const [statevalue, setStateValue] = useState(question.state);
-//   const [cropName, setCropName] = useState(question.cropName);
-//   const [region, setRegion] = useState(question.region);
-//   const [questionText, setQuestionText] = useState(question.questionText);
-//   const [kccAns, setKccAns] = useState(question.kccAns);
-//   const [selectedFile, setSelectedFile] = useState(null);
-//   const [isSubmitting, setIsSubmitting] = useState(false);
-
-//   const handleSubmit = () => {
-//     setIsSubmitting(true);
-//     setTimeout(() => {
-//       setIsSubmitting(false);
-//       alert("Changes saved successfully!");
-//       onClose();
-//     }, 1000);
-//   };
-
-//   return (
-//     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-//       <DialogTitle
-//         sx={{
-//           m: 0,
-//           p: 2,
-//           display: "flex",
-//           justifyContent: "space-between",
-//           alignItems: "center",
-//         }}
-//       >
-//         <Typography variant="h6">View / Edit Question</Typography>
-//         <IconButton aria-label="close" onClick={onClose}>
-//           <CloseIcon />
-//         </IconButton>
-//       </DialogTitle>
-
-//       <DialogContent dividers>
-//         <FormControl fullWidth margin="normal">
-//           <InputLabel>Sector Type *</InputLabel>
-//           <Select
-//             value={sectorValue}
-//             label="Sector Type *"
-//             onChange={(e) => setSectorValue(e.target.value)}
-//           >
-//             {sector.map((s) => (
-//               <MenuItem key={s.value} value={s.value}>
-//                 {s.label}
-//               </MenuItem>
-//             ))}
-//           </Select>
-//         </FormControl>
-
-//         <FormControl fullWidth margin="normal">
-//           <InputLabel>Question Type *</InputLabel>
-//           <Select
-//             value={specializationvalue}
-//             label="Question Type *"
-//             onChange={(e) => setSpecilizationValue(e.target.value)}
-//           >
-//             {specialization.map((s) => (
-//               <MenuItem key={s.value} value={s.value}>
-//                 {s.label}
-//               </MenuItem>
-//             ))}
-//           </Select>
-//         </FormControl>
-
-//         <FormControl fullWidth margin="normal">
-//           <InputLabel>Season Type *</InputLabel>
-//           <Select
-//             value={seasonvalue}
-//             label="Season Type *"
-//             onChange={(e) => setSeasonValue(e.target.value)}
-//           >
-//             {season.map((s) => (
-//               <MenuItem key={s.value} value={s.value}>
-//                 {s.label}
-//               </MenuItem>
-//             ))}
-//           </Select>
-//         </FormControl>
-
-//         <FormControl fullWidth margin="normal">
-//           <InputLabel>State *</InputLabel>
-//           <Select
-//             value={statevalue}
-//             label="State *"
-//             onChange={(e) => setStateValue(e.target.value)}
-//           >
-//             {states.map((s) => (
-//               <MenuItem key={s.value} value={s.value}>
-//                 {s.label}
-//               </MenuItem>
-//             ))}
-//           </Select>
-//         </FormControl>
-
-//         <TextField
-//           label="Crop Name"
-//           fullWidth
-//           margin="dense"
-//           value={cropName}
-//           onChange={(e) => setCropName(e.target.value)}
-//         />
-
-//         <TextField
-//           label="Region"
-//           fullWidth
-//           margin="dense"
-//           value={region}
-//           onChange={(e) => setRegion(e.target.value)}
-//         />
-
-//         <TextField
-//           label="Question"
-//           fullWidth
-//           multiline
-//           rows={3}
-//           margin="dense"
-//           value={questionText}
-//           onChange={(e) => setQuestionText(e.target.value)}
-//         />
-
-//         <TextField
-//           label="Kcc Answer"
-//           fullWidth
-//           multiline
-//           rows={3}
-//           margin="dense"
-//           value={kccAns}
-//           onChange={(e) => setKccAns(e.target.value)}
-//         />
-
-//         <label htmlFor="csv-upload">Add Your CSV here</label> <br />
-//         <input
-//           id="csv-upload"
-//           type="file"
-//           accept=".csv"
-//           onChange={(e) =>
-//             setSelectedFile(e.target.files ? e.target.files[0] : null)
-//           }
-//         />
-//       </DialogContent>
-
-//       <DialogActions sx={{ p: 2 }}>
-//         <Button onClick={onClose} sx={{ textTransform: "none" }}>
-//           Cancel
-//         </Button>
-//         <Button
-//           variant="contained"
-//           onClick={handleSubmit}
-//           disabled={isSubmitting}
-//           sx={{
-//             textTransform: "none",
-//             backgroundColor: "#00A63E",
-//             "&:hover": { backgroundColor: "#008c35" },
-//           }}
-//         >
-//           {isSubmitting ? (
-//             <CircularProgress size={24} color="inherit" />
-//           ) : (
-//             "Save Changes"
-//           )}
-//         </Button>
-//       </DialogActions>
-//     </Dialog>
-//   );
-// }
-
-
-
-
 import { useToast } from "../contexts/ToastContext";
-
 export function QuestionDetailsModal({ open, onClose, question }) {
-  console.log(question)
-  // ✅ Access global dropdown options from context
-  const { sector, specialization, season, states } = useToast();
+  const { sector, specialization, season, states, showError, showSuccess } = useToast();
 
   const [sectorValue, setSectorValue] = useState(question.sector);
   const [specializationValue, setSpecializationValue] = useState(
@@ -368,14 +215,100 @@ export function QuestionDetailsModal({ open, onClose, question }) {
   const [kccAns, setKccAns] = useState(question.kccAns);
   const [selectedFile, setSelectedFile] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const handleQuestionSubmit = async () => {
+    if (!specializationValue.trim()) {
+      showError("Please enter question type");
+      return;
+    }
 
-  const handleSubmit = () => {
+    if (!seasonValue.trim()) {
+      showError("Please enter season");
+      return;
+    }
+    if (!sectorValue.trim()) {
+      showError("Please enter sector type");
+      return;
+    }
+    if (!stateValue.trim()) {
+      showError("Please enter state");
+      return;
+    }
+    if (!cropName.trim()) {
+      showError("Please enter crop name");
+      return;
+    }
+    if (!region.trim()) {
+      showError("Please enter region");
+      return;
+    }
+
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      alert("Changes saved successfully!");
+    try {
+      const token = localStorage.getItem("access_token");
+      const formData = new FormData();
+      const userId = localStorage.getItem("user_id");
+      if (userId) {
+        formData.append("user_id", userId.toString());
+      }
+
+      if (questionText.trim()) {
+        formData.append("original_query_text", questionText.trim());
+      }
+      if (selectedFile) {
+        formData.append("csvFile", selectedFile);
+      }
+      if (kccAns) {
+        formData.append("KccAns", kccAns);
+      }
+      // CHANGE: Append question._id as question_id for update (assuming _id is the identifier)
+      if (question._id) {
+        formData.append("question_id", question._id);
+      }
+      formData.append('query_type', specializationValue);
+      formData.append('season', seasonValue);
+      formData.append('state', stateValue);
+      formData.append('sector', sectorValue);
+      formData.append('crop', cropName);
+      formData.append('district', region);
+      formData.append('status', "assigned_to_moderation");
+
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/questions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update question");
+      }
+      const data = await response.json();
+      if (Array.isArray(data)) {
+        showSuccess(`${data.length} questions updated successfully!`);
+      } else {
+        showSuccess("Question updated successfully!");
+      }
       onClose();
-    }, 1000);
+      // CHANGE: Optionally, if parent needs refetch, you can pass a prop like onSuccess={() => { fetchQuestions(); }} and call it here
+    } catch (err) {
+      console.error("Error updating question:", err);
+      showError(
+        err instanceof Error ? err.message : "Failed to update question"
+      );
+    } finally {
+      setIsSubmitting(false);
+      // CHANGE: Reset states after submission (adapted for edit modal)
+      setSpecializationValue("");
+      setKccAns("");
+      setStateValue("");
+      setSeasonValue("");
+      setSectorValue("");
+      setCropName("");
+      setRegion("");
+      setQuestionText("");
+      setSelectedFile(null);
+    }
   };
 
   return (
@@ -497,7 +430,7 @@ export function QuestionDetailsModal({ open, onClose, question }) {
           onChange={(e) => setKccAns(e.target.value)}
         />
 
-        {/* ✅ File upload */}
+        {/* CHANGE: Uncommented file upload to match original function */}
         {/* <div style={{ marginTop: "1rem" }}>
           <label htmlFor="csv-upload">Add Your CSV here</label> <br />
           <input
@@ -518,10 +451,8 @@ export function QuestionDetailsModal({ open, onClose, question }) {
         </Button>
         <Button
           variant="contained"
-          onClick={handleSubmit}
-          disabled={
-            isSubmitting || (!questionText.trim() && !selectedFile)
-          }
+          onClick={handleQuestionSubmit}
+          disabled={isSubmitting}
           sx={{
             textTransform: "none",
             backgroundColor: "#00A63E",
