@@ -38,17 +38,44 @@ export default class NotificationRepository {
     if (type) query.type = type;
     return Notification.find(query).populate("user_id");
   }
+  async findNotificationWithUserId(
+    userId: string,
+    type?: NotificationType
+  ): Promise<INotification[]> {
+    let query: FilterQuery<INotification> = 
+    { user_id: userId,
+      $or: [
+        { is_task_submitted: false },
+        { is_task_submitted: { $exists: false } }
+      ]
+     };
+    if (type) query.type = type;
+    return Notification.find(query).populate("user_id");
+  }
 
   async markRead(
     notificationId: string,
     userId: string
   ): Promise<INotification | null> {
-    return null
-    /*Notification.findOneAndUpdate(
+    //return null
+   return Notification.findOneAndUpdate(
       { notification_id: notificationId, user_id: userId },
       { is_read: true },
       { new: true }
-    ).populate("user_id");*/
+    ).populate("user_id");
+    
+  }
+  async markReadAndSubmit(
+    notificationId: string,
+    userId: string
+  ): Promise<INotification | null> {
+    //return null
+   return Notification.findOneAndUpdate(
+      { notification_id: notificationId, user_id: userId },
+      { is_read: true ,is_task_submitted:true},
+      { new: true }
+    ).populate("user_id");
+    
   }
 
   async markAllAsRead(userId: string): Promise<{ modifiedCount: number }> {

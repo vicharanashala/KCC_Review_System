@@ -25,6 +25,7 @@ export default class PeerValidationService {
     peerData: PeerValidateCreateDto,
     currentUserId: string
   ): Promise<any> {
+  
     const currentUser = await userRepo.findById(currentUserId);
     if (!currentUser) {
       throw new Error("User not found");
@@ -55,20 +56,8 @@ export default class PeerValidationService {
     if (!notification)
       throw new Error("You are not assigned to peer review this answer");
 
-    await notificationRepo.markRead(
-      notification.notification_id,
-      currentUserId
-    );
+   
     const userObjectId = new Types.ObjectId(currentUserId);
-    const newPeerVal = await peerValidationRepo.create({
-      ...peerData,
-      answer_id: answer._id,
-      reviewer_id: userObjectId,
-      status: peerData.status,
-      comments: peerData.comments || "",
-      peer_validation_id: `PV_${uuidv4().slice(0, 8).toUpperCase()}`,
-    });
-
     let reviewedBy = question!.reviewed_by_specialists || [];
     if (!reviewedBy.includes(userObjectId)) reviewedBy.push(userObjectId);
     question.reviewed_by_specialists = reviewedBy;
@@ -119,6 +108,24 @@ export default class PeerValidationService {
           `Peer approved answer ${answer.answer_id}, consecutive: ${question.consecutive_peer_approvals}`
         );
       }
+      await notificationRepo.markReadAndSubmit(
+        notification.notification_id,
+        currentUserId
+      );
+      
+      const newPeerVal = await peerValidationRepo.create({
+        ...peerData,
+        answer_id: answer._id,
+        reviewer_id: userObjectId,
+        status: peerData.status,
+        comments: peerData.comments || "",
+        peer_validation_id: `PV_${uuidv4().slice(0, 8).toUpperCase()}`,
+      });
+      const workload = await userRepo.updateWorkload(currentUserId, -1);
+    return {
+      message: "Peer validation submitted successfully",
+      peer_validation_id: newPeerVal.peer_validation_id,
+    };
     } else {
       const originalSpecialistId =
         typeof answer.specialist_id === "object" &&
@@ -143,12 +150,24 @@ export default class PeerValidationService {
         related_entity_type: "answer",
         related_entity_id: answer.answer_id,
       });
+      const newPeerVal = await peerValidationRepo.create({
+        ...peerData,
+        answer_id: answer._id,
+        reviewer_id: userObjectId,
+        status: peerData.status,
+        comments: peerData.comments || "",
+        peer_validation_id: `PV_${uuidv4().slice(0, 8).toUpperCase()}`,
+      });
       logger.info(
         `Revision notification sent to original specialist for answer ${question.assigned_specialist_id}`
       );
+      await notificationRepo.markReadAndSubmit(
+        notification.notification_id,
+        currentUserId
+      );
       question.consecutive_peer_approvals = 0;
        await question.save()
-      if (peerData.revised_answer_text) {
+     // if (peerData.revised_answer_text) {
         console.log("reaching hereeeeee")
         answer.is_current = false;
         //  answer.sendBackToRevision="Revesion"
@@ -179,11 +198,11 @@ export default class PeerValidationService {
           logger.info(`Peer Review Submitted Successfully to---${user?.name} `);
 
        // logger.info(`Peer revised answer ${answer.answer_id} to new version ${newAnswer.version}`);
-        }
+       // }
 
         return {
-          message: "Peer Review Submitted Successfully",
-          peer_validation_id: newPeerVal.peer_validation_id,
+          message: "Answer Revise Submitted Successfully",
+          peer_validation_id:'No Applicable'
         };
       } else {
         logger.warning(
@@ -194,11 +213,7 @@ export default class PeerValidationService {
     }
 
     // Decrement workload
-    const workload = await userRepo.updateWorkload(currentUserId, -1);
-    return {
-      message: "Peer validation submitted successfully",
-      peer_validation_id: newPeerVal.peer_validation_id,
-    };
+    
   }
 
   async getHistoryByAnswerId(answerId: string): Promise<any[]> {

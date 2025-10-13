@@ -3,6 +3,7 @@ import QuestionRepository from '../repositories/question.repository';
 import GoldenFAQRepository from '../repositories/goldenFAQ.repository';
 import PeerValidationRepository from '../repositories/peerValidation.repository';
 import NotificationRepository from '../repositories/notification.repository';
+import ValidationRepository from '../repositories/validation.repository';
 import { NotificationType, QuestionStatus, UserRole } from '../interfaces/enums';
 import AnswerRepository from '../repositories/answer.repository';
 import { IQuestion } from '../interfaces/question.interface';
@@ -15,6 +16,7 @@ const goldenFAQRepo = new GoldenFAQRepository();
 const notificationRepo = new NotificationRepository();
 const answerRepo = new AnswerRepository()
 const peerValidation=new PeerValidationRepository()
+const validation=new ValidationRepository()
 export default class DashboardService {
   async getStats(currentUserId: string): Promise<any> {
     const totalSpecialists = await userRepo.findAll(0, 0, UserRole.AGRI_SPECIALIST).then(u => u.length);
@@ -57,6 +59,7 @@ export default class DashboardService {
         QuestionStatus.NEEDS_REVISION,
         QuestionStatus.READY_FOR_GOLDEN_FAQ,
       ]);
+     // console.log("the questions coming=====",assignedQuestions)
       for (const question of assignedQuestions) {
         let taskType = 'create_answer';
         if (question.status === QuestionStatus.READY_FOR_GOLDEN_FAQ) {
@@ -85,7 +88,8 @@ export default class DashboardService {
         });
       }
 
-      const peerNotifications = await notificationRepo.findUnreadByUserId(currentUserId, NotificationType.PEER_REVIEW_REQUEST);
+      const peerNotifications = await notificationRepo.findNotificationWithUserId(currentUserId, NotificationType.PEER_REVIEW_REQUEST);
+    //  console.log("the peernotifications=====",peerNotifications)
       for (const notification of peerNotifications) {
   const peerAnswer = await answerRepo.findByAnswerId(notification.related_entity_id as string);
 
@@ -110,12 +114,13 @@ export default class DashboardService {
         sector:q.sector||'N/A',
         crop:q.crop||'N/A',
         district:q.district||'N/A',
+        notification_id:notification.notification_id
              
     });
   }
 }
     } else if (currentRole === UserRole.MODERATOR) {
-      const validationNotifications = await notificationRepo.findUnreadByUserId(currentUserId, NotificationType.VALIDATION_REQUEST);
+      const validationNotifications = await notificationRepo.findNotificationWithUserId(currentUserId, NotificationType.VALIDATION_REQUEST);
       for (const notification of validationNotifications) {
         const answer = await answerRepo.findByAnswerId(notification.related_entity_id as string);
         if (answer && answer.question_id && !(answer.question_id instanceof Types.ObjectId)) {
@@ -144,7 +149,7 @@ export default class DashboardService {
         }
       }
     }
-    
+    if (currentRole === UserRole.MODERATOR) {
       const validationNotifications = await peerValidation.findUnreadByUserId(currentUserId, QuestionStatus.ASSIGNED_TO_MODERATION);
      // console.log("the notifications====",validationNotifications)
       if (validationNotifications && validationNotifications.length > 0) {
@@ -220,7 +225,8 @@ export default class DashboardService {
     
 
   }
-
+}
+else if(currentRole === UserRole.AGRI_SPECIALIST){
     const status=false
     const revisionSuccess=true
     const rejectedAnswers= await answerRepo.findRejectedQuestions(currentUserId,status,revisionSuccess)
@@ -265,22 +271,43 @@ export default class DashboardService {
 
     }
   
-
+  }
     return { tasks };
   }
   async getUserPerformance(currentUserId: string, currentRole: string): Promise<any> {
 
-    const userPerformance=await peerValidation.findByReviewerId(currentUserId)
-   // console.log("userPerformance====",userPerformance)
-    const userCount=await userRepo.getAllUsersList(currentUserId)
+if(currentRole===UserRole.AGRI_SPECIALIST)
+{
+const userPerformance=await peerValidation.findByReviewerId(currentUserId,UserRole.AGRI_SPECIALIST)
+
    
     if(userPerformance)
     {
       return userPerformance
     }
     else{
+      const userCount=await userRepo.getAllUsersList(currentUserId,UserRole.AGRI_SPECIALIST)
       return userCount[0]
     }
+
+}
+else{
+  const userPerformance=await validation.findByModeratorId(currentUserId,UserRole.MODERATOR)
+  
+ 
+  if(userPerformance)
+    {
+      return userPerformance
+    }
+    else{
+      const userCount=await userRepo.getAllUsersList(currentUserId,UserRole.MODERATOR)
+      return userCount[0]
+    }
+}
+    
+   
+   // console.log("userPerformance====",userPerformance)
+    
     
   }
   async updateUserState(currentUserId: string,locationDetails:any): Promise<any> {

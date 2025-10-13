@@ -308,7 +308,33 @@ export const ReviewQueue = () => {
       {renderField("region", task?.district)}
            
          </Paper>
-    );
+    )
+   
+    const SourceComponent=()=>(
+        <Paper
+      sx={{
+        p: 3,
+        mb: 3,
+        borderRadius: 2,
+        boxShadow: "0px 2px 6px rgba(0,0,0,0.05)",
+        border: "1px solid #ddd",
+      }}
+    >
+      <Typography variant="h8" >
+        Sources {task.sources?.length ? `(${task.sources.length})` : ""}
+      </Typography>
+
+      {task.sources && task.sources.length > 0 ? (
+        task.sources.map((ele: any, index: number) =>
+          renderField(ele.name, ele.link)
+        )
+      ) : (
+        <Typography variant="body2" color="text.secondary">
+          No sources available
+        </Typography>
+      )}
+    </Paper>
+    )
    /* const isValidURL = (url: string,id:number) => {
 
                 try {
@@ -522,7 +548,6 @@ const handleSubmitQuestion=async()=>{
             showError('Answer ID is missing');
             return;
         }
-
         setIsSubmitting(true);
         try {
             const token = localStorage.getItem('access_token');
@@ -534,7 +559,8 @@ const handleSubmitQuestion=async()=>{
                 validationData = {
                     answer_id: task.answer_id,
                     validation_status: selectedStatus == 'approved' ? 'valid' : 'invalid',
-                    comments: comments.trim() || undefined
+                    comments: comments.trim() || undefined,
+                   // notification_id:task.notification_id?task.notification_id:''
                 };
             } else {
                 apiUrl = `${import.meta.env.VITE_API_BASE_URL}/peer-validate`;
@@ -542,7 +568,8 @@ const handleSubmitQuestion=async()=>{
                     answer_id: task.answer_id,
                     status: selectedStatus,
                     comments: comments.trim() || undefined,
-                    revised_answer_text: selectedStatus === 'revised' ? revisedAnswer.trim() : undefined
+                    revised_answer_text: selectedStatus === 'revised' ? revisedAnswer.trim() : undefined,
+                   // notification_id:task.notification_id?task.notification_id:''
                 };
             }
 
@@ -936,6 +963,7 @@ const handleSubmitQuestion=async()=>{
                         </Box>
                         </Box>
                         <MetaDataComponent/>
+                        <SourceComponent/>
                     <Paper  sx={{
                         p: 3,
                         mb: 3,
@@ -1165,6 +1193,7 @@ const handleSubmitQuestion=async()=>{
                         )}
                     </Paper>
                     <MetaDataComponent/>
+                    <SourceComponent/>
 
                     {task?.type === 'create_answer'||task?.type === 'Reject' ? (
                         <Paper

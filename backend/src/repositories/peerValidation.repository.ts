@@ -50,7 +50,7 @@ export default class PeerValidationRepository {
     }
     return PeerValidation.findOne({ answer_id: answerObjectId }).sort({ created_at: -1 }).populate('answer_id reviewer_id');
   }
-  async findByReviewerId(reviewer_id: string) {
+  async findByReviewerId(reviewer_id: string,role:string) {
     const reviewerStats = await PeerValidation.aggregate([
       // Filter by reviewer
       { $match: { reviewer_id: new mongoose.Types.ObjectId(reviewer_id) } },
@@ -248,25 +248,43 @@ export default class PeerValidationRepository {
       // Ranking info + include penality field
       {
         $lookup: {
-          from: 'users',
-          let: { reviewerId: '$_id' },
+          from: "users",
+          let: { reviewerId: "$_id" },
           pipeline: [
+            // 🟩 Only include users of the given role
+            ...(role ? [{ $match: { role } }] : []),
+  
             { $sort: { incentive_points: -1 } },
-            { $setWindowFields: { sortBy: { incentive_points: -1 }, output: { rank: { $rank: {} } } } },
-            { $match: { $expr: { $eq: ['$_id', '$$reviewerId'] } } },
-            { $lookup: { from: 'users', pipeline: [{ $count: 'totalUsers' }], as: 'userCount' } },
-            { $unwind: { path: '$userCount', preserveNullAndEmptyArrays: true } },
+            {
+              $setWindowFields: {
+                sortBy: { incentive_points: -1 },
+                partitionBy: role ? "$role" : undefined, // rank within same role
+                output: { rank: { $rank: {} } },
+              },
+            },
+            { $match: { $expr: { $eq: ["$_id", "$$reviewerId"] } } },
+            {
+              $lookup: {
+                from: "users",
+                pipeline: [
+                  ...(role ? [{ $match: { role } }] : []),
+                  { $count: "totalUsers" },
+                ],
+                as: "userCount",
+              },
+            },
+            { $unwind: { path: "$userCount", preserveNullAndEmptyArrays: true } },
             {
               $project: {
                 rank: 1,
                 incentive_points: 1,
-                penality: 1, // ✅ include penality field
-                totalUsers: '$userCount.totalUsers'
-              }
-            }
+                penality: 1,
+                totalUsers: "$userCount.totalUsers",
+              },
+            },
           ],
-          as: 'rankInfo'
-        }
+          as: "rankInfo",
+        },
       },
       { $unwind: { path: '$rankInfo', preserveNullAndEmptyArrays: true } },
   

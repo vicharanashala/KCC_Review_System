@@ -313,59 +313,66 @@ const results= this.getAvailableUserList(currentUserObj,questionObj,UserRole.AGR
 
   
  
-  async getAllUsersList(currentUserId:string): Promise<any> {
-   
-  const result=  await User.aggregate([
-      // 1. Rank all users by incentive_points (descending)
+  async getAllUsersList(currentUserId: string, role?: string): Promise<any> {
+    const objectId = mongoose.Types.ObjectId.createFromHexString(currentUserId);
+  
+    const matchRoleStage = role ? { $match: { role } } : { $match: {} };
+  
+    const result = await User.aggregate([
+      // 1️⃣ Match only users with the given role (if provided)
+      matchRoleStage,
+  
+      // 2️⃣ Rank users by incentive_points (descending) within that role
       {
         $setWindowFields: {
           sortBy: { incentive_points: -1 },
+          partitionBy: role ? "$role" : undefined, // ensures rank is role-specific
           output: {
-            rank: { $rank: {} }
-          }
-        }
+            rank: { $rank: {} },
+          },
+        },
       },
-    
-      // 2. Match the specific user
-      {
-        $match: {
-          _id:  mongoose.Types.ObjectId.createFromHexString(currentUserId)
-        }
-      },
-    
-      // 3. Count total users (via a lookup)
+  
+      // 3️⃣ Match the specific user
+      { $match: { _id: objectId } },
+  
+      // 4️⃣ Count total users within that same role
       {
         $lookup: {
           from: "users",
           pipeline: [
-            { $match: {} },
-            { $count: "totalUsers" }
+            ...(role ? [{ $match: { role } }] : []), // count only users of same role
+            { $count: "totalUsers" },
           ],
-          as: "userCount"
-        }
+          as: "userCount",
+        },
       },
-    
-      // 4. Flatten total user count
+  
+      // 5️⃣ Flatten total user count
       {
         $addFields: {
-          totalUsers: { $ifNull: [{ $arrayElemAt: ["$userCount.totalUsers", 0] }, 0] }
-        }
+          totalUsers: {
+            $ifNull: [{ $arrayElemAt: ["$userCount.totalUsers", 0] }, 0],
+          },
+        },
       },
-    
-      // 5. Project final output
+  
+      // 6️⃣ Project final output
       {
         $project: {
           _id: 1,
           name: 1,
           email: 1,
+          role: 1,
           incentive_points: 1,
           rank: 1,
-          totalUsers: 1
-        }
-      }
+          totalUsers: 1,
+        },
+      },
     ]);
-    return result
-   
+  
+    return result;
   }
+  
     
 }
