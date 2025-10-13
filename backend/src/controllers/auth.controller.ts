@@ -45,7 +45,9 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 };
 
 export const login = async (req: Request, res: Response): Promise<void> => {
+  
   try {
+    console.log("login===")
     const { error } = loginSchema.validate(req.body);
     if (error) {
       res.status(400).json({ detail: error.details[0]!.message });

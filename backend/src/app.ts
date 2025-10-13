@@ -17,7 +17,7 @@ import adminRoutes from './routes/admin.routes';
 import { connectDB } from './config/database';
 import logger from './utils/logger.utils';
 
-connectDB();
+//connectDB();
 
 const app = express();
 
