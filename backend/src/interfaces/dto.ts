@@ -1,3 +1,4 @@
+import { Types } from 'mongoose';
 import { UserRole, QuestionStatus, ValidationStatus, PeerStatus, NotificationType } from './enums';
 
 export interface UserCreateDto {
@@ -41,7 +42,14 @@ export interface QuestionCreateDto {
   longitude?: string;
   priority?: string;
   user_id?: string;
-  question_owner?:string
+  question_owner?:string,
+  questionStatus?:string,
+  question_id?:string,
+  question_approval?:number,
+  comments?:string,
+  peer_validation_id?:string,
+  status?:string,
+  reviewed_by_Moderators?:Types.ObjectId[]
 }
 
 export interface QuestionResponseDto {
@@ -53,7 +61,9 @@ export interface QuestionResponseDto {
   consecutive_peer_approvals: number;
   created_at: Date;
   user_id?: string
-  question_owner?:string
+  question_owner?:string,
+  
+
 }
 
 export interface AnswerCreateDto {

@@ -11,7 +11,7 @@ const answerRepo = new AnswerRepository();
 const questionRepo = new QuestionRepository();
 const userRepo = new UserRepository()
 export default class AnswerService {
-  async create(answerData: AnswerCreateDto, currentUserId: string): Promise<any> {
+  async create(answerData: AnswerCreateDto, currentUserId: string,skipPeerAssignment=false): Promise<any> {
     
     const currentUser = await userRepo.findById(currentUserId)
     const question = await questionRepo.findByQuestionId(answerData.question_id);
@@ -21,7 +21,21 @@ export default class AnswerService {
     } else if (question.status === QuestionStatus.NEEDS_REVISION) {
       const currentAns = await answerRepo.findCurrentByQuestionId(question._id.toString());
   
-      if (!currentAns || currentAns.specialist_id.toString() !== currentUserId) throw new Error('You are not authorized to revise this answer');
+      //if (!currentAns || currentAns.specialist_id.toString() !== currentUserId) throw new Error('You are not authorized to revise this answer');
+      if(answerData.status==='Rejected'){
+        // const currentAns = await answerRepo.findByAnswerId(question._id.toString());
+         let currentAnswer=await answerRepo.findByExactQuestionId(answerData.questionObjId)
+       
+         currentAnswer.map(async (answer)=>{
+          answer.RevisedAnswer = true;
+          //  answer.sendBackToRevision="Revesion"
+          //  answer.first_answered_person=question.assigned_specialist_id
+            await answer.save();
+         
+  
+         })
+   
+       }
     } 
     else if(answerData.status==='Rejected'){
       // const currentAns = await answerRepo.findByAnswerId(question._id.toString());
@@ -65,9 +79,12 @@ export default class AnswerService {
     question.consecutive_peer_approvals = 0;
     question.status = QuestionStatus.PENDING_PEER_REVIEW;
     await question.save();
+    
     await userRepo.updateWorkload(currentUserId,-1)
-   
-    setImmediate(() => WorkflowService.assignToPeerReviewer(newAnswer.answer_id,currentUser,question));
+    if(!skipPeerAssignment){
+      setImmediate(() => WorkflowService.assignToPeerReviewer(newAnswer.answer_id,currentUser,question));
+    }
+    
 
     logger.info(`Answer created: ${newAnswer.answer_id}, version: ${newAnswer.version}`);
     return { message: 'Answer created successfully', answer_id: newAnswer.answer_id, version: newAnswer.version };

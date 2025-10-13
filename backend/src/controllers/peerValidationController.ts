@@ -29,6 +29,7 @@ const createSchema = Joi.object({
     }),
     otherwise: Joi.string().optional().allow('').default(''),
   }),
+  question_id:Joi.string().optional()
 });
 
 export const peerValidate = [
@@ -68,6 +69,32 @@ export const getPeerValidationHistory = [
     } catch (error: any) {
       logger.error(error);
       res.status(404).json({ detail: error.message });
+    }
+  },
+];
+export const peerQuestionValidate = [
+  authenticateToken,
+  restrictTo(UserRole.MODERATOR),
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const { error } = createSchema.validate(req.body);
+      if (error) {
+        res.status(400).json({ detail: error.details[0]!.message });
+        return;
+      }
+      const peerData: PeerValidateCreateDto = req.body;
+      const currentUser = (req as any).user;
+      const result = await peerValidationService.create(peerData, currentUser);
+      res.json(result);
+    } catch (error: any) {
+      logger.error(error);
+      if (error.message.includes('403')) {
+        res.status(403).json({ detail: error.message });
+      } else if (error.message.includes('400')) {
+        res.status(400).json({ detail: error.message });
+      } else {
+        res.status(404).json({ detail: error.message });
+      }
     }
   },
 ];

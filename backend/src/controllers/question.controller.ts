@@ -2,12 +2,13 @@
 import { Response, NextFunction } from 'express';
 import QuestionService from '../services/question.service';
 import { QuestionCreateDto } from '../interfaces/dto';
-import Joi from 'joi';
+import Joi, { string } from 'joi';
 import logger from '../utils/logger.utils';
 import { authenticateToken, AuthRequest } from '../middleware/auth.middleware';
 import multer from 'multer'
 import csv from 'csv-parser'
 import { Readable } from 'stream';
+import { ILLMQuestion } from '../models/LlmQuestion.model';
 const questionService = new QuestionService();
 
 const createSchema = Joi.object({
@@ -24,7 +25,12 @@ const createSchema = Joi.object({
   longitude: Joi.string().optional(),
   priority: Joi.string().default('medium').optional(),
   user_id:Joi.string().optional(),
-  KccAns:Joi.string().optional()
+  KccAns:Joi.string().optional(),
+  status:Joi.string().optional(),
+  question_id:Joi.string().optional(),
+  comments:Joi.string().optional(),
+  peer_validation_id:Joi.string().optional()
+
   
 });
 
@@ -145,6 +151,7 @@ export const submitQuestion: Middleware[] = [
           res.status(400).json({ detail: errorMessage });
           return;
         }
+        console.log("Quetiom creating ",req.body)
         const questionData: QuestionCreateDto = req.body;
        const question = await questionService.create(questionData);
         res.status(201).json(question);
@@ -193,3 +200,50 @@ export const getMyQuestions: Middleware[] = [
     }
   },
 ];
+
+
+export const CreateLLmQuestions: Middleware[] = [
+  // authenticateToken,
+  async (req: AuthRequest, res: Response):Promise<void> => {
+    try {
+      const body:ILLMQuestion = req.body
+      const result = await questionService.createLLMQuestions(body)
+      res.status(200).json({ result });
+    } catch (error: any) {
+      logger.error(error);
+      res.status(400).json({ detail: error.message });
+    }
+  },
+];
+
+export const getAllLLmQuestions: Middleware[] = [
+  authenticateToken,
+  async (req: AuthRequest, res: Response):Promise<void> => {
+    try {
+      const result = await questionService.getAllLLMQuestions()
+      res.status(200).json( result );
+    } catch (error: any) {
+      logger.error(error);
+      res.status(400).json({ detail: error.message });
+    }
+  },
+];
+
+
+export const getLLmQuestionsByUserId: Middleware[] = [
+  authenticateToken,
+  async (req: AuthRequest, res: Response):Promise<void> => {
+    try {
+      const userId = req.user._id.toString()
+      const result = await questionService.getLLmQuestionsByUserId(userId)
+      res.status(200).json( result );
+    } catch (error: any) {
+      logger.error(error);
+      res.status(400).json({ detail: error.message });
+    }
+  },
+];
+
+
+
+

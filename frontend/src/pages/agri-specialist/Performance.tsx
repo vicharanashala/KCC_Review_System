@@ -32,9 +32,6 @@ interface Performance {
     latestRevisedQuestion: LatestQuestion | null;
   }
   
-  interface PerformanceProps {
-    performance: Performance;
-  }
 export const Performance = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
@@ -90,7 +87,7 @@ export const Performance = () => {
                         px: 1.5,
                     }}
                 />
-                <Chip
+                {/* <Chip
                     label="Categories"
                     sx={{
                         borderRadius: "16px",
@@ -99,7 +96,7 @@ export const Performance = () => {
                         fontWeight: 400,
                         px: 1.5,
                     }}
-                />
+                /> */}
             </Box>
 
             <Grid container spacing={2} sx={{ mb: 3 }}>
@@ -115,14 +112,16 @@ export const Performance = () => {
                         title: "Approval Rate",
                         value: performance ? `${performance.approvalRate||0}%` : '--',
                         progress: performance.approvalRate||0,
-                        subtitle: "Above team average (72%)",
+                        // subtitle: "Above team average (72%)",
+                        subtitle: '',
                         icon: <CheckCircleIcon fontSize="small" sx={{ color: "#6b7280" }} />,
                     },
                     {
                         title: "Avg Review Time",
                         value: performance ? `${performance.averageReviewHours||0}H` : '--',
                         progress: performance.averageReviewHours||0,
-                        subtitle: "40% faster than average",
+                        // subtitle: "40% faster than average",
+                        subtitle: "",
                         icon: <AccessTimeIcon fontSize="small" sx={{ color: "#6b7280" }} />,
                     },
                     {
@@ -288,9 +287,9 @@ export const Performance = () => {
                             <Typography variant="body2">
                                 <strong>Fastest review:</strong> {performance.fastestReviewMinutes||'N/A'} min
                             </Typography>
-                            <Typography variant="body2">
+                            {/* <Typography variant="body2">
                                 <strong>Most reviewed category:</strong> Crop Management
-                            </Typography>
+                            </Typography> */}
                         </Box>
                     </Paper>
                 </Grid>
