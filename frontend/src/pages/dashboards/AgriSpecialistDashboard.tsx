@@ -145,37 +145,29 @@ const AgriSpecialistDashboard = () => {
   // const [viewQuestionModal,setViewQuestionModal] = useState(false)
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [rejectedQuestion, setRejectedQuestion] = useState<Task[]>([]);
-  const [questionText, setQuestionText] = useState(
-    rejectedQuestion[0]?.question_text || ""
-  );
-  const [kccAns, setKccAns] = useState(rejectedQuestion[0]?.kccAns || "");
-  const [specializationvalue, setSpecilizationValue] = useState(
-    rejectedQuestion[0]?.question_type || ""
-  );
-  const [seasonvalue, setSeasonValue] = useState(
-    rejectedQuestion[0]?.season || ""
-  );
-  const [sectorValue, setSectorValue] = useState(
-    rejectedQuestion[0]?.sector || ""
-  );
-  const [statevalue, setStateValue] = useState(
-    rejectedQuestion[0]?.state || ""
-  );
-  const [cropName, setCropName] = useState(rejectedQuestion[0]?.crop || "");
-  const [region, setRegion] = useState(rejectedQuestion[0]?.district || "");
+  const [selectedFile,setSelectedFile] = useState<File | null>(null)
+  const [rejectedQuestion,setRejectedQuestion]=useState<Task[]>([])
+  const [questionText, setQuestionText] = useState(rejectedQuestion[0]?.question_text||'');
+  const [kccAns,setKccAns]=useState(rejectedQuestion[0]?.kccAns||'')
+  const [specializationvalue,setSpecilizationValue]=useState(rejectedQuestion[0]?.question_type||'')
+  const [seasonvalue,setSeasonValue]=useState(rejectedQuestion[0]?.season||'')
+  const [sectorValue,setSectorValue]=useState(rejectedQuestion[0]?.sector||'')
+  const [statevalue,setStateValue]=useState(rejectedQuestion[0]?.state||'')
+  const [cropName,setCropName]=useState(rejectedQuestion[0]?.crop||'')
+  const [region,setRegion]=useState(rejectedQuestion[0]?.district||'')
 
-  useEffect(() => {
-    if (rejectedQuestion && rejectedQuestion.length >= 1) {
-      setQuestionText(rejectedQuestion[0].question_text);
-      setKccAns(rejectedQuestion[0].kccAns);
-      setSpecilizationValue(rejectedQuestion[0].question_type);
-      setSeasonValue(rejectedQuestion[0].season);
-      setSectorValue(rejectedQuestion[0].sector);
-      setStateValue(rejectedQuestion[0].state);
-      setCropName(rejectedQuestion[0].crop);
-      setRegion(rejectedQuestion[0].district);
+  
+  useEffect(()=>{
+    if(rejectedQuestion && rejectedQuestion.length>=1)
+    {
+      setQuestionText(rejectedQuestion[0].question_text)
+      setKccAns(rejectedQuestion[0].kccAns)
+      setSpecilizationValue(rejectedQuestion[0].question_type)
+      setSeasonValue(rejectedQuestion[0].season)
+      setSectorValue(rejectedQuestion[0].sector)
+      setStateValue(rejectedQuestion[0].state)
+      setCropName(rejectedQuestion[0].crop)
+      setRegion(rejectedQuestion[0].district)
       //setQuestionText(rejectedQuestion[0].question_type)
     }
   }, [rejectedQuestion]);
@@ -190,15 +182,16 @@ const AgriSpecialistDashboard = () => {
 
   const handleCloseQuestionModal = () => {
     setIsQuestionModalOpen(false);
-    setQuestionText("");
-    setSelectedFile(null);
-    setSpecilizationValue("");
-    setKccAns("");
-    setStateValue("");
-    setSeasonValue("");
-    setSectorValue("");
-    setCropName("");
-    setRegion("");
+    setQuestionText('');
+    setSelectedFile(null)
+    setSpecilizationValue('')
+    setKccAns('')
+    setStateValue('')
+    setSeasonValue('')
+    setSectorValue('')
+    setCropName('')
+    setRegion('')
+  
   };
 
   const handleQuestionSubmit = async () => {
@@ -255,27 +248,25 @@ const AgriSpecialistDashboard = () => {
           rejectedQuestion[0].peer_validation_id
         );
       }
-      formData.append("query_type", specializationvalue);
-      formData.append("season", seasonvalue);
-      formData.append("state", statevalue);
-      formData.append("sector", sectorValue);
-      formData.append("crop", cropName);
-      formData.append("district", region);
-      formData.append("status", "assigned_to_moderation");
-      const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/questions`,
-        {
-          method: "POST",
-          headers: {
-            // 'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          // body: JSON.stringify({
-          //   original_query_text: questionText.trim()
-          // }),
-          body: formData,
-        }
-      );
+      formData.append('query_type',specializationvalue)
+      formData.append('season',seasonvalue)
+      formData.append('state',statevalue)
+      formData.append('sector',sectorValue)
+      formData.append('crop',cropName)
+      formData.append('district',region)
+      formData.append('status',"assigned_to_moderation")
+    
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/questions`, {
+        method: 'POST',
+        headers: {
+          // 'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        // body: JSON.stringify({
+        //   original_query_text: questionText.trim()
+        // }),
+        body:formData
+      });
 
       if (!response.ok) {
         throw new Error("Failed to create question");
@@ -569,7 +560,9 @@ const AgriSpecialistDashboard = () => {
                 </IconButton>
               </DialogTitle>
               <DialogContent dividers>
-                <TextField
+                {
+                  rejectedQuestion[0]?.type === "question_rejected"?
+                  <TextField
                   autoFocus
                   margin="dense"
                   id="question"
@@ -581,93 +574,95 @@ const AgriSpecialistDashboard = () => {
                   rows={1}
                   value={rejectedQuestion[0]?.comments}
                   sx={{ mt: 1 }}
-                />
-                <FormControl fullWidth margin="normal" sx={{ mb: 2 }}>
-                  <InputLabel id="role-label">Sector Type *</InputLabel>
-                  <Select
-                    labelId="role-label"
-                    id="role"
-                    name="role"
-                    value={sectorValue}
-                    label="Sector Type *"
-                    onChange={(e) => setSectorValue(e.target.value)}
-                    required
-                  >
-                    <MenuItem value="">
-                      <em>Select Sector Type *</em>
-                    </MenuItem>
-                    {sector.map((role) => (
-                      <MenuItem key={role.value} value={role.value}>
-                        {role.label}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                <FormControl fullWidth margin="normal" sx={{ mb: 2 }}>
-                  <InputLabel id="role-label">Question Type *</InputLabel>
-                  <Select
-                    labelId="role-label"
-                    id="role"
-                    name="role"
-                    value={specializationvalue}
-                    label="Question Type *"
-                    onChange={(e) => setSpecilizationValue(e.target.value)}
-                    required
-                  >
-                    <MenuItem value="">
-                      <em>Select Question Type *</em>
-                    </MenuItem>
-                    {specialization.map((role) => (
-                      <MenuItem key={role.value} value={role.value}>
-                        {role.label}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                <FormControl fullWidth margin="normal" sx={{ mb: 2 }}>
-                  <InputLabel id="role-label">Season Type *</InputLabel>
-                  <Select
-                    labelId="role-label"
-                    id="role"
-                    name="role"
-                    value={seasonvalue}
-                    label="Season Type *"
-                    onChange={(e) => setSeasonValue(e.target.value)}
-                    required
-                  >
-                    <MenuItem value="">
-                      <em>Select Season Type *</em>
-                    </MenuItem>
-                    {season.map((role) => (
-                      <MenuItem key={role.value} value={role.value}>
-                        {role.label}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                <FormControl fullWidth margin="normal" sx={{ mb: 2 }}>
-                  <InputLabel id="role-label">State *</InputLabel>
-                  <Select
-                    labelId="role-label"
-                    id="role"
-                    name="role"
-                    value={statevalue}
-                    label="State *"
-                    onChange={(e) => setStateValue(e.target.value)}
-                    required
-                  >
-                    <MenuItem value="">
-                      <em>Select State *</em>
-                    </MenuItem>
-                    {states.map((role) => (
-                      <MenuItem key={role.value} value={role.value}>
-                        {role.label}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-
-                <TextField
+                />:''
+                }
+              
+              <FormControl fullWidth margin="normal" sx={{ mb: 2 }}>
+              <InputLabel id="role-label">Sector Type *</InputLabel>
+              <Select
+                labelId="role-label"
+                id="role"
+                name="role"
+                value={sectorValue}
+                label="Sector Type *"
+                onChange={(e) => setSectorValue( e.target.value)}
+                required
+              >
+                <MenuItem value="">
+                  <em>Select Sector Type *</em>
+                </MenuItem>
+                {sector.map((role) => (
+                  <MenuItem key={role.value} value={role.value}>
+                    {role.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+              <FormControl fullWidth margin="normal" sx={{ mb: 2 }}>
+              <InputLabel id="role-label">Question Type *</InputLabel>
+              <Select
+                labelId="role-label"
+                id="role"
+                name="role"
+                value={specializationvalue}
+                label="Question Type *"
+                onChange={(e) => setSpecilizationValue( e.target.value)}
+                required
+              >
+                <MenuItem value="">
+                  <em>Select Question Type *</em>
+                </MenuItem>
+                {specialization.map((role) => (
+                  <MenuItem key={role.value} value={role.value}>
+                    {role.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth margin="normal" sx={{ mb: 2 }}>
+              <InputLabel id="role-label">Season Type *</InputLabel>
+              <Select
+                labelId="role-label"
+                id="role"
+                name="role"
+                value={seasonvalue}
+                label="Season Type *"
+                onChange={(e) => setSeasonValue( e.target.value)}
+                required
+              >
+                <MenuItem value="">
+                  <em>Select Season Type *</em>
+                </MenuItem>
+                {season.map((role) => (
+                  <MenuItem key={role.value} value={role.value}>
+                    {role.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth margin="normal" sx={{ mb: 2 }}>
+              <InputLabel id="role-label">State *</InputLabel>
+              <Select
+                labelId="role-label"
+                id="role"
+                name="role"
+                value={statevalue}
+                label="State *"
+                onChange={(e) => setStateValue( e.target.value)}
+                required
+              >
+                <MenuItem value="">
+                  <em>Select State *</em>
+                </MenuItem>
+                {states.map((role) => (
+                  <MenuItem key={role.value} value={role.value}>
+                    {role.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+           
+            <TextField
                   autoFocus
                   margin="dense"
                   id="question"

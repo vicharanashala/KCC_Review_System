@@ -460,6 +460,10 @@ const handleSubmitQuestion=async()=>{
       formData.append('original_query_text', task.original_query_text)
      
     const userId=localStorage.getItem('user_id')
+    if(userId)
+      {
+        formData.append('user_id',userId.toString())
+      }
     const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/questions`, {
         method: 'POST',
         headers: {

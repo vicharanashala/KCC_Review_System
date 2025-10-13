@@ -176,7 +176,6 @@ const results= this.getAvailableUserList(currentUserObj,questionObj,UserRole.AGR
  
  
    const currentUserfromDatabase=await User.findOne({_id:currentUserObj})
-   
    if(currentUserfromDatabase?.location?.coordinates)
    {
      const latitude=currentUserfromDatabase.location.coordinates[0]
@@ -230,6 +229,81 @@ const results= this.getAvailableUserList(currentUserObj,questionObj,UserRole.AGR
     else{
      return User.find({
        role: type,
+       is_active: true,
+       is_available: true,
+     }).sort({ workload_count: 1 });
+    
+    }
+  }
+  async getAvailableModeratorList(currentUserObj?: any,questionObj?: any,type?:string): Promise<IUser[]>{
+    let reviewed_by_specialist_array= []
+    if(currentUserObj &&questionObj )
+    {
+    
+     const result= await Question.find({question_id:questionObj.question_id} )
+    let questionOwner=currentUserObj._id.toString()
+   // let speArr=result[0]?.reviewed_by_specialists|| []
+    let modArr=result[0]?.reviewed_by_Moderators
+   // let arr=[...speArr,...modArr]
+   
+  // console.log("the reviewed by modertors===",modArr)
+  const currentUserfromDatabase=await User.findOne({_id:currentUserObj})
+  // console.log("total review id-====",totalReviewedUserList)
+   if(currentUserfromDatabase?.location?.coordinates)
+   {
+     const latitude=currentUserfromDatabase.location.coordinates[0]
+     const longitude=currentUserfromDatabase.location.coordinates[1]
+     const nearestUser = await User.aggregate([
+       {
+         $geoNear: {
+           near: { type: "Point", coordinates: [latitude,longitude] },
+           distanceField: "dist.calculated",
+            spherical: true,
+         },
+       },
+       {
+         $match: { 
+          _id: { $nin: modArr },
+       //  specializationField:questionObj.query_type,
+         role: UserRole.MODERATOR,
+         is_active: true,
+         is_available: true } // filter by username
+       },
+       {
+         $sort: { workload_count: 1, "dist.calculated": 1 },
+       },
+      
+     ]);
+    // console.log("nearet user=====",nearestUser)
+    if(nearestUser)
+    {
+     
+      return nearestUser
+    }
+    else{
+      return User.find({
+        _id: { $nin: modArr },
+        role: UserRole.MODERATOR,
+        is_active: true,
+        is_available: true,
+      }).sort({ workload_count: 1 });
+    }
+   
+   }
+   else{
+     let userList= await User.find({
+       _id: { $nin: modArr },
+       role: UserRole.MODERATOR,
+       is_active: true,
+       is_available: true,
+     }).sort({ workload_count: 1 });
+         return userList
+ 
+   }
+   }
+    else{
+     return User.find({
+       role: UserRole.MODERATOR,
        is_active: true,
        is_available: true,
      }).sort({ workload_count: 1 });

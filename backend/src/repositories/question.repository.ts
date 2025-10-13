@@ -65,7 +65,7 @@ export default class QuestionRepository {
             ...questionData,
             status, // ensure status is stored as the enum value
             updated_at: new Date(),
-            reviewed_by_Moderators:[]
+          // reviewed_by_Moderators:[]
           }
         },
         {
@@ -75,11 +75,11 @@ export default class QuestionRepository {
       ).lean(); // optional for plain JS object
   
       if (!updatedQuestion) {
-        console.warn(`⚠️ No question found with ID ${question_id}`);
+      //  console.warn(`⚠️ No question found with ID ${question_id}`);
         return null;
       }
   
-      console.log("✅ Question updated:", updatedQuestion.question_id);
+     // console.log("✅ Question updated:", updatedQuestion.question_id);
       return updatedQuestion;
     } catch (err) {
       console.error("❌ Error updating question:", err);

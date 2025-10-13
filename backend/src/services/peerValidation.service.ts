@@ -126,6 +126,7 @@ export default class PeerValidationService {
           ? answer.specialist_id._id.toString()
           : answer.specialist_id;
       await userRepo.updatePenality(originalSpecialistId, 1);
+      await userRepo.updateWorkload(originalSpecialistId,1)
       logger.info(
         `Incentive -1 applied to specialist ${originalSpecialistId} for revised peer review`
       );
@@ -146,14 +147,14 @@ export default class PeerValidationService {
         `Revision notification sent to original specialist for answer ${question.assigned_specialist_id}`
       );
       question.consecutive_peer_approvals = 0;
-      // await question.save()
+       await question.save()
       if (peerData.revised_answer_text) {
         console.log("reaching hereeeeee")
         answer.is_current = false;
         //  answer.sendBackToRevision="Revesion"
         //  answer.first_answered_person=question.assigned_specialist_id
-        // await answer.save();
-        const newAnswer = await answerRepo.create({
+         await answer.save();
+      /*  const newAnswer = await answerRepo.create({
           question_id: question._id,
           specialist_id: userObjectId,
           answer_text: peerData.revised_answer_text,
@@ -163,7 +164,7 @@ export default class PeerValidationService {
           first_answered_person: question.assigned_specialist_id,
           //original_query_text:question. original_query_text,
           // original_question_id:question.question_id
-        });
+        });*/
 
         // question.status = QuestionStatus.PENDING_PEER_REVIEW;
         question.status = QuestionStatus.NEEDS_REVISION;
@@ -177,9 +178,7 @@ export default class PeerValidationService {
           );
           logger.info(`Peer Review Submitted Successfully to---${user?.name} `);
 
-          logger.info(
-            `Peer revised answer ${answer.answer_id} to new version ${newAnswer.version}`
-          );
+       // logger.info(`Peer revised answer ${answer.answer_id} to new version ${newAnswer.version}`);
         }
 
         return {
