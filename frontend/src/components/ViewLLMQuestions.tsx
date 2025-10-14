@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"; // CHANGE: Added useEffect import
+import { useState, useEffect } from "react"; 
 import axios from "axios";
 import {
   Dialog,
@@ -213,9 +213,14 @@ export function QuestionDetailsModal({ open, onClose, question }) {
   const [region, setRegion] = useState(question.region);
   const [questionText, setQuestionText] = useState(question.questionText);
   const [kccAns, setKccAns] = useState(question.kccAns);
+  const [llmId,setLlmId] =useState(question.id as string)
   const [selectedFile, setSelectedFile] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const handleQuestionSubmit = async () => {
+    if (!llmId.trim()) {
+      showError("Please enter question type");
+      return;
+    }
     if (!specializationValue.trim()) {
       showError("Please enter question type");
       return;
@@ -249,6 +254,9 @@ export function QuestionDetailsModal({ open, onClose, question }) {
       const userId = localStorage.getItem("user_id");
       if (userId) {
         formData.append("user_id", userId.toString());
+      }
+      if(llmId){
+        formData.append("llmId",llmId)
       }
 
       if (questionText.trim()) {
@@ -300,6 +308,7 @@ export function QuestionDetailsModal({ open, onClose, question }) {
       setIsSubmitting(false);
       // CHANGE: Reset states after submission (adapted for edit modal)
       setSpecializationValue("");
+      setLlmId("");
       setKccAns("");
       setStateValue("");
       setSeasonValue("");

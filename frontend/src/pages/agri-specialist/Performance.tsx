@@ -43,7 +43,6 @@ export const Performance = () => {
 
   // Parse JSON
   const performance = performanceString ? JSON.parse(performanceString) : null;
-    //console.log("the performane====*************",performance)
     return (
         <Box sx={{ p: 3, maxWidth: 1200, mx: "auto" }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 4 }}>

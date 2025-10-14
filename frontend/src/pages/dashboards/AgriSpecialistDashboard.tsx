@@ -381,7 +381,6 @@ const AgriSpecialistDashboard = () => {
   useEffect(() => {
     const latest = notifications[0];
     if (latest?.type === "task_assigned") {
-      //console.log(" Reloading tasks after assignment");
       fetchMyTasks();
       fetchMyPerformance()
     }

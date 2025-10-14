@@ -16,11 +16,10 @@ const peerValidationRepo = new PeerValidationRepository();
 
 export default class QuestionService {
   async create(questionData: QuestionCreateDto): Promise<any> {
-    console.log("the question data===",questionData)
    
     if(questionData.question_id)
     {
-      console.log("the first loop")
+      // console.log("the first loop")
       const question=await questionRepo.findByQuestionId(questionData.question_id)
       if(question)
       {
@@ -49,7 +48,7 @@ export default class QuestionService {
             }
         if(question.question_approval>=2)
         {
-          console.log("the question approved====********",question)
+          // console.log("the question approved====********",question)
           question.reviewed_by_Moderators=[]
           await question.save();
           setImmediate(() => WorkflowService.assignQuestionToSpecialist(question.question_id,questionData.user_id));
@@ -205,5 +204,9 @@ export default class QuestionService {
 
   async getLLmQuestionsByUserId(userId:string){
     return await questionRepo.getLLMQuestionsBYUserId(userId)
+  }
+
+  async markLlmAsRead(id:string){
+    return await questionRepo.markLLmAsRead(id)
   }
 }

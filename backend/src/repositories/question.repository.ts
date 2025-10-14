@@ -207,7 +207,6 @@ export default class QuestionRepository {
 
   async createLLmQuestion(data:ILLMQuestion){
     const result =await LlmQuestionModel.create(data)
-    console.log("result after creating from repo ",result)
     return result._id
   }
 
@@ -216,10 +215,12 @@ export default class QuestionRepository {
   }
   
   async getLLMQuestionsBYUserId(userId:string){
-    const questions = await LlmQuestionModel.find({assigned_moderator:userId})
-    console.log("Your questions from LLM ",questions)
+    const questions = await LlmQuestionModel.find({assigned_moderator:userId,isDone:false })
     return questions
   }
   
-  
+  async markLLmAsRead(id:string){
+    const result = await LlmQuestionModel.findByIdAndUpdate(id,{isDone:true})
+    return result?._id
+  }
 }
