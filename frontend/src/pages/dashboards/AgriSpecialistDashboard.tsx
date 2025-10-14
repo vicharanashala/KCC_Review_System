@@ -2,7 +2,7 @@ import { Box, Typography, Paper, Grid, Card, CardContent, Button, IconButton, Ba
   MenuItem,
   FormControl,
   InputLabel,
-  Select } from '@mui/material';
+  Select ,Pagination} from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useToast } from '../../contexts/ToastContext';
@@ -361,6 +361,9 @@ const AgriSpecialistDashboard = () => {
  // const [notifications, setNotifications] = useState<any[]>([]);
   const[performance,setPerformance]= useState<Performance | null>(null);
   const [questionPerformance,setQuestionPerformance]=useState<Performance |null>(null)
+  const ITEMS_PER_PAGE = 7;
+  const [currentPage, setCurrentPage] = useState(1);
+  const [paginatedTasks, setPaginatedTasks] = useState<Task[]>([]);
 
   const fetchMyTasks = async () => {
     try {
@@ -374,7 +377,7 @@ const AgriSpecialistDashboard = () => {
       if (!res.ok) throw new Error('Failed to fetch tasks');
       const data = await res.json();
       setTasks(data?.tasks || []);
-      setFilteredTasks(data?.tasks || []);
+     // setFilteredTasks(data?.tasks || []);
     } catch (error) {
       console.error('Error fetching tasks:', error);
       setTasks([]);
@@ -425,7 +428,46 @@ const AgriSpecialistDashboard = () => {
       setNotifications([]);
     }
   };*/
-
+  const handlePageChange = (_event: React.ChangeEvent<unknown>, page: number) => {
+    setCurrentPage(page);
+  };
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+  useEffect(() => {
+   
+    // Step 1: Sort all tasks by created_at (newest first)
+    const sortedTasks = [...tasks].sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+  
+    // Step 2: Filter (if searchQuery is provided)
+    let filtered = sortedTasks;
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = sortedTasks.filter(
+        (task) =>
+          task.
+          question_text
+          ?.toLowerCase().includes(query) ||
+          task.question_id?.toLowerCase().includes(query)
+      );
+    }
+    const totalPages = Math.ceil(tasks.length / ITEMS_PER_PAGE);
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(1);
+      return;
+    }
+   
+    // Step 3: Pagination logic
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    const pageTasks = filtered.slice(startIndex, endIndex);
+ 
+    // Step 4: Update state
+    setFilteredTasks(filtered);
+    setPaginatedTasks(pageTasks);
+  }, [tasks, searchQuery, currentPage]);
   useEffect(() => {
     const latest = notifications[0];
     if (latest?.type === "task_assigned") {
@@ -930,14 +972,14 @@ const AgriSpecialistDashboard = () => {
                 <Typography variant="body2" color="text.secondary">
                   Loading tasks...
                 </Typography>
-              ) : filteredTasks.length === 0 ? (
+              ) : paginatedTasks.length === 0 ? (
                 <Typography variant="body2" color="text.secondary">
                   {searchQuery
                     ? "No tasks match your search."
                     : "No tasks available."}
                 </Typography>
               ) : (
-                filteredTasks.map((task, index) => (
+                paginatedTasks.map((task, index) => (
                   <Paper
                     key={`${task.answer_id}-${index}`}
                     variant="outlined"
@@ -1058,6 +1100,15 @@ const AgriSpecialistDashboard = () => {
                 ))
               )}
             </Paper>
+            <Box sx={{ display: 'flex', justifyContent:'flex-end', mt: 3 }}>
+          <Pagination
+            count={Math.ceil(filteredTasks.length / ITEMS_PER_PAGE)}
+            page={currentPage}
+            onChange={handlePageChange}
+            color="primary"
+            shape="rounded"
+          />
+        </Box>
           </Grid>
 
           <Grid item xs={12} md={4}>
