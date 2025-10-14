@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { submitQuestion, getQuestionDetails, getMyQuestions } from '../controllers/question.controller';
+import { submitQuestion, getQuestionDetails, getMyQuestions,CreateLLmQuestions,getAllLLmQuestions,getLLmQuestionsByUserId } from '../controllers/question.controller';
 import multer from 'multer';
 const router = Router();
 const upload = multer({
@@ -16,5 +16,7 @@ const upload = multer({
 router.post('/',upload.single('csvFile'), submitQuestion);
 router.get('/id/:question_id', getQuestionDetails);
 router.get('/my-questions', getMyQuestions);
-
+router.post('/llm',CreateLLmQuestions)
+router.get('/all/llm',getAllLLmQuestions)
+router.get('/llm/moderator/',getLLmQuestionsByUserId)
 export default router;

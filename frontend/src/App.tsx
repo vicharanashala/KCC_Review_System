@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-
 import { CssBaseline, ThemeProvider, createTheme, Box, Typography } from '@mui/material';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ToastProvider, useToast } from './contexts/ToastContext';
+import{NotificationProvider} from './contexts/NotificationContext'
 import { setToastFunctions } from './api/auth';
 import { setToastFunctions as setApiToastFunctions } from './utils/apiWithToast';
 import { setToastFunctions as setPeerValidationToastFunctions } from './api/peerValidation';
@@ -156,7 +157,9 @@ function App() {
         <ToastProvider>
           <ToastInitializer>
             <AuthProvider>
+            <NotificationProvider>
               <AppRoutes />
+              </NotificationProvider>
             </AuthProvider>
           </ToastInitializer>
         </ToastProvider>

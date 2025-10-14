@@ -8,6 +8,7 @@ import { QuestionStatus ,NotificationType} from '../interfaces/enums';
 import mongoose from "mongoose";
 import PeerValidationRepository from '../repositories/peerValidation.repository';
 import UserRepository from '../repositories/user.repository';
+import { ILLMQuestion } from '../models/LlmQuestion.model';
 const userRepo = new UserRepository();
 const questionRepo = new QuestionRepository();
 const notificationRepo = new NotificationRepository();
@@ -192,5 +193,17 @@ export default class QuestionService {
   async getAssignedToUser(userId: string): Promise<any[]> {
     const data = questionRepo.findAssignedToUser(userId, [QuestionStatus.ASSIGNED_TO_SPECIALIST, QuestionStatus.NEEDS_REVISION, QuestionStatus.READY_FOR_GOLDEN_FAQ]);
     return data
+  }
+
+  async createLLMQuestions(data:ILLMQuestion){
+    return await questionRepo.createLLmQuestion(data)
+  }
+
+  async getAllLLMQuestions(){
+    return await questionRepo.getAllLLMQuestions()
+  }
+
+  async getLLmQuestionsByUserId(userId:string){
+    return await questionRepo.getLLMQuestionsBYUserId(userId)
   }
 }

@@ -11,12 +11,15 @@ import RateReviewIcon from '@mui/icons-material/RateReview';
 import AssessmentIcon from '@mui/icons-material/Assessment';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import { CallReceived } from "@mui/icons-material";
 import AddIcon from '@mui/icons-material/Add';
 import ReportProblemOutlinedIcon from '@mui/icons-material/ReportProblemOutlined';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import { TextField } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { useNotifications } from "../../contexts/NotificationContext";
+import ViewLLMQuestionsModal from "../../components/ViewLLMQuestions";
 
 const DashboardCard = ({
   title,
@@ -119,7 +122,8 @@ const AgriSpecialistDashboard = () => {
   const [statevalue,setStateValue]=useState(rejectedQuestion[0]?.state||'')
   const [cropName,setCropName]=useState(rejectedQuestion[0]?.crop||'')
   const [region,setRegion]=useState(rejectedQuestion[0]?.district||'')
-
+  const { notifications, markAsRead, markAllAsRead,taskAdded } = useNotifications();
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   
   useEffect(()=>{
     if(rejectedQuestion && rejectedQuestion.length>=1)
@@ -308,7 +312,7 @@ const AgriSpecialistDashboard = () => {
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [notifications, setNotifications] = useState<any[]>([]);
+ // const [notifications, setNotifications] = useState<any[]>([]);
   const[performance,setPerformance]= useState<Performance | null>(null);
 
   const fetchMyTasks = async () => {
@@ -357,7 +361,7 @@ const AgriSpecialistDashboard = () => {
   };
 
 
-  const fetchNotifications = async () => {
+  /*const fetchNotifications = async () => {
     try {
       const token = localStorage.getItem('access_token');
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/notifications`, {
@@ -372,13 +376,22 @@ const AgriSpecialistDashboard = () => {
       console.error('Error fetching notifications:', error);
       setNotifications([]);
     }
-  };
+  };*/
 
+  useEffect(() => {
+    const latest = notifications[0];
+    if (latest?.type === "task_assigned") {
+      //console.log(" Reloading tasks after assignment");
+      fetchMyTasks();
+      fetchMyPerformance()
+    }
+  } ,[taskAdded]);
   useEffect(() => {
     fetchMyPerformance()
     fetchMyTasks();
-    fetchNotifications();
-  }, []);
+   // fetchNotifications();
+   }, []);
+  
   
   useEffect(() => {
     if (!searchQuery.trim()) {
@@ -424,45 +437,97 @@ const AgriSpecialistDashboard = () => {
       path: `${getBasePath()}/notifications`,
     },
   ];
-
+ 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+    <Box sx={{ display: "flex", minHeight: "100vh" }}>
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
           <Box>
             <Typography variant="h4" component="h1" gutterBottom>
-              
-              {user?.role === 'moderator' ? "Moderator Dashboard" : "Reviewer Dashboard"}
+              {user?.role === "moderator"
+                ? "Moderator Dashboard"
+                : "Reviewer Dashboard"}
             </Typography>
             <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
               Welcome back! You have {tasks.length} pending reviews.
             </Typography>
           </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-          {user?.role === 'moderator' && (
-            <Button
-                variant="outlined"
-                fullWidth
-                startIcon={<AddIcon fontSize="small" sx={{ color: '#000' }} />}
-                onClick={()=>handleOpenQuestionModal()}
-                sx={{
-                  borderRadius: 2,
-                  textTransform: 'none',
-                  color: '#000',
-                  width: '100%',
-                  borderColor: '#0000001A',
-                  '&:hover': {
-                    borderColor: '#0000001A',
-                  },
-                }}
-              >
-                Question
-              </Button>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
+            {user?.role === "moderator" && (
+              <>
+                <Button
+                  variant="outlined"
+                  fullWidth
+                  startIcon={<CallReceived fontSize="small" sx={{ color: '#000' }} />}
+                  onClick={() => setIsViewModalOpen(true)}
+                  sx={{
+                    borderRadius: 2,
+                    textTransform: "none",
+                    color: "#000",
+                    width: "100%",
+                    borderColor: "#0000001A",
+                    "&:hover": {
+                      borderColor: "#0000001A",
+                    },
+                  }}
+                >
+                  From LLM
+                </Button>
+
+                <Button
+                  variant="outlined"
+                  fullWidth
+                  startIcon={
+                    <AddIcon fontSize="small" sx={{ color: "#000" }} />
+                  }
+                  onClick={() => handleOpenQuestionModal()}
+                  sx={{
+                    borderRadius: 2,
+                    textTransform: "none",
+                    color: "#000",
+                    width: "100%",
+                    borderColor: "#0000001A",
+                    "&:hover": {
+                      borderColor: "#0000001A",
+                    },
+                  }}
+                >
+                  Question
+                </Button>
+              </>
             )}
 
-            <Dialog open={isQuestionModalOpen} onClose={handleCloseQuestionModal} maxWidth="sm" fullWidth>
-              <DialogTitle sx={{ m: 0, p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="h6">{rejectedQuestion[0]?.type === "question_rejected"? "Please Correct Your Question" : "Create Question"}</Typography>
+            <ViewLLMQuestionsModal
+            open={isViewModalOpen} 
+              onClose={() => setIsViewModalOpen(false)}
+            />
+
+            <Dialog
+              open={isQuestionModalOpen}
+              onClose={handleCloseQuestionModal}
+              maxWidth="sm"
+              fullWidth
+            >
+              <DialogTitle
+                sx={{
+                  m: 0,
+                  p: 2,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <Typography variant="h6">
+                  {rejectedQuestion[0]?.type === "question_rejected"
+                    ? "Please Correct Your Question"
+                    : "Create Question"}
+                </Typography>
                 <IconButton
                   aria-label="close"
                   onClick={handleCloseQuestionModal}
@@ -487,7 +552,6 @@ const AgriSpecialistDashboard = () => {
                   multiline
                   rows={1}
                   value={rejectedQuestion[0]?.comments}
-                 
                   sx={{ mt: 1 }}
                 />:''
                 }
@@ -619,9 +683,8 @@ const AgriSpecialistDashboard = () => {
                   onChange={(e) => setQuestionText(e.target.value)}
                   sx={{ mt: 1 }}
                 />
-                
 
-            <TextField
+                <TextField
                   autoFocus
                   margin="dense"
                   id="question"
@@ -637,38 +700,46 @@ const AgriSpecialistDashboard = () => {
                   sx={{ mt: 1 }}
                 />
               </DialogContent>
-              
+
               <DialogContent>
-                <label htmlFor="csv-upload">Add Your CSV here</label> <br/>
+                <label htmlFor="csv-upload">Add Your CSV here</label> <br />
                 <input
                   id="csv-upload"
                   type="file"
                   accept=".csv"
                   title="Upload CSV file"
                   placeholder="Choose a CSV file"
-                  onChange={(e) => setSelectedFile(e.target.files ? e.target.files[0] : null)}
+                  onChange={(e) =>
+                    setSelectedFile(e.target.files ? e.target.files[0] : null)
+                  }
                 />
               </DialogContent>
               <DialogActions sx={{ p: 2 }}>
-                <Button 
+                <Button
                   onClick={handleCloseQuestionModal}
-                  sx={{ textTransform: 'none' }}
+                  sx={{ textTransform: "none" }}
                 >
                   Cancel
                 </Button>
                 <Button
                   variant="contained"
                   onClick={handleQuestionSubmit}
-                  disabled={isSubmitting || (!questionText.trim() && !selectedFile)}
+                  disabled={
+                    isSubmitting || (!questionText.trim() && !selectedFile)
+                  }
                   sx={{
-                    textTransform: 'none',
-                    backgroundColor: '#00A63E',
-                    '&:hover': {
-                      backgroundColor: '#008c35',
+                    textTransform: "none",
+                    backgroundColor: "#00A63E",
+                    "&:hover": {
+                      backgroundColor: "#008c35",
                     },
                   }}
                 >
-                  {isSubmitting ? <CircularProgress size={24} color="inherit" /> : 'Create Question'}
+                  {isSubmitting ? (
+                    <CircularProgress size={24} color="inherit" />
+                  ) : (
+                    "Create Question"
+                  )}
                 </Button>
               </DialogActions>
             </Dialog>
@@ -676,15 +747,23 @@ const AgriSpecialistDashboard = () => {
             <Button
               variant="outlined"
               fullWidth
-              startIcon={<TrendingUpIcon fontSize="small" sx={{ color: '#000' }} />}
-              onClick={() => navigate(`${getBasePath()}/performance?data=${encodeURIComponent(JSON.stringify(performance))}`)}
+              startIcon={
+                <TrendingUpIcon fontSize="small" sx={{ color: "#000" }} />
+              }
+              onClick={() =>
+                navigate(
+                  `${getBasePath()}/performance?data=${encodeURIComponent(
+                    JSON.stringify(performance)
+                  )}`
+                )
+              }
               sx={{
                 borderRadius: 2,
-                textTransform: 'none',
-                color: '#000',
-                borderColor: '#0000001A',
-                '&:hover': {
-                  borderColor: '#0000001A',
+                textTransform: "none",
+                color: "#000",
+                borderColor: "#0000001A",
+                "&:hover": {
+                  borderColor: "#0000001A",
                 },
               }}
             >
@@ -692,22 +771,27 @@ const AgriSpecialistDashboard = () => {
             </Button>
 
             <Badge
-              badgeContent={notifications.filter(n => !n.is_read).length}
+              badgeContent={notifications.filter((n) => !n.is_read).length}
               color="error"
-              sx={{ '& .MuiBadge-badge': { top: 6, right: 6 } }}
+              sx={{ "& .MuiBadge-badge": { top: 6, right: 6 } }}
             >
               <Button
                 variant="outlined"
                 fullWidth
-                startIcon={<ReportProblemOutlinedIcon fontSize="small" sx={{ color: '#000' }} />}
+                startIcon={
+                  <ReportProblemOutlinedIcon
+                    fontSize="small"
+                    sx={{ color: "#000" }}
+                  />
+                }
                 onClick={() => navigate(`${getBasePath()}/notifications`)}
                 sx={{
                   borderRadius: 2,
-                  textTransform: 'none',
-                  color: '#000',
-                  borderColor: '#0000001A',
-                  '&:hover': {
-                    borderColor: '#0000001A',
+                  textTransform: "none",
+                  color: "#000",
+                  borderColor: "#0000001A",
+                  "&:hover": {
+                    borderColor: "#0000001A",
                   },
                 }}
               >
@@ -737,8 +821,8 @@ const AgriSpecialistDashboard = () => {
               sx={{
                 p: 3,
                 borderRadius: 3,
-                border: '1px solid #f0f0f0',
-                boxShadow: 'none',
+                border: "1px solid #f0f0f0",
+                boxShadow: "none",
               }}
             >
               <Typography variant="subtitle1" fontWeight={600} gutterBottom>
@@ -756,23 +840,23 @@ const AgriSpecialistDashboard = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 sx={{
-                  backgroundColor: '#fff8ef',
+                  backgroundColor: "#fff8ef",
                   borderRadius: 2,
                   mb: 3,
                   input: {
                     fontSize: 14,
-                    color: '#5f5f5f',
+                    color: "#5f5f5f",
                     paddingY: 1.5,
                     paddingX: 2,
                   },
-                  '& fieldset': {
-                    borderColor: '#fdebc8',
+                  "& fieldset": {
+                    borderColor: "#fdebc8",
                   },
-                  '&:hover fieldset': {
-                    borderColor: '#fcd89d',
+                  "&:hover fieldset": {
+                    borderColor: "#fcd89d",
                   },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#fcd89d',
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#fcd89d",
                   },
                 }}
               />
@@ -783,11 +867,12 @@ const AgriSpecialistDashboard = () => {
                 </Typography>
               ) : filteredTasks.length === 0 ? (
                 <Typography variant="body2" color="text.secondary">
-                  {searchQuery ? 'No tasks match your search.' : 'No tasks available.'}
+                  {searchQuery
+                    ? "No tasks match your search."
+                    : "No tasks available."}
                 </Typography>
               ) : (
                 filteredTasks.map((task, index) => (
-                  
                   <Paper
                     key={`${task.answer_id}-${index}`}
                     variant="outlined"
@@ -795,90 +880,118 @@ const AgriSpecialistDashboard = () => {
                       p: 2,
                       mb: 2,
                       borderRadius: 2,
-                      borderColor: '#eee',
-                      '&:hover': {
+                      borderColor: "#eee",
+                      "&:hover": {
                         boxShadow: 1,
-                        cursor: 'pointer'
-                      }
-                    }}>
-                    <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                        cursor: "pointer",
+                      },
+                    }}
+                  >
+                    <Typography
+                      variant="subtitle2"
+                      fontWeight={600}
+                      gutterBottom
+                    >
                       {task.question_text}
                     </Typography>
 
-                    
-                   
-                      {task.type==="Reject"?
-                       <Typography variant="caption" color="text.secondary" display="block">
-                      Rejected: {new Date(task.created_at).toLocaleDateString()}
+                    {task.type === "Reject" ? (
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        display="block"
+                      >
+                        Rejected:{" "}
+                        {new Date(task.created_at).toLocaleDateString()}
                       </Typography>
-                      :
-                      <Typography variant="caption" color="text.secondary" display="block">
-                      Approvals: {task.consecutive_approvals} • {new Date(task.created_at).toLocaleDateString()}
+                    ) : (
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        display="block"
+                      >
+                        Approvals: {task.consecutive_approvals} •{" "}
+                        {new Date(task.created_at).toLocaleDateString()}
                       </Typography>
-                      }
-                      
-                    
-                        <Box
-     
-    >
-                      {task.sources && task.sources.length>=1 &&task.sources.map(source => (
-                         <Box 
-                         sx={{
-                          width: 400,         // fixed width in px
-                          height: 20,        // fixed height in px
-                         
-                          display:'flex',
-                          justifyContent:'space-between'
-                        }}
-                           >
-                          <Typography variant="caption" color="text.secondary" display="block">
-                          SourceName:{source.name}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary" display="block">
-                          SourceUrl:<a href={source.link}>Open</a>
-                          </Typography>
-                         </Box>
-                          ))}
-                        </Box>
-                         
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    )}
+
+                    <Box>
+                      {task.sources &&
+                        task.sources.length >= 1 &&
+                        task.sources.map((source) => (
+                          <Box
+                            sx={{
+                              width: 400, // fixed width in px
+                              height: 20, // fixed height in px
+
+                              display: "flex",
+                              justifyContent: "space-between",
+                            }}
+                          >
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              display="block"
+                            >
+                              SourceName:{source.name}
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              display="block"
+                            >
+                              SourceUrl:<a href={source.link}>Open</a>
+                            </Typography>
+                          </Box>
+                        ))}
+                    </Box>
+
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
                       <Typography variant="caption" color="text.secondary">
                         Question ID: {task.question_id}
                       </Typography>
-                      
+
                       <Button
                         variant="contained"
                         size="small"
-                        onClick={task.type === "question_rejected"?()=>handleOpenQuestionModal(task):() => navigate(`${getBasePath()}/review-queue`, { state: { task } })}
+                        onClick={
+                          task.type === "question_rejected"
+                            ? () => handleOpenQuestionModal(task)
+                            : () =>
+                                navigate(`${getBasePath()}/review-queue`, {
+                                  state: { task },
+                                })
+                        }
                         sx={{
-                          backgroundColor: '#000',
-                          textTransform: 'none',
+                          backgroundColor: "#000",
+                          textTransform: "none",
                           borderRadius: 2,
                           px: 2,
                           py: 0.5,
                           fontSize: 13,
-                          '&:hover': { backgroundColor: '#222' },
+                          "&:hover": { backgroundColor: "#222" },
                         }}
                       >
-                       
-                       {
-    task.type === "Reject"
-    ? "Revise Answer"
-    : task.type === "question_validation"
-    ? "Question Review"
-    : task.type === "create_answer"
-    ? "Submit Answer"
-    : task.type === "question_rejected"
-    ? "Question Revised"
-    : "Review Answer"
-}
-                      
+                        {task.type === "Reject"
+                          ? "Revise Answer"
+                          : task.type === "question_validation"
+                          ? "Question Review"
+                          : task.type === "create_answer"
+                          ? "Submit Answer"
+                          : task.type === "question_rejected"
+                          ? "Question Revised"
+                          : "Review Answer"}
                       </Button>
                     </Box>
                   </Paper>
                 ))
               )}
-
             </Paper>
           </Grid>
 
@@ -887,8 +1000,8 @@ const AgriSpecialistDashboard = () => {
               sx={{
                 p: 3,
                 borderRadius: 3,
-                border: '1px solid #f0f0f0',
-                boxShadow: 'none',
+                border: "1px solid #f0f0f0",
+                boxShadow: "none",
                 mb: 3,
               }}
             >
@@ -896,52 +1009,61 @@ const AgriSpecialistDashboard = () => {
                 Recent Activity
               </Typography>
 
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <CheckCircleOutlineIcon fontSize="small" color="success" sx={{ mr: 1 }} />
+              <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                <CheckCircleOutlineIcon
+                  fontSize="small"
+                  color="success"
+                  sx={{ mr: 1 }}
+                />
                 <Box>
                   <Typography variant="body2" fontWeight={500}>
                     Approved
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                  {performance?.latestApprovedQuestion?.questionText
-  ? performance.latestApprovedQuestion.questionText
-  : 'N/A'}
+                    {performance?.latestApprovedQuestion?.questionText
+                      ? performance.latestApprovedQuestion.questionText
+                      : "N/A"}
                     <br />
                     {performance?.latestApprovedQuestion?.createdAt
-  ? new Date(performance.latestApprovedQuestion.createdAt).toLocaleString()
-  : 'N/A'}
+                      ? new Date(
+                          performance.latestApprovedQuestion.createdAt
+                        ).toLocaleString()
+                      : "N/A"}
                   </Typography>
                 </Box>
               </Box>
 
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <CancelOutlinedIcon fontSize="small" color="error" sx={{ mr: 1 }} />
+              <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                <CancelOutlinedIcon
+                  fontSize="small"
+                  color="error"
+                  sx={{ mr: 1 }}
+                />
                 <Box>
                   <Typography variant="body2" fontWeight={500}>
                     Rejected
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                  {performance?.latestRevisedQuestion?.questionText
-  ? performance.latestRevisedQuestion.questionText
-  : 'N/A'}
+                    {performance?.latestRevisedQuestion?.questionText
+                      ? performance.latestRevisedQuestion.questionText
+                      : "N/A"}
                     <br />
                     {performance?.latestRevisedQuestion?.createdAt
-  ? new Date(performance.latestRevisedQuestion.createdAt).toLocaleString()
-  : 'N/A'}
+                      ? new Date(
+                          performance.latestRevisedQuestion.createdAt
+                        ).toLocaleString()
+                      : "N/A"}
                   </Typography>
                 </Box>
               </Box>
-
-              
-             
             </Paper>
 
             <Paper
               sx={{
                 p: 3,
                 borderRadius: 3,
-                border: '1px solid #f0f0f0',
-                boxShadow: 'none',
+                border: "1px solid #f0f0f0",
+                boxShadow: "none",
               }}
             >
               <Typography variant="subtitle1" fontWeight={600} gutterBottom>
@@ -949,36 +1071,55 @@ const AgriSpecialistDashboard = () => {
               </Typography>
 
               <Box sx={{ mt: 2 }}>
-                <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ mb: 1, display: "block" }}
+                >
                   Approval Rate
                 </Typography>
-                <Box sx={{ height: 6, borderRadius: 5, bgcolor: '#e0e0e0', position: 'relative' }}>
+                <Box
+                  sx={{
+                    height: 6,
+                    borderRadius: 5,
+                    bgcolor: "#e0e0e0",
+                    position: "relative",
+                  }}
+                >
                   <Box
                     sx={{
                       width: `${performance?.approvalRate ?? 0}%`,
-                      height: '100%',
-                      bgcolor: '#000',
+                      height: "100%",
+                      bgcolor: "#000",
                       borderRadius: 5,
-                      position: 'absolute',
+                      position: "absolute",
                       top: 0,
                       left: 0,
                     }}
                   />
                 </Box>
                 <Typography variant="body2" fontWeight={500} sx={{ mt: 1 }}>
-                {performance?.approvalRate}%
+                  {performance?.approvalRate}%
                 </Typography>
               </Box>
 
-              <Box sx={{ display: 'flex', justifyContent: 'space-around', mt: 2, borderTop: '1px solid #e0e0e0', pt: 2 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-around",
+                  mt: 2,
+                  borderTop: "1px solid #e0e0e0",
+                  pt: 2,
+                }}
+              >
                 <Typography variant="body2" color="success.main">
-                  {performance?.incentivePoints||0} <br />
+                  {performance?.incentivePoints || 0} <br />
                   <Typography variant="caption" color="text.secondary">
                     Incentives
                   </Typography>
                 </Typography>
                 <Typography variant="body2" color="error.main">
-                  {performance?.penality||0} <br />
+                  {performance?.penality || 0} <br />
                   <Typography variant="caption" color="text.secondary">
                     Penalties
                   </Typography>
