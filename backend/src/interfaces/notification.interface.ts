@@ -15,4 +15,5 @@ export interface INotification extends Document {
   created_at: Date;
   user: IUser;
   comments:string;
+  is_task_submitted:boolean
 }

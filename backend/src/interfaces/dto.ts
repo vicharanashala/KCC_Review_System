@@ -85,6 +85,8 @@ export interface PeerValidateCreateDto {
   status: PeerStatus;
   comments?: string;
   revised_answer_text?: string;
+  notification_id?:string
+
 }
 
 export interface GoldenFAQCreateDto {
