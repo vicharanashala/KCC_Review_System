@@ -216,7 +216,7 @@ if(questionData.status=="revised")
     question.reviewed_by_Moderators.push(mongoose.Types.ObjectId.createFromHexString(question.user_id))
     await question.save();
 
-   await userRepo.updateWorkload(question.user_id.toString(), 1);
+  
    const userDetails= await userRepo.findById(question.user_id)
   
     await notificationRepo.create({
@@ -236,10 +236,11 @@ if(questionData.status=="revised")
       peer_validation_id: `PV_${uuidv4().slice(0, 8).toUpperCase()}`,
     });
   // console.log("the newPeervali=====",newPeerVal)
-    
+  const workload = await userRepo.updateWorkload(questionData.user_id, -1);
     logger.info(`Question ${questionId} assigned to original user ${userDetails?.email}`);
 }
-else{
+else {
+  
  // console.log("the condition approved")
     question.assigned_specialist_id = specialist._id;
     question.status = QuestionStatus.ASSIGNED_TO_MODERATION;
@@ -278,9 +279,13 @@ else{
     //console.log("new peer validation created====",newPeerVal)
     logger.info(`Question ${questionId} assigned to Modirator ${specialist.name}`);
   }
+  
 
   
-  
+  if(questionData.status=="approved")
+  {
+    const workload = await userRepo.updateWorkload(questionData.user_id, -1);
+  }
 
     
 

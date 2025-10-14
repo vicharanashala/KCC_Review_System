@@ -12,20 +12,39 @@ export default class UserRepository {
   async findByEmail(email: string): Promise<IUser | null> {
     return User.findOne({ email });
   }
-  async updateUserState(id: string,locationDetails:any): Promise<IUser | null> {
-   // console.log("location details===",locationDetails)
-    //return null
-  const  longitude=locationDetails.location.coordinates[0]
-  const  latitude=locationDetails.location.coordinates[1]
-    return await User.findByIdAndUpdate(
+  async updateUserState(
+    id: string,
+    locationDetails: {
+      state: string;
+      location: { coordinates: [number, number] };
+    }
+  ): Promise<IUser | null> {
+    // Extract longitude and latitude safely
+    const [longitude, latitude] = locationDetails.location.coordinates;
+  
+    // Validate coordinates before updating
+    if (
+      typeof longitude !== 'number' ||
+      typeof latitude !== 'number' ||
+      !Number.isFinite(longitude) ||
+      !Number.isFinite(latitude)
+    ) {
+      throw new Error('Invalid coordinates provided');
+    }
+  
+    // Update the user document and return the updated version
+    const updatedUser = await User.findByIdAndUpdate(
       id,
       {
-        state:locationDetails.state,
-        location: { type: 'Point', coordinates: [longitude, latitude] }
+        state: locationDetails.state,
+        location: { type: 'Point', coordinates: [longitude, latitude] },
       },
       { new: true }
     );
+     
+    return updatedUser as IUser | null
   }
+  
 
   async findById(id: string): Promise<IUser | null> {
     return User.findById(id);
@@ -132,9 +151,21 @@ const results= this.getAvailableUserList(currentUserObj,questionObj,UserRole.AGR
 
 
   async updateWorkload(userId: string, increment: number): Promise<void> {
-    await User.findByIdAndUpdate(userId, {
-      $inc: { workload_count: increment },
-    });
+    await User.findByIdAndUpdate(
+      userId,
+      [
+        {
+          $set: {
+            workload_count: {
+              $max: [
+                { $add: ['$workload_count', increment] },
+                0
+              ]
+            }
+          }
+        }
+      ]
+    );
   }
 
   async updateIncentive(userId: string, increment: number): Promise<void> {

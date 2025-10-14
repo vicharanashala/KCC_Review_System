@@ -42,7 +42,11 @@ export const Performance = () => {
   const performanceString = query.get('data');
 
   // Parse JSON
-  const performance = performanceString ? JSON.parse(performanceString) : null;
+  const performanceobj = performanceString ? JSON.parse(performanceString) : null;
+   // console.log("the performane====*************",performance)
+    const performance=performanceobj.performance
+    const questionPerformane=performanceobj.questionPerformance
+
     return (
         <Box sx={{ p: 3, maxWidth: 1200, mx: "auto" }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 4 }}>
@@ -176,6 +180,78 @@ export const Performance = () => {
                     </Grid>
                 ))}
             </Grid>
+            {user?.role=="moderator"?
+              <Grid container spacing={2} sx={{ mb: 3 }}>
+              {[
+                  {
+                      title: "Total Question Reviews",
+                      value: questionPerformane.totalAssigned ||0,
+                      progress: questionPerformane.milestoneProgress||0,
+                      subtitle: `${ questionPerformane.milestoneProgress||0}% towards next milestone`,
+                      icon: <BarChartIcon fontSize="small" sx={{ color: "#6b7280" }} />,
+                  },
+                  {
+                      title: "Question Approval Rate",
+                      value: questionPerformane? `${questionPerformane.approvalRate||0}%` : '--',
+                      progress: questionPerformane.approvalRate||0,
+                      // subtitle: "Above team average (72%)",
+                      subtitle: '',
+                      icon: <CheckCircleIcon fontSize="small" sx={{ color: "#6b7280" }} />,
+                  },
+                  {
+                      title: "Question Avg Review Time",
+                      value: questionPerformane ? `${questionPerformane.averageReviewHours||0}H` : '--',
+                      progress: questionPerformane.averageReviewHours||0,
+                      // subtitle: "40% faster than average",
+                      subtitle: "",
+                      icon: <AccessTimeIcon fontSize="small" sx={{ color: "#6b7280" }} />,
+                  }
+                  
+              ].map((stat, i) => (
+                  <Grid item xs={12} sm={6} md={3} key={i}>
+                      <Paper
+                          sx={{
+                              p: 2.5,
+                              borderRadius: "16px",
+                              height: "100%",
+                              boxShadow: "0px 1px 2px rgba(0,0,0,0.05)",
+                              border: "1px solid #ddd",
+                          }}
+                      >
+                          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <Typography variant="body2" sx={{ color: "#6b7280", fontWeight: 500 }}>
+                                  {stat.title}
+                              </Typography>
+                              {stat.icon}
+                          </Box>
+                          <Typography
+                              variant="h6"
+                              sx={{ fontWeight: 600, my: 1, color: "#111827" }}
+                          >
+                              {stat.value}
+                          </Typography>
+                          <LinearProgress
+                              variant="determinate"
+                              value={stat.progress}
+                              sx={{
+                                  height: 8,
+                                  borderRadius: 5,
+                                  mb: 0.5,
+                                  bgcolor: "#e5e7eb",
+                                  "& .MuiLinearProgress-bar": { bgcolor: "#111827" },
+                              }}
+                          />
+                          <Typography
+                              variant="caption"
+                              sx={{ color: "#6b7280" }}
+                          >
+                              {stat.subtitle}
+                          </Typography>
+                      </Paper>
+                  </Grid>
+              ))}
+          </Grid>
+            :""}
 
             <Grid container spacing={2}>
                 <Grid item xs={12} md={6}>
@@ -246,39 +322,69 @@ export const Performance = () => {
                         </Typography>
 
                         <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
-                            <Box
-                                sx={{
-                                    flex: 1,
-                                    bgcolor: "#ECECF0",
-                                    p: 2,
-                                    borderRadius: "8px",
-                                    textAlign: "center",
-                                }}
-                            >
-                                <Typography variant="h6" sx={{ color: "green", fontWeight: 600 }}>
-                                    {performance.approvedCount|| 0}
-                                </Typography>
-                                <Typography variant="body2">Approved</Typography>
-                            </Box>
-                            <Box
-                                sx={{
-                                    flex: 1,
-                                    bgcolor: "#ECECF0",
-                                    p: 2,
-                                    borderRadius: "8px",
-                                    textAlign: "center",
-                                }}
-                            >
-                                <Typography variant="h6" sx={{ color: "red", fontWeight: 600 }}>
-                                    {performance.revisedCount|| 0}
-                                </Typography>
-                                <Typography variant="body2">Rejected</Typography>
-                            </Box>
-                        </Box>
+                        <Box
+  sx={{
+    flex: 1,
+    bgcolor: "#ECECF0",
+    p: 2,
+    borderRadius: "8px",
+    display: "flex",
+    justifyContent: "space-between",
+    gap: 2, // space between left & right
+  }}
+>
+  {/* Left Approved */}
+  <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+    <Typography variant="h6" sx={{ color: "green", fontWeight: 600 }}>
+      {performance.approvedCount || 0}
+    </Typography>
+    <Typography variant="body2">Approved</Typography>
+  </Box>
+
+  {/* Right Approved */}
+  {user?.role=="moderator" && (
+    <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <Typography variant="h6" sx={{ color: "green", fontWeight: 600 }}>
+        {questionPerformane?.approvedCount || 0}
+      </Typography>
+      <Typography variant="body2"> Questions Approved</Typography>
+    </Box>
+  )}
+</Box>
+<Box
+  sx={{
+    flex: 1,
+    bgcolor: "#ECECF0",
+    p: 2,
+    borderRadius: "8px",
+    display: "flex",
+    justifyContent: "space-between",
+    gap: 2, // space between left & right
+  }}
+>
+  {/* Left Approved */}
+  <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+    <Typography variant="h6" sx={{ color: "red", fontWeight: 600 }}>
+    {performance.revisedCount|| 0}
+    </Typography>
+    <Typography variant="body2">Rejected</Typography>
+  </Box>
+
+  {/* Right Approved */}
+  {user?.role==='moderator' && (
+    <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <Typography variant="h6" sx={{ color: "red", fontWeight: 600 }}>
+        {questionPerformane.revisedCount|| 0}
+      </Typography>
+      <Typography variant="body2">Questions Rejected</Typography>
+    </Box>
+  )}
+</Box>
+</Box>
 
                         <Box sx={{ display: "grid", gap: 1 }}>
                             <Typography variant="body2">
-                                <strong>Questions per day:</strong> {performance.QperDay||'N/A'}
+                                <strong>Answers per day:</strong> {performance.QperDay||'N/A'}
                             </Typography>
                             <Typography variant="body2">
                                 <strong>Peak review hour:</strong> {performance.peakReviewHour||'N/A'} Hours
@@ -290,6 +396,24 @@ export const Performance = () => {
                                 <strong>Most reviewed category:</strong> Crop Management
                             </Typography> */}
                         </Box>
+                        {user?.role==='moderator'?
+                        <Box sx={{ display: "grid", gap: 1,mt:2 }}>
+                        <Typography variant="body2">
+                            <strong>Questions per day:</strong> {questionPerformane.QperDay||'N/A'}
+                        </Typography>
+                        <Typography variant="body2">
+                            <strong>Peak review hour:</strong> {questionPerformane.peakReviewHour||'N/A'} Hours
+                        </Typography>
+                        <Typography variant="body2">
+                            <strong>Fastest review:</strong> {questionPerformane.fastestReviewMinutes||'N/A'} min
+                        </Typography>
+                        {/* <Typography variant="body2">
+                            <strong>Most reviewed category:</strong> Crop Management
+                        </Typography> */}
+                    </Box>
+
+                        :""}
+                        
                     </Paper>
                 </Grid>
             </Grid>
