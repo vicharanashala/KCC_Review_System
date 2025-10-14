@@ -27,12 +27,20 @@ const DashboardCard = ({
   caption,
   icon,
   onClick,
+  isModerator,
+  secondaryTitle,
+  secondaryValue,
+  secondaryCaption,
 }: {
   title: string;
   value: string | number;
   caption: string;
   icon: React.ReactNode;
   onClick?: () => void;
+  secondaryTitle:string,
+  secondaryValue:string,
+  secondaryCaption:string,
+  isModerator:boolean
 }) => (
   <Card
     variant="outlined"
@@ -41,8 +49,9 @@ const DashboardCard = ({
       p: 3,
       minHeight: 140,
       display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'flex-start',
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
       boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
       borderColor: '#e5e7eb',
       cursor: onClick ? 'pointer' : 'default',
@@ -55,14 +64,17 @@ const DashboardCard = ({
     }}
     onClick={onClick}
   >
-    <CardContent sx={{ p: 0, '&:last-child': { pb: 0 } }}>
+    <CardContent sx={{ p: 0, '&:last-child': { pb: 0 } ,
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',}}>
+          <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Typography variant="body2" color="#6b7280" sx={{ fontWeight: 500, fontSize: '0.875rem' }}>
           {title}
         </Typography>
-        <Box sx={{ color: '#9ca3af', fontSize: '1.25rem' }}>
-          {icon}
-        </Box>
+        
       </Box>
 
       <Typography variant="h3" sx={{ 
@@ -82,6 +94,40 @@ const DashboardCard = ({
       }}>
         {caption}
       </Typography>
+      </Box>
+     
+    {isModerator?(
+       <Box>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Typography variant="body2" color="#6b7280" sx={{ fontWeight: 500, fontSize: '0.875rem' }}>
+          {secondaryTitle}
+        </Typography>
+        
+      </Box>
+
+      <Typography variant="h3" sx={{ 
+        fontWeight: 700, 
+        color: '#111827', 
+        mb: 1,
+        fontSize: '1rem',
+        lineHeight: 1.2
+      }}>
+        {secondaryValue}
+      </Typography>
+
+      <Typography variant="caption" sx={{ 
+        color: '#6b7280', 
+        fontSize: '0.75rem',
+        fontWeight: 400
+      }}>
+        {secondaryCaption}
+      </Typography>
+      </Box>
+      ):''}
+      <Box sx={{ color: '#9ca3af', fontSize: '1.25rem' }}>
+          {icon}
+        </Box>
+    
     </CardContent>
   </Card>
 );
@@ -314,6 +360,7 @@ const AgriSpecialistDashboard = () => {
   const [searchQuery, setSearchQuery] = useState('');
  // const [notifications, setNotifications] = useState<any[]>([]);
   const[performance,setPerformance]= useState<Performance | null>(null);
+  const [questionPerformance,setQuestionPerformance]=useState<Performance |null>(null)
 
   const fetchMyTasks = async () => {
     try {
@@ -349,7 +396,8 @@ const AgriSpecialistDashboard = () => {
       if (!res.ok) throw new Error('Failed to fetch tasks');
       const data = await res.json();
      
-      setPerformance(data || []);
+      setPerformance(data.userPerformance || []);
+      setQuestionPerformance(data.questionPerformance)
      
     } catch (error) {
       console.error('Error fetching tasks:', error);
@@ -412,8 +460,12 @@ const AgriSpecialistDashboard = () => {
   const getBasePath = () => {
     return user?.role === 'moderator' ? '/moderator' : '/agri-specialist';
   };
+  const performanceData = {
+    performance,
+    questionPerformance,
+  };
   const performanceScore = (performance?.incentivePoints ?? 0) - (performance?.penality ?? 0);
-
+  const isModerator = user?.role === "moderator";
   const quickActions = [
     {
       title: 'Current Workload',
@@ -421,20 +473,28 @@ const AgriSpecialistDashboard = () => {
       description: 'Pending assignments',
       icon: <RateReviewIcon />,
       path: `${getBasePath()}/review-queue`,
+     
     },
     {
       title: 'Approval Rate',
       value: performance ? `${performance.approvalRate||0}%` : '--',
   description: performance ? `Of ${performance.totalAssigned || 0} reviews` : 'Loading...',
       icon: <AssessmentIcon />,
-      path: `${getBasePath()}/performance?data=${encodeURIComponent(JSON.stringify(performance))}`,
+      path: `${getBasePath()}/performance?data=${encodeURIComponent(JSON.stringify(performanceData))}`,
+      
+      secondaryValue: isModerator
+      ? `${questionPerformance?.approvalRate || 0}%`
+      : 'N/A',
+      secondarytitle: 'Question Approval Rate',
+      secondaryDescription:questionPerformance ? `Of ${questionPerformance.totalAssigned || 0} reviews` : 'Loading...',
     },
     {
       title: 'Performance Score',
-      value: performance?.approvedCount ?? 0,
-      description: `+2 / -0`,
+      value: performanceScore ?? 0,
+      description: ``,
       icon: <NotificationsIcon />,
       path: `${getBasePath()}/notifications`,
+
     },
   ];
  
@@ -753,7 +813,7 @@ const AgriSpecialistDashboard = () => {
               onClick={() =>
                 navigate(
                   `${getBasePath()}/performance?data=${encodeURIComponent(
-                    JSON.stringify(performance)
+                    JSON.stringify(performanceData)
                   )}`
                 )
               }
@@ -810,6 +870,10 @@ const AgriSpecialistDashboard = () => {
                 caption={action.description}
                 icon={action.icon}
                 onClick={() => navigate(action.path)}
+                isModerator={isModerator}
+                secondaryTitle={action.secondarytitle||''}
+                secondaryValue={action.secondaryValue||''}
+                secondaryCaption={action.secondaryDescription||''}
               />
             </Grid>
           ))}
@@ -910,8 +974,7 @@ const AgriSpecialistDashboard = () => {
                         color="text.secondary"
                         display="block"
                       >
-                        Approvals: {task.consecutive_approvals} •{" "}
-                        {new Date(task.created_at).toLocaleDateString()}
+                        Approvals: {task.consecutive_approvals}                 
                       </Typography>
                     )}
 
@@ -953,8 +1016,9 @@ const AgriSpecialistDashboard = () => {
                         alignItems: "center",
                       }}
                     >
-                      <Typography variant="caption" color="text.secondary">
-                        Question ID: {task.question_id}
+                     <Typography variant="caption" color="text.secondary">
+                     
+                        Approved on: {new Date(task.created_at).toLocaleString()}
                       </Typography>
 
                       <Button
@@ -996,67 +1060,99 @@ const AgriSpecialistDashboard = () => {
           </Grid>
 
           <Grid item xs={12} md={4}>
-            <Paper
-              sx={{
-                p: 3,
-                borderRadius: 3,
-                border: "1px solid #f0f0f0",
-                boxShadow: "none",
-                mb: 3,
-              }}
-            >
-              <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-                Recent Activity
-              </Typography>
+          <Paper
+  sx={{
+    p: 3,
+    borderRadius: 3,
+    border: "1px solid #f0f0f0",
+    boxShadow: "none",
+    mb: 3,
+  }}
+>
+  <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+    Recent Activity
+  </Typography>
 
-              <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                <CheckCircleOutlineIcon
-                  fontSize="small"
-                  color="success"
-                  sx={{ mr: 1 }}
-                />
-                <Box>
-                  <Typography variant="body2" fontWeight={500}>
-                    Approved
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {performance?.latestApprovedQuestion?.questionText
-                      ? performance.latestApprovedQuestion.questionText
-                      : "N/A"}
-                    <br />
-                    {performance?.latestApprovedQuestion?.createdAt
-                      ? new Date(
-                          performance.latestApprovedQuestion.createdAt
-                        ).toLocaleString()
-                      : "N/A"}
-                  </Typography>
-                </Box>
-              </Box>
+  <Box sx={{ display: "flex", justifyContent: "space-between", gap: 4, flexWrap: "wrap" }}>
+    {/* Left Set: Always visible */}
+    <Box sx={{ display: "flex", flexDirection: "column", flex: 1, minWidth: 200 }}>
+      {/* Approved */}
+      <Box sx={{ display: "flex", alignItems: "flex-start", mb: 1 }}>
+        <CheckCircleOutlineIcon fontSize="small" color="success" sx={{ mr: 1, mt: "3px" }} />
+        <Box sx={{ wordBreak: "break-word" }}>
+          <Typography variant="body2" fontWeight={500}>
+            Approved
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {performance?.latestApprovedQuestion?.questionText || "N/A"}
+            <br />
+            {performance?.latestApprovedQuestion?.createdAt
+              ? new Date(performance.latestApprovedQuestion.createdAt).toLocaleString()
+              : "N/A"}
+          </Typography>
+        </Box>
+      </Box>
 
-              <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                <CancelOutlinedIcon
-                  fontSize="small"
-                  color="error"
-                  sx={{ mr: 1 }}
-                />
-                <Box>
-                  <Typography variant="body2" fontWeight={500}>
-                    Rejected
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {performance?.latestRevisedQuestion?.questionText
-                      ? performance.latestRevisedQuestion.questionText
-                      : "N/A"}
-                    <br />
-                    {performance?.latestRevisedQuestion?.createdAt
-                      ? new Date(
-                          performance.latestRevisedQuestion.createdAt
-                        ).toLocaleString()
-                      : "N/A"}
-                  </Typography>
-                </Box>
-              </Box>
-            </Paper>
+      {/* Rejected */}
+      <Box sx={{ display: "flex", alignItems: "flex-start" }}>
+        <CancelOutlinedIcon fontSize="small" color="error" sx={{ mr: 1, mt: "3px" }} />
+        <Box sx={{ wordBreak: "break-word" }}>
+          <Typography variant="body2" fontWeight={500}>
+            Rejected
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {performance?.latestRevisedQuestion?.questionText || "N/A"}
+            <br />
+            {performance?.latestRevisedQuestion?.createdAt
+              ? new Date(performance.latestRevisedQuestion.createdAt).toLocaleString()
+              : "N/A"}
+          </Typography>
+        </Box>
+      </Box>
+    </Box>
+
+    {/* Right Set: Only visible for Moderator */}
+    {isModerator && (
+      <Box sx={{ display: "flex", flexDirection: "column", flex: 1, minWidth: 200 }}>
+        {/* Approved */}
+        <Box sx={{ display: "flex", alignItems: "flex-start", mb: 1 }}>
+          <CheckCircleOutlineIcon fontSize="small" color="success" sx={{ mr: 1, mt: "3px" }} />
+          <Box sx={{ wordBreak: "break-word" }}>
+            <Typography variant="body2" fontWeight={500}>
+              Question Approved
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {questionPerformance?.latestApprovedQuestion?.questionText || "N/A"}
+              <br />
+              {questionPerformance?.latestApprovedQuestion?.createdAt
+                ? new Date(questionPerformance.latestApprovedQuestion.createdAt).toLocaleString()
+                : "N/A"}
+            </Typography>
+          </Box>
+        </Box>
+
+        {/* Rejected */}
+        <Box sx={{ display: "flex", alignItems: "flex-start" }}>
+          <CancelOutlinedIcon fontSize="small" color="error" sx={{ mr: 1, mt: "3px" }} />
+          <Box sx={{ wordBreak: "break-word" }}>
+            <Typography variant="body2" fontWeight={500}>
+             Question  Rejected
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {questionPerformance?.latestRevisedQuestion?.questionText || "N/A"}
+              <br />
+              {questionPerformance?.latestRevisedQuestion?.createdAt
+                ? new Date(questionPerformance.latestRevisedQuestion.createdAt).toLocaleString()
+                : "N/A"}
+            </Typography>
+          </Box>
+        </Box>
+      </Box>
+    )}
+  </Box>
+</Paper>
+
+
 
             <Paper
               sx={{
@@ -1102,6 +1198,42 @@ const AgriSpecialistDashboard = () => {
                   {performance?.approvalRate}%
                 </Typography>
               </Box>
+              {
+                isModerator?
+                <Box sx={{ mt: 2 }}>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ mb: 1, display: "block" }}
+                >
+                 Question Approval Rate
+                </Typography>
+                <Box
+                  sx={{
+                    height: 6,
+                    borderRadius: 5,
+                    bgcolor: "#e0e0e0",
+                    position: "relative",
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: `${questionPerformance?.approvalRate ?? 0}%`,
+                      height: "100%",
+                      bgcolor: "#000",
+                      borderRadius: 5,
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                    }}
+                  />
+                </Box>
+                <Typography variant="body2" fontWeight={500} sx={{ mt: 1 }}>
+                  {questionPerformance?.approvalRate}%
+                </Typography>
+              </Box>
+                :''
+              }
 
               <Box
                 sx={{

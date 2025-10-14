@@ -16,14 +16,30 @@ const peerValidationRepo = new PeerValidationRepository();
 
 export default class QuestionService {
   async create(questionData: QuestionCreateDto): Promise<any> {
-    console.log("the question data===",questionData)
+   // console.log("the question data===",questionData)
    
     if(questionData.question_id)
     {
-      console.log("the first loop")
+     // console.log("the first loop")
+      if(questionData.user_id)
+      {
+        const notification = await notificationRepo
+        .findAllByUserId(questionData.user_id)
+        .then((n) => n.find((n) => n.related_entity_id === questionData.question_id));
+        if(notification)
+        {
+          await notificationRepo.markReadAndSubmit(
+            notification.notification_id,
+            questionData.user_id
+          );
+        }
+
+      }
+     
       const question=await questionRepo.findByQuestionId(questionData.question_id)
       if(question)
       {
+        const convertUserid = mongoose.Types.ObjectId.createFromHexString(question.user_id)
         let peer_validation
         if(questionData.peer_validation_id)
         {
@@ -33,7 +49,8 @@ export default class QuestionService {
        
           if(questionData.status=="approved")
           { 
-            await userRepo.updateWorkload(question.user_id, -1);
+            await userRepo.updateIncentive(question.user_id, 1)
+          
             question.question_approval=(question.question_approval|| 0) + 1
             await question.save()
             
@@ -43,13 +60,13 @@ export default class QuestionService {
             if(peervalidation)
             {
              
-            const result=  await peerValidationRepo.updatePeerValidationBypeerId(peer_validation,QuestionStatus.PENDING_PEER_MODERATION_REVIEW)
+            const result=  await peerValidationRepo.updatePeerValidationBypeerId(peer_validation,"approved")
            
              
             }
         if(question.question_approval>=2)
         {
-          console.log("the question approved====********",question)
+         // console.log("the question approved====********",question)
           question.reviewed_by_Moderators=[]
           await question.save();
           setImmediate(() => WorkflowService.assignQuestionToSpecialist(question.question_id,questionData.user_id));
@@ -64,7 +81,8 @@ export default class QuestionService {
           }
           else if(questionData.status=="revised")
           {
-            await userRepo.updateWorkload(question.user_id, -1);
+            await userRepo.updatePenality(question.user_id, 1)
+            await userRepo.updateWorkload(question.user_id, 1);
             const convertUserid = mongoose.Types.ObjectId.createFromHexString(question.user_id)
             question.question_approval= 0 
            // question.reviewed_by_Moderators=[]
@@ -75,7 +93,7 @@ export default class QuestionService {
            
             if(peervalidation)
             {
-              const result=  await peerValidationRepo.updatePeerValidationBypeerId(peer_validation,QuestionStatus.QUESTION_REJECTED )
+              const result=  await peerValidationRepo.updatePeerValidationBypeerId(peer_validation,"revised" )
            
             }
             setImmediate(() => WorkflowService.assignQuestionToModerator(question.question_id,questionData));
@@ -90,7 +108,11 @@ export default class QuestionService {
             new mongoose.Types.ObjectId(questionData.user_id)
           ];
         }
-        await userRepo.updateWorkload(question.user_id, -1);
+        if (questionData.user_id) {
+           await userRepo.updateWorkload(questionData.user_id, -1);
+        }
+        
+       
               
            const updatedQuestion=   await questionRepo.findAndUpdateQuestion(question.question_id,questionData, questionData.status as QuestionStatus)
           

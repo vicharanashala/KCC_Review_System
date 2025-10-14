@@ -283,7 +283,7 @@ const userPerformance=await peerValidation.findByReviewerId(currentUserId,UserRo
    
     if(userPerformance)
     {
-      return userPerformance
+      return {userPerformance}
     }
     else{
       const userCount=await userRepo.getAllUsersList(currentUserId,UserRole.AGRI_SPECIALIST)
@@ -293,11 +293,13 @@ const userPerformance=await peerValidation.findByReviewerId(currentUserId,UserRo
 }
 else{
   const userPerformance=await validation.findByModeratorId(currentUserId,UserRole.MODERATOR)
+  const questionPerformance=await peerValidation.findByModeratorQuestionStatus(currentUserId,UserRole.MODERATOR)
+ // console.log("the question Performance====",questionPerf)
   
  
   if(userPerformance)
     {
-      return userPerformance
+      return {userPerformance,questionPerformance}
     }
     else{
       const userCount=await userRepo.getAllUsersList(currentUserId,UserRole.MODERATOR)
