@@ -130,7 +130,7 @@ export const Performance = () => {
                             rank
                             }` : '--',
                         progress:performance.currentRank||0,
-                        subtitle: `Out of ${performance.totalUsers} reviewers`,
+                        subtitle: `Out of ${performance.totalUsers} ${user?.role}`,
                         icon: <EmojiEventsIcon fontSize="small" sx={{ color: "#6b7280" }} />,
                     },
                 ].map((stat, i) => (
