@@ -12,6 +12,7 @@ import { ILLMQuestion } from '../models/LlmQuestion.model';
 const questionService = new QuestionService();
 
 const createSchema = Joi.object({
+  llmId:Joi.string().optional(),
   crop: Joi.string().optional(),
   state: Joi.string().optional(),
   district: Joi.string().optional(),
@@ -143,7 +144,6 @@ export const submitQuestion: Middleware[] = [
           logger.warn('Ignoring original_query_text from body in CSV batch mode');
         }
       } else {
-      //  console.log("the questionCreated===",req.body)
         // Existing: Single question mode
         const { error } = createSchema.validate(req.body);
         if (error) {
@@ -151,9 +151,11 @@ export const submitQuestion: Middleware[] = [
           res.status(400).json({ detail: errorMessage });
           return;
         }
-        console.log("Quetiom creating ",req.body)
-        const questionData: QuestionCreateDto = req.body;
-       const question = await questionService.create(questionData);
+        const {llmId,...questionData} = req.body;
+        if(llmId){
+          await questionService.markLlmAsRead(llmId)
+        }
+        const question = await questionService.create(questionData);
         res.status(201).json(question);
       }
 

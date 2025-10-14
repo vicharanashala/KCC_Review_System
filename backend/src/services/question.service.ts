@@ -228,4 +228,8 @@ export default class QuestionService {
   async getLLmQuestionsByUserId(userId:string){
     return await questionRepo.getLLMQuestionsBYUserId(userId)
   }
+
+  async markLlmAsRead(id:string){
+    return await questionRepo.markLLmAsRead(id)
+  }
 }

@@ -59,7 +59,6 @@ export default class DashboardService {
         QuestionStatus.NEEDS_REVISION,
         QuestionStatus.READY_FOR_GOLDEN_FAQ,
       ]);
-     // console.log("the questions coming=====",assignedQuestions)
       for (const question of assignedQuestions) {
         let taskType = 'create_answer';
         if (question.status === QuestionStatus.READY_FOR_GOLDEN_FAQ) {
@@ -89,7 +88,6 @@ export default class DashboardService {
       }
 
       const peerNotifications = await notificationRepo.findNotificationWithUserId(currentUserId, NotificationType.PEER_REVIEW_REQUEST);
-    //  console.log("the peernotifications=====",peerNotifications)
       for (const notification of peerNotifications) {
   const peerAnswer = await answerRepo.findByAnswerId(notification.related_entity_id as string);
 
@@ -151,7 +149,6 @@ export default class DashboardService {
     }
     if (currentRole === UserRole.MODERATOR) {
       const validationNotifications = await peerValidation.findUnreadByUserId(currentUserId, QuestionStatus.ASSIGNED_TO_MODERATION);
-     // console.log("the notifications====",validationNotifications)
       if (validationNotifications && validationNotifications.length > 0) {
         const questionList = await Promise.all(
           validationNotifications.map(async (notif) => {
@@ -308,14 +305,12 @@ else{
 }
     
    
-   // console.log("userPerformance====",userPerformance)
     
     
   }
   async updateUserState(currentUserId: string,locationDetails:any): Promise<any> {
 
     const userPerformance=await userRepo.updateUserState(currentUserId,locationDetails)
-  // console.log("userper===",userPerformance)
     if(userPerformance)
     {
       return{state:userPerformance.state}

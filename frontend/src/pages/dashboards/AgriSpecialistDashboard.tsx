@@ -429,7 +429,6 @@ const AgriSpecialistDashboard = () => {
   useEffect(() => {
     const latest = notifications[0];
     if (latest?.type === "task_assigned") {
-      //console.log(" Reloading tasks after assignment");
       fetchMyTasks();
       fetchMyPerformance()
     }
@@ -470,7 +469,8 @@ const AgriSpecialistDashboard = () => {
     {
       title: 'Current Workload',
       value: tasks.length,
-      description: 'Pending assignments',
+      // description: 'Pending assignments',
+      description: '',
       icon: <RateReviewIcon />,
       path: `${getBasePath()}/review-queue`,
      
@@ -478,7 +478,8 @@ const AgriSpecialistDashboard = () => {
     {
       title: 'Approval Rate',
       value: performance ? `${performance.approvalRate||0}%` : '--',
-  description: performance ? `Of ${performance.totalAssigned || 0} reviews` : 'Loading...',
+  // description: performance ? `Of ${performance.totalAssigned || 0} reviews` : 'Loading...',
+  description: '',
       icon: <AssessmentIcon />,
       path: `${getBasePath()}/performance?data=${encodeURIComponent(JSON.stringify(performanceData))}`,
       

@@ -18,5 +18,5 @@ router.get('/id/:question_id', getQuestionDetails);
 router.get('/my-questions', getMyQuestions);
 router.post('/llm',CreateLLmQuestions)
 router.get('/all/llm',getAllLLmQuestions)
-router.get('/llm/moderator/',getLLmQuestionsByUserId)
+router.get('/llm/moderator',getLLmQuestionsByUserId)
 export default router;
