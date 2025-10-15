@@ -96,7 +96,7 @@ const DashboardCard = ({
       </Typography>
       </Box>
      
-    {/* {isModerator?(
+    {isModerator && secondaryTitle ?(
        <Box>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Typography variant="body2" color="#6b7280" sx={{ fontWeight: 500, fontSize: '0.875rem' }}>
@@ -126,7 +126,7 @@ const DashboardCard = ({
       ):''}
       <Box sx={{ color: '#9ca3af', fontSize: '1.25rem' }}>
           {icon}
-        </Box> */}
+        </Box>
 
         {isModerator && secondaryTitle ? (
   <Box>
@@ -605,7 +605,6 @@ const AgriSpecialistDashboard = () => {
     secondaryCaption: '',
   },
 ];
-
 if (isModerator) {
   quickActions.splice(2, 0, {
     title: 'Question Approval Rate',
@@ -618,7 +617,6 @@ if (isModerator) {
     secondaryCaption: '',
   });
 }
- 
   return (
     <Box sx={{ display: "flex", minHeight: "100vh" }}>
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>

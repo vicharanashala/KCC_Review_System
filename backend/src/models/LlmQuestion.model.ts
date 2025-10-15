@@ -64,7 +64,7 @@ LLMQuestionSchema.post("save", async function (doc) {
       await userModel.findByIdAndUpdate(moderator._id, {
         $inc: { workload_count: 1 },
       });
-      logger.info(`Question assigned for moderator ${moderator.email}`);
+      logger.info(`LLM Question is assigned to ${moderator.name}, ${moderator.email}`)
     } catch (err) {
       console.error("Error assigning moderator:", err);
     }
