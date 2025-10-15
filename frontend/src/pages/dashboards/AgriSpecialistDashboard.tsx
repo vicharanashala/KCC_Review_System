@@ -96,7 +96,7 @@ const DashboardCard = ({
       </Typography>
       </Box>
      
-    {isModerator?(
+    {/* {isModerator?(
        <Box>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Typography variant="body2" color="#6b7280" sx={{ fontWeight: 500, fontSize: '0.875rem' }}>
@@ -126,7 +126,37 @@ const DashboardCard = ({
       ):''}
       <Box sx={{ color: '#9ca3af', fontSize: '1.25rem' }}>
           {icon}
-        </Box>
+        </Box> */}
+
+        {isModerator && secondaryTitle ? (
+  <Box>
+    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+      <Typography variant="body2" color="#6b7280" sx={{ fontWeight: 500, fontSize: '0.875rem' }}>
+        {secondaryTitle}
+      </Typography>
+    </Box>
+    <Typography variant="h3" sx={{ 
+        fontWeight: 700, 
+        color: '#111827', 
+        mb: 1,
+        fontSize: '1rem',
+        lineHeight: 1.2
+      }}>
+        {secondaryValue}
+      </Typography>
+
+      <Typography variant="caption" sx={{ 
+        color: '#6b7280', 
+        fontSize: '0.75rem',
+        fontWeight: 400
+      }}>
+        {secondaryCaption}
+      </Typography>
+  </Box>
+) : null}
+<Box sx={{ color: '#9ca3af', fontSize: '1.25rem' }}>
+  {icon}
+</Box>
     
     </CardContent>
   </Card>
@@ -507,39 +537,87 @@ const AgriSpecialistDashboard = () => {
   };
   const performanceScore = (performance?.incentivePoints ?? 0) - (performance?.penality ?? 0);
   const isModerator = user?.role === "moderator";
-  const quickActions = [
-    {
-      title: 'Current Workload',
-      value: tasks.length,
-      // description: 'Pending assignments',
-      description: '',
-      icon: <RateReviewIcon />,
-      path: `${getBasePath()}/review-queue`,
+  // const quickActions = [
+  //   {
+  //     title: 'Current Workload',
+  //     value: tasks.length,
+  //     // description: 'Pending assignments',
+  //     description: '',
+  //     icon: <RateReviewIcon />,
+  //     path: `${getBasePath()}/review-queue`,
      
-    },
-    {
-      title: 'Approval Rate',
-      value: performance ? `${performance.approvalRate||0}%` : '--',
-  // description: performance ? `Of ${performance.totalAssigned || 0} reviews` : 'Loading...',
-  description: '',
-      icon: <AssessmentIcon />,
-      path: `${getBasePath()}/performance?data=${encodeURIComponent(JSON.stringify(performanceData))}`,
+  //   },
+  //   {
+  //     title: 'Approval Rate',
+  //     value: performance ? `${performance.approvalRate||0}%` : '--',
+  // // description: performance ? `Of ${performance.totalAssigned || 0} reviews` : 'Loading...',
+  // description: '',
+  //     icon: <AssessmentIcon />,
+  //     path: `${getBasePath()}/performance?data=${encodeURIComponent(JSON.stringify(performanceData))}`,
       
-      secondaryValue: isModerator
-      ? `${questionPerformance?.approvalRate || 0}%`
-      : 'N/A',
-      secondarytitle: 'Question Approval Rate',
-      secondaryDescription:questionPerformance ? `Of ${questionPerformance.totalAssigned || 0} reviews` : 'Loading...',
-    },
-    {
-      title: 'Performance Score',
-      value: performanceScore ?? 0,
-      description: ``,
-      icon: <NotificationsIcon />,
-      path: `${getBasePath()}/notifications`,
+  //     secondaryValue: isModerator
+  //     ? `${questionPerformance?.approvalRate || 0}%`
+  //     : 'N/A',
+  //     secondarytitle: 'Question Approval Rate',
+  //     secondaryDescription:questionPerformance ? `Of ${questionPerformance.totalAssigned || 0} reviews` : 'Loading...',
+  //   },
+  //   {
+  //     title: 'Performance Score',
+  //     value: performanceScore ?? 0,
+  //     description: ``,
+  //     icon: <NotificationsIcon />,
+  //     path: `${getBasePath()}/notifications`,
 
-    },
-  ];
+  //   },
+  // ];
+
+  const quickActions = [
+  {
+    title: 'Current Workload',
+    value: tasks.length,
+    // description: 'Pending assignments',
+    description: '',
+    icon: <RateReviewIcon />,
+    path: `${getBasePath()}/review-queue`,
+    secondaryTitle: '',
+    secondaryValue: '',
+    secondaryCaption: '',
+  },
+  {
+    title: 'Approval Rate',
+    value: performance ? `${performance.approvalRate || 0}%` : '--',
+    // description: performance ? `Of ${performance.totalAssigned || 0} reviews` : 'Loading...',
+    description: '',
+    icon: <AssessmentIcon />,
+    path: `${getBasePath()}/performance?data=${encodeURIComponent(JSON.stringify(performanceData))}`,
+    secondaryTitle: '',
+    secondaryValue: '',
+    secondaryCaption: '',
+  },
+  {
+    title: 'Performance Score',
+    value: performanceScore ?? 0,
+    description: ``,
+    icon: <NotificationsIcon />,
+    path: `${getBasePath()}/notifications`,
+    secondaryTitle: '',
+    secondaryValue: '',
+    secondaryCaption: '',
+  },
+];
+
+if (isModerator) {
+  quickActions.splice(2, 0, {
+    title: 'Question Approval Rate',
+    value: questionPerformance ? `${questionPerformance.approvalRate || 0}%` : '--',
+    description: questionPerformance ? `Of ${questionPerformance.totalAssigned || 0} reviews` : 'Loading...',
+    icon: <AssessmentIcon />,
+    path: `${getBasePath()}/performance?data=${encodeURIComponent(JSON.stringify(performanceData))}`,
+    secondaryTitle: '',
+    secondaryValue: '',
+    secondaryCaption: '',
+  });
+}
  
   return (
     <Box sx={{ display: "flex", minHeight: "100vh" }}>
@@ -906,8 +984,9 @@ const AgriSpecialistDashboard = () => {
 
         <Grid container spacing={3} sx={{ mb: 4 }}>
           {quickActions.map((action, index) => (
-            <Grid item xs={12} md={4} key={index}>
-              <DashboardCard
+            // <Grid item xs={12} md={4} key={index}>
+            <Grid item xs={12} md={quickActions.length > 3 ? 3 : 4} key={index}>
+              {/* <DashboardCard
                 title={action.title}
                 value={action.value}
                 caption={action.description}
@@ -917,7 +996,19 @@ const AgriSpecialistDashboard = () => {
                 secondaryTitle={action.secondarytitle||''}
                 secondaryValue={action.secondaryValue||''}
                 secondaryCaption={action.secondaryDescription||''}
-              />
+              /> */}
+
+              <DashboardCard
+  title={action.title}
+  value={action.value}
+  caption={action.description}
+  icon={action.icon}
+  onClick={() => navigate(action.path)}
+  isModerator={isModerator}
+  secondaryTitle={action.secondaryTitle || ''}
+  secondaryValue={action.secondaryValue || ''}
+  secondaryCaption={action.secondaryCaption || ''}
+/>
             </Grid>
           ))}
         </Grid>
