@@ -35,13 +35,13 @@ export default function ViewLLMQuestionsModal({ open, onClose }) {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [selectedQuestion, setSelectedQuestion] = useState(null);
-
+   const API_URL = import.meta.env.VITE_API_BASE_URL;
   // CHANGE: Added useEffect to fetch data from API when modal opens
   useEffect(() => {
   if (open) {
     setLoading(true);
     axios
-      .get("http://localhost:8000/api/questions/llm/moderator")
+      .get(`${API_URL}/questions/llm/moderator`)
       .then((res) => {
         const data = res.data; // Axios auto-parses JSON
         const mappedQuestions = data.map((q) => ({

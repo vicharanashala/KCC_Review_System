@@ -3,6 +3,7 @@ import { IQuestion } from "../interfaces/question.interface";
 import { QuestionStatus } from "../interfaces/enums";
 import { v4 as uuidv4 } from "uuid";
 import userModel from "./user.model";
+import logger from "../utils/logger.utils";
 
 export interface ILLMQuestion {
   _id?: string;
@@ -63,7 +64,7 @@ LLMQuestionSchema.post("save", async function (doc) {
       await userModel.findByIdAndUpdate(moderator._id, {
         $inc: { workload_count: 1 },
       });
-
+      logger.info(`LLM Question is assigned to ${moderator.name}, ${moderator.email}`)
     } catch (err) {
       console.error("Error assigning moderator:", err);
     }
