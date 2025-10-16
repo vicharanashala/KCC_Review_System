@@ -22,6 +22,17 @@ export default class NotificationRepository {
       .limit(limit)
       .populate("user_id");
   }
+  async findNotificationByUserId(
+    userId: string,
+    skip: number = 0,
+    limit: number = 50
+  ): Promise<INotification[]> {
+    return Notification.find({ user_id: userId })
+      .sort({ created_at: -1 })
+      .skip(skip)
+      .limit(limit)
+      
+  }
 
   async findAllByUserId(userId:string){
     const notifications=await Notification.find({user_id:userId})
@@ -40,10 +51,35 @@ export default class NotificationRepository {
   }
   async findNotificationWithUserId(
     userId: string,
+    skip: number = 0,
+    limit: number = 100,
+    search?: string
+  ): Promise<{ notifications: INotification[]; total: number }> {
+    
+    let query: FilterQuery<INotification> = 
+    { user_id: userId,
+      $or: [
+        { is_task_submitted: true },
+        { is_task_submitted: { $exists: false } }
+      ]
+     };
+     const [notifications, total] = await Promise.all([
+      Notification.find(query)
+        .skip(skip)
+        .limit(limit)
+        .sort({ created_at: -1 })  // optional, newest first
+        .lean(),
+      Notification.countDocuments(query)
+    ]);
+    return { notifications, total }
+  }
+  async findNotificationWithNotificationId(
+    notification_id:string,
     type?: NotificationType
   ): Promise<INotification[]> {
     let query: FilterQuery<INotification> = 
-    { user_id: userId,
+    { 
+      notification_id: notification_id,
       $or: [
         { is_task_submitted: false },
         { is_task_submitted: { $exists: false } }

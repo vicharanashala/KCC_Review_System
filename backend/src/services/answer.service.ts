@@ -1,20 +1,25 @@
 import AnswerRepository from '../repositories/answer.repository';
 import QuestionRepository from '../repositories/question.repository';
 import UserRepository from '../repositories/user.repository';
+import NotificationRepository from '../repositories/notification.repository';
 import WorkflowService from './workFlow.service';
 import { AnswerCreateDto } from '../interfaces/dto';
 import { QuestionStatus } from '../interfaces/enums';
 import logger from '../utils/logger.utils';
 import { Types } from 'mongoose';
+import PeerValidationRepository from '../repositories/peerValidation.repository';
 
 const answerRepo = new AnswerRepository();
 const questionRepo = new QuestionRepository();
-const userRepo = new UserRepository()
+const userRepo = new UserRepository();
+const notificationRepo=new NotificationRepository();
+const peerValidationRepo = new PeerValidationRepository();
 export default class AnswerService {
   async create(answerData: AnswerCreateDto, currentUserId: string,skipPeerAssignment=false): Promise<any> {
     
     const currentUser = await userRepo.findById(currentUserId)
     const question = await questionRepo.findByQuestionId(answerData.question_id);
+    
     if (!question) throw new Error('Question not found');
     if (question.status === QuestionStatus.ASSIGNED_TO_SPECIALIST) {
       if (question.assigned_specialist_id!.toString() !== currentUserId) throw new Error('You are not assigned to this question');
@@ -84,6 +89,20 @@ export default class AnswerService {
     if(!skipPeerAssignment){
       setImmediate(() => WorkflowService.assignToPeerReviewer(newAnswer.answer_id,currentUser,question));
     }
+    if(answerData.status)
+    {
+      const result=  await peerValidationRepo.updatePeerValidationBypeerId(answerData.peer_validation_id,"answer_created")
+     
+      if(answerData.notification_id)
+      {
+        await notificationRepo.markReadAndSubmit(
+          answerData.notification_id,
+          answerData.userId
+        );
+      }
+
+    }
+   
     
 
     logger.info(`Answer created: ${newAnswer.answer_id}, version: ${newAnswer.version}`);

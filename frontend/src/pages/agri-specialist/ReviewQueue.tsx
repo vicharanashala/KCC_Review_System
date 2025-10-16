@@ -27,7 +27,9 @@ interface AnswerData {
     userId?: string;
     RejectedUser?: string;
     status?:string;
-    questionObjId?:string
+    questionObjId?:string;
+    notification_id:string;
+    peer_validation_id:string;
 }
 
 interface VersionHistory {
@@ -59,7 +61,7 @@ export const ReviewQueue = () => {
     const location = useLocation();
     const { user } = useAuth();
     const task = location.state?.task;
-    console.log("the task coming====",task)
+   // console.log("the task coming====",task)
     const answer=task?. answer_text
     let avilableSourceList=[]
     
@@ -102,7 +104,7 @@ export const ReviewQueue = () => {
     ];
      // Add new input
      const addGroup = (id:number): void => {
-        console.log("the index coming===",id)
+      //  console.log("the index coming===",id)
         setSources((prev) => [
           ...prev,
           { id: Date.now(), name: "", link: "" , errorsList: {}},
@@ -115,7 +117,7 @@ export const ReviewQueue = () => {
         }
       };
       const validateInput = (value: string,field:string): string | undefined => {
-        console.log("the value coming====",value,field)
+      //  console.log("the value coming====",value,field)
         
         if(field==="link")
         {
@@ -193,7 +195,7 @@ export const ReviewQueue = () => {
         try {
             const response = await peerValidationApi.getPeerValidationHistory(task.answer_id);
             const history = response.peer_validation_history || [];
-
+               // console.log("the response coming=====",response)
             const transformedHistory: VersionHistory[] = [];
 
             transformedHistory.push({
@@ -203,7 +205,7 @@ export const ReviewQueue = () => {
             });
 
             history.forEach((validation, index) => {
-                console.log(validation,"validationvalidationvalidation")
+              //  console.log(validation,"validationvalidationvalidation")
                 const versionNumber = validation.answer_id.version;
                 const createdAt = new Date(validation.created_at);
                 const diffMs = Date.now() - createdAt.getTime();
@@ -408,7 +410,9 @@ export const ReviewQueue = () => {
                 userId:userId?.toString(),
                 RejectedUser:task?. RejectedUser,
                 status:task?.status,
-                questionObjId:task?.questionObjId
+                questionObjId:task?.questionObjId,
+                notification_id:task.notification_id?task.notification_id:'',
+                peer_validation_id:task.peer_validation_id?task.peer_validation_id:''
                 
                 
 
@@ -472,6 +476,11 @@ const handleSubmitQuestion=async()=>{
     {
         formData.append('peer_validation_id',task.peer_validation_id)
     }
+    if(task.notification_id)
+    {
+        formData.append('notification_id',task.notification_id)
+    }
+
    // selectedStatus=='approved'?setQuestionStatus('approved'):setQuestionStatus('revised')
     const token = localStorage.getItem('access_token');
     
@@ -551,16 +560,19 @@ const handleSubmitQuestion=async()=>{
         setIsSubmitting(true);
         try {
             const token = localStorage.getItem('access_token');
-
+            const userId=localStorage.getItem('user_id')
             let apiUrl, validationData;
 
             if (user?.role === 'moderator') {
+                console.log("the modertor===",user.role)
                 apiUrl = `${import.meta.env.VITE_API_BASE_URL}/validate`;
                 validationData = {
                     answer_id: task.answer_id,
                     validation_status: selectedStatus == 'approved' ? 'valid' : 'invalid',
                     comments: comments.trim() || undefined,
-                   // notification_id:task.notification_id?task.notification_id:''
+                    notification_id:task.notification_id?task.notification_id:'',
+                    peer_validation_id:task.peer_validation_id?task.peer_validation_id:'',
+                    userId:userId
                 };
             } else {
                 apiUrl = `${import.meta.env.VITE_API_BASE_URL}/peer-validate`;
@@ -569,7 +581,9 @@ const handleSubmitQuestion=async()=>{
                     status: selectedStatus,
                     comments: comments.trim() || undefined,
                     revised_answer_text: selectedStatus === 'revised' ? revisedAnswer.trim() : undefined,
-                   // notification_id:task.notification_id?task.notification_id:''
+                    notification_id:task.notification_id?task.notification_id:'',
+                    peer_validation_id:task.peer_validation_id?task.peer_validation_id:'',
+                    userId:userId
                 };
             }
 
@@ -1546,12 +1560,12 @@ const handleSubmitQuestion=async()=>{
                     )}
                 </Box>
                
-
-                {task?.type !== 'create_answer' && user?.role === 'moderator'&& task?.type !== 'question_validation' && (
+                <VersionHistoryComponent />
+                {/*task?.type !== 'create_answer' && user?.role === 'moderator'&& task?.type !== 'question_validation' && (
                     <Box sx={{ width: 400, flexShrink: 0 }}>
                         <VersionHistoryComponent />
                     </Box>
-                )}
+                )*/}
                 </Box>
             </Box>
 }

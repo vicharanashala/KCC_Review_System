@@ -14,4 +14,5 @@ export interface IValidation extends Document {
   created_at: Date;
   answer: IAnswer;
   moderator: IUser;
+  related_answer_id?:string
 }

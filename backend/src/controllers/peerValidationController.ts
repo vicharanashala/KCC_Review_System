@@ -29,7 +29,10 @@ const createSchema = Joi.object({
     }),
     otherwise: Joi.string().optional().allow('').default(''),
   }),
-  question_id:Joi.string().optional()
+  question_id:Joi.string().optional(),
+  peer_validation_id:Joi.string().optional(),
+  notification_id:Joi.string().optional(),
+  userId:Joi.string().optional()
 });
 
 export const peerValidate = [

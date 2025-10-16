@@ -24,6 +24,7 @@ export enum QuestionStatus {
 export enum ValidationStatus {
   VALID = 'valid',
   INVALID = 'invalid',
+  VALIDATION_REQUEST = 'validation_request',
 }
 
 export enum PeerStatus {
@@ -33,7 +34,8 @@ export enum PeerStatus {
   ASSIGNED_TO_MODERATION = 'assigned_to_moderation',
   PENDING_PEER_MODERATION_REVIEW = 'pending_peer_moderation_review',
   QUESTION_REJECTED='question_rejected',
-  QUESTION_SENDBACK_TO_OWNER='question_sendback_to_owner'
+  QUESTION_SENDBACK_TO_OWNER='question_sendback_to_owner',
+  ASSIGNED_TO_AGRISPECILIST = 'assigned_to_agrispecilist',
 }
 
 export enum NotificationType {

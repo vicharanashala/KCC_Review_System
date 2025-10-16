@@ -40,7 +40,24 @@ export const getMyTasks: Middleware[] = [
       const currentUserId = req.user._id.toString();
       const currentRole = req.user.role;
       // console.log("for commiting")
-      const tasks = await dashboardService.getMyTasks(currentUserId, currentRole);
+      // Type-safe destructuring with default values
+    const { skip, limit, search } = req.query as {
+      skip?: string;
+      limit?: string;
+      search?: string;
+       };
+       const skipNum = skip ? parseInt(skip) : 0;
+       const limitNum = limit ? parseInt(limit) : 10;
+       
+    const searchStr = search ?? "";
+      const tasks = await dashboardService.getMyTasks(
+        currentUserId, 
+        currentRole,
+        skipNum,
+      limitNum,
+      searchStr
+       
+        );
       res.json(tasks);
     } catch (error: any) {
       logger.error(error);

@@ -48,13 +48,28 @@ export default class PeerValidationService {
     if (!question) {
       throw new Error("No question found");
     }
+    if(peerData.status && peerData.peer_validation_id)
+    {
+     // console.log("the peer validation status====",peerData)
+      const result=  await peerValidationRepo.updatePeerValidationBypeerId(peerData.peer_validation_id,peerData.status)
+    // console.log("the result coming====",result)
+      if(peerData.notification_id)
+      {
+
+        await notificationRepo.markReadAndSubmit(
+          peerData.notification_id,
+          peerData.userId
+        );
+      }
+
+    }
 
     // const notification = await notificationRepo.findUnreadByUserId(currentUserId, NotificationType.PEER_REVIEW_REQUEST).then(n => n.find(n => n.related_entity_id === peerData.answer_id));
-    const notification = await notificationRepo
+  /*  const notification = await notificationRepo
       .findAllByUserId(currentUserId)
       .then((n) => n.find((n) => n.related_entity_id === peerData.answer_id));
     if (!notification)
-      throw new Error("You are not assigned to peer review this answer");
+      throw new Error("You are not assigned to peer review this answer");*/
 
    
     const userObjectId = new Types.ObjectId(currentUserId);
@@ -75,11 +90,12 @@ export default class PeerValidationService {
       const lastPeer = await peerValidationRepo.findLastByAnswerId(
         answer._id.toString()
       );
-      if (lastPeer && lastPeer.status === PeerStatus.APPROVED) {
+      /*if (lastPeer && lastPeer.status === PeerStatus.APPROVED) {
         question.consecutive_peer_approvals += 1;
       } else {
         question.consecutive_peer_approvals = 1;
-      }
+      }*/
+      question.consecutive_peer_approvals += 1;
       await question.save();
 
       if (question.consecutive_peer_approvals >= 3) {
@@ -108,24 +124,22 @@ export default class PeerValidationService {
           `Peer approved answer ${answer.answer_id}, consecutive: ${question.consecutive_peer_approvals}`
         );
       }
-      await notificationRepo.markReadAndSubmit(
+    /*  await notificationRepo.markReadAndSubmit(
         notification.notification_id,
         currentUserId
-      );
+      );*/
       
-      const newPeerVal = await peerValidationRepo.create({
+    /*  const newPeerVal = await peerValidationRepo.create({
         ...peerData,
         answer_id: answer._id,
         reviewer_id: userObjectId,
         status: peerData.status,
         comments: peerData.comments || "",
         peer_validation_id: `PV_${uuidv4().slice(0, 8).toUpperCase()}`,
-      });
+        related_answer_id:answer.answer_id
+      });*/
       const workload = await userRepo.updateWorkload(currentUserId, -1);
-    return {
-      message: "Peer validation submitted successfully",
-      peer_validation_id: newPeerVal.peer_validation_id,
-    };
+   
     } else {
       const originalSpecialistId =
         typeof answer.specialist_id === "object" &&
@@ -151,21 +165,23 @@ export default class PeerValidationService {
         related_entity_id: answer.answer_id,
       });
       const newPeerVal = await peerValidationRepo.create({
-        ...peerData,
+       
         answer_id: answer._id,
-        reviewer_id: userObjectId,
-        status: peerData.status,
+        reviewer_id: question.assigned_specialist_id,
+        status:PeerStatus.REVISED,
         comments: peerData.comments || "",
         peer_validation_id: `PV_${uuidv4().slice(0, 8).toUpperCase()}`,
+        related_answer_id:answer.answer_id
       });
       logger.info(
         `Revision notification sent to original specialist for answer ${question.assigned_specialist_id}`
       );
-      await notificationRepo.markReadAndSubmit(
+    /*  await notificationRepo.markReadAndSubmit(
         notification.notification_id,
         currentUserId
-      );
+      );*/
       question.consecutive_peer_approvals = 0;
+      question.reviewed_by_specialists=[]
        await question.save()
      // if (peerData.revised_answer_text) {
         console.log("reaching hereeeeee")
@@ -211,7 +227,11 @@ export default class PeerValidationService {
       }
       // await question.save();
     }
-
+   
+    return {
+      message: "Peer validation submitted successfully",
+     // peer_validation_id: newPeerVal.peer_validation_id,
+    };
     // Decrement workload
     
   }
