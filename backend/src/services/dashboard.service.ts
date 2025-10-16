@@ -8,7 +8,6 @@ import { NotificationType, QuestionStatus, UserRole } from '../interfaces/enums'
 import AnswerRepository from '../repositories/answer.repository';
 import { IQuestion } from '../interfaces/question.interface';
 import { Types } from 'mongoose';
-import { boolean } from 'joi';
 
 const userRepo = new UserRepository();
 const questionRepo = new QuestionRepository();
@@ -51,120 +50,36 @@ export default class DashboardService {
     };
   }
 
-  async getMyTasks(currentUserId: string, currentRole: string): Promise<any> {
-    const tasks = [];
-    if (currentRole === UserRole.AGRI_SPECIALIST) {
-      const assignedQuestions = await questionRepo.findAssignedToUser(currentUserId, [
-        QuestionStatus.ASSIGNED_TO_SPECIALIST,
-        QuestionStatus.NEEDS_REVISION,
-        QuestionStatus.READY_FOR_GOLDEN_FAQ,
-      ]);
-      for (const question of assignedQuestions) {
-        let taskType = 'create_answer';
-        if (question.status === QuestionStatus.READY_FOR_GOLDEN_FAQ) {
-          const currentAns = await answerRepo.findCurrentByQuestionId(question._id.toString());
-          if (currentAns && currentAns.specialist_id.toString() === currentUserId) taskType = 'create_golden_faq';
-        } else if (question.status === QuestionStatus.NEEDS_REVISION) {
-          const currentAns = await answerRepo.findCurrentByQuestionId(question._id.toString());
-          if (currentAns && currentAns.specialist_id.toString() === currentUserId) taskType = 'revise_answer';
-          else continue;
-        }
+  async getMyTasks(
+    currentUserId: string, 
+    currentRole: string,
+    skip: number,
+  limit: number,
+  search: string,
+    ): Promise<any> {
+    const tasks : any[] = [];
+   
+      const {notifications,total} = await notificationRepo.findNotificationWithUserId(currentUserId,skip,limit,search);
+  //  console.log("the notifications coming===",notifications)
+      if(notifications)
+      await Promise.all(
+        notifications.map(async(notif)=>{
+          if (!notif.related_entity_id) return null;
+          
+          if(notif.type==='question_validation'|| notif.type==='question_rejected')
+          {
+            const peervalidationObj=await peerValidation.findByUserAndPeerValidation(currentUserId,notif.related_entity_id)
+            const questionObj = await questionRepo.findByQuestionId(notif.related_entity_id);
 
-        tasks.push({
-          type: taskType,
-          question_id: question.question_id,
-          question_text: question.original_query_text,
-          status: question.status,
-          valid_count: question.valid_count,
-          created_at: question.created_at,
-          KccAns:question.KccAns,
-          question_type:question.query_type||'N/A',
-        season:question.season||'N/A',
-        state:question.state||'N/A',
-        sector:question.sector||'N/A',
-        crop:question.crop||'N/A',
-        district:question.district||'N/A'
-        });
-      }
-
-      const peerNotifications = await notificationRepo.findNotificationWithUserId(currentUserId, NotificationType.PEER_REVIEW_REQUEST);
-      for (const notification of peerNotifications) {
-  const peerAnswer = await answerRepo.findByAnswerId(notification.related_entity_id as string);
-
-  if (peerAnswer && peerAnswer.question_id && !(peerAnswer.question_id instanceof Types.ObjectId)) {
-    const q = peerAnswer.question_id as IQuestion;
-
-    tasks.push({
-      type: 'peer_review',
-      answer_id: peerAnswer.answer_id,
-      question_id: q.question_id,
-      question_text:
-        q.original_query_text ,
-      answer_preview:
-        peerAnswer.answer_text,
-      consecutive_approvals: q.consecutive_peer_approvals,
-      created_at: notification.created_at,
-       sources:peerAnswer.sources,
-       KccAns:q.KccAns,
-       question_type:q.query_type||'N/A',
-        season:q.season||'N/A',
-        state:q.state||'N/A',
-        sector:q.sector||'N/A',
-        crop:q.crop||'N/A',
-        district:q.district||'N/A',
-        notification_id:notification.notification_id
-             
-    });
-  }
-}
-    } else if (currentRole === UserRole.MODERATOR) {
-      const validationNotifications = await notificationRepo.findNotificationWithUserId(currentUserId, NotificationType.VALIDATION_REQUEST);
-      for (const notification of validationNotifications) {
-        const answer = await answerRepo.findByAnswerId(notification.related_entity_id as string);
-        if (answer && answer.question_id && !(answer.question_id instanceof Types.ObjectId)) {
-          const q = answer.question_id as IQuestion;
-
-          if (q.status === QuestionStatus.PENDING_MODERATION) {
-            tasks.push({
-              type: "validate_answer",
-              answer_id: answer.answer_id,
-              question_id: q.question_id,
-              question_text:
-                q.original_query_text,
-              answer_preview:
-                answer.answer_text,
-              current_valid_count: q.valid_count,
-              consecutive_approvals: q.consecutive_peer_approvals,
-              created_at: notification.created_at,
-              question_type:q.query_type||'N/A',
-              season:q.season||'N/A',
-              state:q.state||'N/A',
-              sector:q.sector||'N/A',
-              crop:q.crop||'N/A',
-              district:q.district||'N/A',
-            });
-          }
-        }
-      }
-    }
-    if (currentRole === UserRole.MODERATOR) {
-      const validationNotifications = await peerValidation.findUnreadByUserId(currentUserId, QuestionStatus.ASSIGNED_TO_MODERATION);
-      if (validationNotifications && validationNotifications.length > 0) {
-        const questionList = await Promise.all(
-          validationNotifications.map(async (notif) => {
-            if (!notif.quetion_id) return null; 
-            const questionObj = await questionRepo.findByQuestionId(notif.quetion_id);
-            if(questionObj&&questionObj.question_approval<2)
+           if(questionObj)
             {
               tasks.push({
-                
-              type: "question_validation",
-             // question: questionObj,
+                type: notif.type,
               question_id: questionObj.question_id, 
-           question_text:questionObj.original_query_text,
+            question_text:questionObj.original_query_text,
             consecutive_approvals:questionObj.question_approval,
             created_at: notif.created_at,
-             comments:notif.comments,
+             comments:peervalidationObj?.comments,
              question_type:questionObj.query_type||'',
              season:questionObj.season||'',
              state:questionObj.state,
@@ -172,104 +87,145 @@ export default class DashboardService {
              crop:questionObj.crop,
              district:questionObj.district,
              kccAns:questionObj.KccAns,
-             peer_validation_id:notif.peer_validation_id
+             peer_validation_id:peervalidationObj?.peer_validation_id ||'',
+             notification_id:notif.notification_id
                
               });
             }
-          })
-        );
-      
-        // You can now use `questionList` (e.g., send to frontend)
-       
-      
-      
+          }
 
-    }
-    const validationNotificationsRject = await peerValidation.findUnreadByUserId(currentUserId, QuestionStatus.QUESTION_SENDBACK_TO_OWNER);
-    
-    if (validationNotificationsRject && validationNotificationsRject.length > 0) {
-      const questionList = await Promise.all(
-        validationNotificationsRject.map(async (notif) => {
-          if (!notif.quetion_id) return null; 
-          const questionObj = await questionRepo.findByQuestionId(notif.quetion_id);
-          if(questionObj&&questionObj.question_approval<2)
-          {
-            tasks.push({
-              type: "question_rejected",
-             // question: questionObj,
-              question_id: questionObj.question_id, 
-           question_text:questionObj.original_query_text,
-            consecutive_approvals:questionObj.question_approval,
-            created_at: notif.created_at,
-             comments:notif.comments,
-             question_type:questionObj.query_type||'',
-             season:questionObj.season||'',
-             state:questionObj.state,
-             sector:questionObj.sector,
-             crop:questionObj.crop,
-             district:questionObj.district,
-             kccAns:questionObj.KccAns,
-             peer_validation_id:notif.peer_validation_id
+         
+          else if(notif.type==='question_assigned'){// creating-answer
+            const peervalidationObj=await peerValidation.findByUserAndPeerValidation(currentUserId,notif.related_entity_id)
+            const questionObj = await questionRepo.findByQuestionId(notif.related_entity_id);
 
+            if(questionObj)
+            {
+           tasks.push({
+              type: 'create_answer',
+              question_id: questionObj.question_id,
+              question_text: questionObj.original_query_text,
+              status: questionObj.status,
+              valid_count: questionObj.valid_count,
+              created_at: questionObj.created_at,
+              KccAns:questionObj.KccAns,
+              question_type:questionObj.query_type||'N/A',
+            season:questionObj.season||'N/A',
+            state:questionObj.state||'N/A',
+            sector:questionObj.sector||'N/A',
+            crop:questionObj.crop||'N/A',
+            district:questionObj.district||'N/A',
+            notification_id:notif.notification_id,
+            peer_validation_id:peervalidationObj?.peer_validation_id ||''
             });
           }
-        })
-      );
-    
-      // You can now use `questionList` (e.g., send to frontend)
-     
-    
-    
+          }
+          else if(notif.type==='peer_review_request')
+          {
+            const peervalidationObj=await peerValidation.findByUserAndAnswerPeerValidation(currentUserId,notif.related_entity_id)
+            const peerAnswer = await answerRepo.findByAnswerId(notif.related_entity_id as string);
+            if (peerAnswer && peerAnswer.question_id && !(peerAnswer.question_id instanceof Types.ObjectId))
+             {
+              const q = peerAnswer.question_id as IQuestion;
+              tasks.push({
+                type: 'peer_review',
+                answer_id: peerAnswer.answer_id,
+                question_id: q.question_id,
+                question_text:
+                  q.original_query_text ,
+                answer_preview:
+                  peerAnswer.answer_text,
+                consecutive_approvals: q.consecutive_peer_approvals,
+                created_at: notif.created_at,
+                 sources:peerAnswer.sources,
+                 KccAns:q.KccAns,
+                 question_type:q.query_type||'N/A',
+                  season:q.season||'N/A',
+                  state:q.state||'N/A',
+                  sector:q.sector||'N/A',
+                  crop:q.crop||'N/A',
+                  district:q.district||'N/A',
+                  notification_id:notif.notification_id,
+                  peer_validation_id:peervalidationObj?.peer_validation_id ||'PV_2E',
+                       
+              });
+            }
 
-  }
-}
-else if(currentRole === UserRole.AGRI_SPECIALIST){
-    const status=false
-    const revisionSuccess=true
-    const rejectedAnswers= await answerRepo.findRejectedQuestions(currentUserId,status,revisionSuccess)
-    if(rejectedAnswers)
-    {
-      await Promise.all(
-        rejectedAnswers.map(async (answer) => {
-          const questionObj = await questionRepo.findByQuestionObjectId(answer.question_id);
-          const peerValidationObj=await peerValidation.findByAnswerObjId(answer._id)
-          
-          const comments = peerValidationObj?.[0]?.comments;
-          
-      if(questionObj)
-      {
-        tasks.push({
-          type: "Reject",
-          question_id: questionObj.question_id,
-          question_text:
-            questionObj.original_query_text ,
-          status: "Rejected",
-          valid_count: 0,
-          created_at: questionObj.created_at,
-          answer_text:answer.answer_text,
-          sources: answer.sources,
-          RejectedUser: answer.specialist_id,
-          questionObjId:answer.question_id,
-          KccAns:questionObj.KccAns,
-          comments:comments,
-          question_type:questionObj.query_type||'N/A',
-        season:questionObj.season||'N/A',
-        state:questionObj.state||'N/A',
-        sector:questionObj.sector||'N/A',
-        crop:questionObj.crop||'N/A',
-        district:questionObj.district||'N/A',
-        });
-      }
-         
-        })
-      );
-      
-     
+          }
+          else if(notif.type=="validation_request")
+          {
+            const peervalidationObj=await validation.findByUserAndAnswerValidation(currentUserId,notif.related_entity_id)
+            const peerAnswer = await answerRepo.findByAnswerId(notif.related_entity_id as string);
+            if (peerAnswer && peerAnswer.question_id && !(peerAnswer.question_id instanceof Types.ObjectId))
+             {
+              const q = peerAnswer.question_id as IQuestion;
+              tasks.push({
+                type: 'validate_answer',
+                answer_id: peerAnswer.answer_id,
+                question_id: q.question_id,
+                question_text:
+                  q.original_query_text ,
+                answer_preview:
+                  peerAnswer.answer_text,
+                consecutive_approvals: q.consecutive_peer_approvals,
+                created_at: notif.created_at,
+                 sources:peerAnswer.sources,
+                 KccAns:q.KccAns,
+                 question_type:q.query_type||'N/A',
+                  season:q.season||'N/A',
+                  state:q.state||'N/A',
+                  sector:q.sector||'N/A',
+                  crop:q.crop||'N/A',
+                  district:q.district||'N/A',
+                  notification_id:notif.notification_id,
+                  peer_validation_id:peervalidationObj?.validation_id ||'PV_2E',
+                       
+              });
+            }
 
-    }
-  
-  }
-    return { tasks };
+          }
+          else if(notif.type=="revision_needed"){
+            const peervalidationObj=await peerValidation.findByUserAndAnswerPeerValidation(currentUserId,notif.related_entity_id)
+            const peerAnswer = await answerRepo.findByAnswerId(notif.related_entity_id as string);
+            if (peerAnswer && peerAnswer.question_id && !(peerAnswer.question_id instanceof Types.ObjectId))
+             {
+              const questionObj = peerAnswer.question_id as IQuestion;
+              tasks.push({
+                type: "Reject",
+                question_id: questionObj.question_id,
+                question_text:
+                  questionObj.original_query_text ,
+                status: "Rejected",
+                valid_count: 0,
+                created_at: questionObj.created_at,
+                answer_text:peerAnswer.answer_text,
+                sources: peerAnswer.sources,
+                RejectedUser: peervalidationObj?.reviewer_id,
+                questionObjId:questionObj._id,
+                KccAns:questionObj.KccAns,
+                comments:peervalidationObj?.comments,
+                question_type:questionObj.query_type||'N/A',
+              season:questionObj.season||'N/A',
+              state:questionObj.state||'N/A',
+              sector:questionObj.sector||'N/A',
+              crop:questionObj.crop||'N/A',
+              district:questionObj.district||'N/A',
+              notification_id:notif.notification_id,
+              peer_validation_id:peervalidationObj?.peer_validation_id||'PV_2E',
+              });
+
+             }
+
+           
+
+          }
+
+        })
+      )
+
+    
+    
+    return { tasks ,totalCount:total};
   }
   async getUserPerformance(currentUserId: string, currentRole: string): Promise<any> {
 
@@ -284,7 +240,7 @@ const userPerformance=await peerValidation.findByReviewerId(currentUserId,UserRo
     }
     else{
       const userCount=await userRepo.getAllUsersList(currentUserId,UserRole.AGRI_SPECIALIST)
-      return userCount[0]
+      return {userPerformance:userCount[0]}
     }
 
 }
@@ -300,7 +256,7 @@ else{
     }
     else{
       const userCount=await userRepo.getAllUsersList(currentUserId,UserRole.MODERATOR)
-      return userCount[0]
+      return {userPerformance:userCount[0]}
     }
 }
     

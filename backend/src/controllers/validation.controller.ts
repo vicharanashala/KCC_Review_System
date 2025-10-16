@@ -12,6 +12,9 @@ const createSchema = Joi.object({
   answer_id: Joi.string().required(),
   validation_status: Joi.string().valid('valid', 'invalid').required(),
   comments: Joi.string().optional(),
+  peer_validation_id:Joi.string().optional(),
+  notification_id:Joi.string().optional(),
+  userId:Joi.string().optional(),
 });
 
 export const validateAnswer = [

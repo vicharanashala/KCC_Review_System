@@ -16,9 +16,7 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  Select,
-  Pagination,
-} from "@mui/material";
+  Select ,Pagination,TablePagination} from '@mui/material';
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useToast } from "../../contexts/ToastContext";
@@ -196,15 +194,17 @@ const AgriSpecialistDashboard = () => {
     consecutive_approvals: number;
     created_at: string;
     sources: any[];
-    comments: string;
-    question_type: string;
-    season: string;
-    state: string;
-    sector: string;
-    crop: string;
-    district: string;
-    kccAns: string;
-    peer_validation_id: string;
+    comments:string,
+             question_type:string,
+             season:string,
+             state:string,
+             sector:string,
+             crop:string,
+             district:string,
+             kccAns:string,
+             peer_validation_id:string,
+              notification_id:string
+
   }
   const navigate = useNavigate();
   const { showSuccess, showError, specialization, season, sector, states } =
@@ -421,22 +421,29 @@ const AgriSpecialistDashboard = () => {
   const ITEMS_PER_PAGE = 7;
   const [currentPage, setCurrentPage] = useState(1);
   const [paginatedTasks, setPaginatedTasks] = useState<Task[]>([]);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [totalCount, setTotalCount] = useState(0); 
+  
+  const [search, setSearch] = useState("");
 
   const fetchMyTasks = async () => {
     try {
-      const token = localStorage.getItem("access_token");
-      const res = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/dashboard/my-tasks`,
-        {
-          headers: {
-            Accept: "application/json, text/plain, */*",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      if (!res.ok) throw new Error("Failed to fetch tasks");
+      const skip = page * rowsPerPage;
+      const limit = rowsPerPage;
+      const token = localStorage.getItem('access_token');
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/dashboard/my-tasks?skip=${skip}&limit=${limit}&search=${search}`, {
+        headers: {
+          Accept: 'application/json, text/plain, */*',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!res.ok) throw new Error('Failed to fetch tasks');
+      
       const data = await res.json();
       setTasks(data?.tasks || []);
+      setFilteredTasks(data?.tasks || []);
+     setTotalCount(data.totalCount || 0);
       // setFilteredTasks(data?.tasks || []);
     } catch (error) {
       console.error("Error fetching tasks:", error);
@@ -445,6 +452,19 @@ const AgriSpecialistDashboard = () => {
     } finally {
       setLoading(false);
     }
+  };
+  useEffect(() => {
+    fetchMyTasks();
+  }, [page, rowsPerPage, search]);
+  const handleChangePage = (event: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0); // reset to first page when changing rows per page
   };
   const fetchMyPerformance = async () => {
     try {
@@ -470,6 +490,7 @@ const AgriSpecialistDashboard = () => {
       setLoading(false);
     }
   };
+ 
 
   /*const fetchNotifications = async () => {
     try {
@@ -496,6 +517,8 @@ const AgriSpecialistDashboard = () => {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery]);
+ /* useEffect(() => {
+   
   useEffect(() => {
     // Step 1: Sort all tasks by created_at (newest first)
     const sortedTasks = [...tasks].sort(
@@ -527,7 +550,7 @@ const AgriSpecialistDashboard = () => {
     // Step 4: Update state
     setFilteredTasks(filtered);
     setPaginatedTasks(pageTasks);
-  }, [tasks, searchQuery, currentPage]);
+  }, [tasks, searchQuery, currentPage]);*/
   useEffect(() => {
     const latest = notifications[0];
     if (latest?.type === "task_assigned") {
@@ -603,8 +626,8 @@ const AgriSpecialistDashboard = () => {
 
   const quickActions = [
     {
-      title: "Current Workload",
-      value: tasks.length,
+      title: 'Current Workload',
+      value: totalCount,
       // description: 'Pending assignments',
       description: "",
       icon: <RateReviewIcon />,
@@ -1102,14 +1125,14 @@ const AgriSpecialistDashboard = () => {
                 <Typography variant="body2" color="text.secondary">
                   Loading tasks...
                 </Typography>
-              ) : paginatedTasks.length === 0 ? (
+              ) : filteredTasks.length === 0 ? (
                 <Typography variant="body2" color="text.secondary">
                   {searchQuery
                     ? "No tasks match your search."
                     : "No tasks available."}
                 </Typography>
               ) : (
-                paginatedTasks.map((task, index) => (
+                filteredTasks.map((task, index) => (
                   <Paper
                     key={`${task.answer_id}-${index}`}
                     variant="outlined"
@@ -1189,6 +1212,10 @@ const AgriSpecialistDashboard = () => {
                         alignItems: "center",
                       }}
                     >
+                     <Typography variant="caption" color="text.secondary">
+                     
+                        Recent Activity: {new Date(task.created_at).toLocaleString()}
+                        </Typography>
                       <Typography variant="caption" color="text.secondary">
                         Approved on:{" "}
                         {new Date(task.created_at).toLocaleString()}
@@ -1230,15 +1257,25 @@ const AgriSpecialistDashboard = () => {
                 ))
               )}
             </Paper>
-            <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 3 }}>
-              <Pagination
-                count={Math.ceil(filteredTasks.length / ITEMS_PER_PAGE)}
-                page={currentPage}
-                onChange={handlePageChange}
-                color="primary"
-                shape="rounded"
-              />
-            </Box>
+            <Box sx={{ display: 'flex', justifyContent:'flex-end', mt: 3 }}>
+               {/* Pagination */}
+      <TablePagination
+        component="div"
+        count={totalCount}           // total items (from backend)
+        page={page}                  // current page
+        onPageChange={handleChangePage}
+        rowsPerPage={rowsPerPage}    // items per page
+        onRowsPerPageChange={handleChangeRowsPerPage}
+        rowsPerPageOptions={[5, 10, 25, 50]}
+      />
+          {/*<Pagination
+            count={Math.ceil(filteredTasks.length / ITEMS_PER_PAGE)}
+            page={currentPage}
+            onChange={handlePageChange}
+            color="primary"
+            shape="rounded"
+                      />*/}
+        </Box>
           </Grid>
 
           <Grid item xs={12} md={4}>

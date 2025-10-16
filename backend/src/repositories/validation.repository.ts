@@ -367,5 +367,47 @@ export default class ValidationRepository {
   
     return null;
   }
+  async findByUserAndAnswerValidation(
+    userId: string,
+    answer_id: string
+  ): Promise<IValidation | null> {
+    //console.log("uesfrvb====",userId,question_id)
+    let objectId: mongoose.Types.ObjectId | null = null;
+
+    // Try to create an ObjectId safely (if it’s valid)
+    if (mongoose.Types.ObjectId.isValid(userId)) {
+      objectId = new mongoose.Types.ObjectId(userId);
+    }
+    //console.log("userid===",userId,objectId)
+    const ValidationObj = await Validation.findOne({
+      $or: [
+        { moderator_id: userId },    // if stored as string
+        { moderator_id: objectId }   // if stored as ObjectId
+      ],
+      related_answer_id: answer_id
+    }).sort({ created_at: -1 })
+    .lean<IValidation | null>();  // 👈 this makes TypeScript happy
+  
+    //console.log("Peer validation result:", peerValidationObj);
+    return ValidationObj;
+  }
+  async  updateValidationBypeerId(peer_validation_id:string,questionStatus:string
+    ): Promise<number> {
+      try {
+       // console.log("peer validation coming====",peer_validation_id)
+        const result = await Validation.updateOne(
+          { validation_id:peer_validation_id },
+          { $set: {  validation_status: questionStatus} }
+        );
+    
+        // ✅ result.modifiedCount tells how many docs were updated
+      //  console.log("✅ Update result:", result);
+    
+        return result.modifiedCount; 
+      } catch (err) {
+        console.error("❌ Error updating notifications:", err);
+        return 0;
+      }
+    }
   
 }

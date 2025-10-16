@@ -13,5 +13,6 @@ export interface IPeerValidation extends Document {
   created_at: Date;
   answer: IAnswer;
   reviewer: IUser;
-  quetion_id?:string
+  question_id?:string;
+  related_answer_id?:string
 }

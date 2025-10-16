@@ -398,6 +398,55 @@ export default class PeerValidationRepository {
    // console.log("the first notificaj===",peervalidationObj)
     return peervalidationObj
   }
+  async findByUserAndPeerValidation(
+    userId: string,
+    question_id: string
+  ): Promise<IPeerValidation | null> {
+    let objectId: mongoose.Types.ObjectId | null = null;
+  
+    // Safely handle ObjectId conversion
+    if (mongoose.Types.ObjectId.isValid(userId)) {
+      objectId = new mongoose.Types.ObjectId(userId);
+    }
+  
+    // Find the most recent document (latest created_at)
+    const peerValidationObj = await PeerValidation.findOne({
+      $or: [
+        { reviewer_id: userId },   // if stored as string
+        { reviewer_id: objectId }  // if stored as ObjectId
+      ],
+      question_id: question_id
+    })
+    .sort({ created_at: -1 }) // 🔥 ensures the newest document is returned
+    .lean<IPeerValidation | null>();
+  
+    return peerValidationObj;
+  }
+  
+  async findByUserAndAnswerPeerValidation(
+    userId: string,
+    answer_id: string
+  ): Promise<IPeerValidation | null> {
+    //console.log("uesfrvb====",userId,question_id)
+    let objectId: mongoose.Types.ObjectId | null = null;
+
+    // Try to create an ObjectId safely (if it’s valid)
+    if (mongoose.Types.ObjectId.isValid(userId)) {
+      objectId = new mongoose.Types.ObjectId(userId);
+    }
+    //console.log("userid===",userId,objectId)
+    const peerValidationObj = await PeerValidation.findOne({
+      $or: [
+        { reviewer_id: userId },    // if stored as string
+        { reviewer_id: objectId }   // if stored as ObjectId
+      ],
+      related_answer_id: answer_id
+    }).sort({ created_at: -1 })
+    .lean<IPeerValidation | null>();  // 👈 this makes TypeScript happy
+  
+    //console.log("Peer validation result:", peerValidationObj);
+    return peerValidationObj;
+  }
   async findUnreadByUserId(
     userId: string,
     type?: QuestionStatus
@@ -440,7 +489,7 @@ export default class PeerValidationRepository {
         {
           $lookup: {
             from: "questions",
-            localField: "quetion_id",
+            localField: "question_id",
             foreignField: "question_id",
             as: "question"
           }
@@ -736,7 +785,7 @@ export default class PeerValidationRepository {
         {
           $lookup: {
             from: "questions",
-            localField: "quetion_id",
+            localField: "question_id",
             foreignField: "question_id",
             as: "questionInfo"
           }

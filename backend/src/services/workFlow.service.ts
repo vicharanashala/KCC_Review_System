@@ -75,6 +75,15 @@ export default class WorkflowService {
       related_entity_type: 'question',
       related_entity_id: questionId,
     });
+    const newPeerVal = await peerValidationRepo.create({
+     
+      question_id: questionId,
+      reviewer_id: specialist._id,
+      status: PeerStatus.ASSIGNED_TO_AGRISPECILIST,
+      comments: '',
+      peer_validation_id: `PV_${uuidv4().slice(0, 8).toUpperCase()}`,
+    });
+
 
     logger.info(`Question ${questionId} assigned to specialist ${specialist.name}`);
     return true;
@@ -122,6 +131,24 @@ export default class WorkflowService {
       related_entity_type: 'answer',
       related_entity_id: answerId,
     });
+   /* const newPeerVal = await peerValidationRepo.create({
+      ...peerData,
+      answer_id: answer._id,
+      reviewer_id: userObjectId,
+      status: peerData.status,
+      comments: peerData.comments || "",
+      peer_validation_id: `PV_${uuidv4().slice(0, 8).toUpperCase()}`,
+    });*/
+    const newPeerVal = await peerValidationRepo.create({
+     
+      answer_id: answer._id,
+      related_answer_id:answer.answer_id,
+      reviewer_id: reviewer._id,
+      status: PeerStatus.ASSIGNED_TO_AGRISPECILIST,
+      comments: '',
+      peer_validation_id: `PV_${uuidv4().slice(0, 8).toUpperCase()}`,
+    });
+   
     logger.info(`[DEBUG] assignToPeerReviewer called for ${answerId} from stack:`, new Error().stack);
 
     logger.info(`Peer review assigned: answer ${answerId} to ${reviewer.name}`);
@@ -148,12 +175,23 @@ export default class WorkflowService {
       related_entity_type: 'answer',
       related_entity_id: answerId,
     });
+    const sequence = await validationRepo.countByAnswerId(answer._id.toString()) + 1;
+    const newValidation = await validationRepo.create({
+     
+      answer_id: answer._id,
+      moderator_id: moderator._id,
+      validation_status: ValidationStatus.VALIDATION_REQUEST,
+      comments:  '',
+      validation_sequence: sequence,
+      validation_id: `V_${uuidv4().slice(0, 8).toUpperCase()}`,
+      related_answer_id:answer.answer_id
+    });
 
     logger.info(`Validation assigned: answer ${answerId} to moderator ${moderator.name}`);
     return true;
   }
 
-  static async processValidation(validationId: string): Promise<boolean> {
+  static async processValidation(validationId: string,comments?:string): Promise<boolean> {
     const validation = await validationRepo.findByValidationId(validationId);
     if (!validation) return false;
     // const answer: any = validation.answer_id;
@@ -175,13 +213,23 @@ export default class WorkflowService {
         user_id: answer.specialist_id,
         type: NotificationType.REVISION_NEEDED,
         title: 'Answer Revision Needed',
-        message: `Your answer for question ${question.question_id} needs revision. Moderator comments: ${validation.comments}`,
+        message: `Your answer for question ${question.question_id} needs revision. Moderator comments: ${comments}`,
         related_entity_type: 'answer',
         related_entity_id: answer.answer_id,
       });
-
-      logger.info(`Question ${question.question_id} sent back for revision`);
-      setImmediate(() => this.assignToPeerReviewer(answer.answer_id))
+      const newPeerVal = await peerValidationRepo.create({
+       
+        answer_id: answer._id,
+        reviewer_id: answer.specialist_id,
+        status:PeerStatus.REVISED,
+        comments: comments || "",
+        peer_validation_id: `PV_${uuidv4().slice(0, 8).toUpperCase()}`,
+        related_answer_id:answer.answer_id
+      });
+     // console.log("newperrr====",newPeerVal)
+     logger.info(`Answer sent back for revision ${ answer.specialist_id} `);
+      logger.info(`Answer ${question.question_id} sent back for revision`);
+     // setImmediate(() => this.assignToPeerReviewer(answer.answer_id))
     // }
 
     return true;
@@ -229,7 +277,7 @@ if(questionData.status=="revised")
     });
     const newPeerVal = await peerValidationRepo.create({
      
-      quetion_id: questionId,
+      question_id: questionId,
       reviewer_id: mongoose.Types.ObjectId.createFromHexString(question.user_id),
       status: PeerStatus.QUESTION_SENDBACK_TO_OWNER,
       comments:questionData. comments || '',
@@ -270,7 +318,7 @@ else {
    // question.reviewed_by_Moderators.push(specialist._id)
     const newPeerVal = await peerValidationRepo.create({
      
-      quetion_id: questionId,
+      question_id: questionId,
       reviewer_id: specialist._id,
       status: PeerStatus.ASSIGNED_TO_MODERATION,
       comments:questionData. comments || '',

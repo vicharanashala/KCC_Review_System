@@ -10,7 +10,8 @@ const peerValidationSchema = new Schema<IPeerValidation>({
   status: { type: String, enum: Object.values(PeerStatus), required: true },
   comments: { type: String, default: '' },
   created_at: { type: Date, default: Date.now },
-  quetion_id:{type: String,}
+  question_id:{type: String},
+  related_answer_id:{type: String}
 });
 
 export default mongoose.model<IPeerValidation>('PeerValidation', peerValidationSchema);

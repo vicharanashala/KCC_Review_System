@@ -385,6 +385,7 @@ const results= this.getAvailableUserList(currentUserObj,questionObj,UserRole.AGR
           totalUsers: {
             $ifNull: [{ $arrayElemAt: ["$userCount.totalUsers", 0] }, 0],
           },
+          incentivePoints: "$incentive_points",
         },
       },
   
@@ -395,9 +396,10 @@ const results= this.getAvailableUserList(currentUserObj,questionObj,UserRole.AGR
           name: 1,
           email: 1,
           role: 1,
-          incentive_points: 1,
+          incentivePoints: 1,
           rank: 1,
           totalUsers: 1,
+          penality:1
         },
       },
     ]);

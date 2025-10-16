@@ -21,18 +21,14 @@ export default class QuestionService {
     if(questionData.question_id)
     {
      // console.log("the first loop")
-      if(questionData.user_id)
+      if(questionData.user_id && questionData.notification_id)
       {
-        const notification = await notificationRepo
-        .findAllByUserId(questionData.user_id)
-        .then((n) => n.find((n) => n.related_entity_id === questionData.question_id));
-        if(notification)
-        {
+        
           await notificationRepo.markReadAndSubmit(
-            notification.notification_id,
+            questionData.notification_id,
             questionData.user_id
           );
-        }
+        
 
       }
      
@@ -49,8 +45,9 @@ export default class QuestionService {
        
           if(questionData.status=="approved")
           { 
+          //  console.log("approve________________")
             await userRepo.updateIncentive(question.user_id, 1)
-          
+            
             question.question_approval=(question.question_approval|| 0) + 1
             await question.save()
             
@@ -61,16 +58,17 @@ export default class QuestionService {
             {
              
             const result=  await peerValidationRepo.updatePeerValidationBypeerId(peer_validation,"approved")
-           
+          // console.log("the peer validation--------------",result)
              
             }
         if(question.question_approval>=2)
         {
+          await userRepo.updateWorkload(question.user_id, 1);
          // console.log("the question approved====********",question)
           question.reviewed_by_Moderators=[]
           await question.save();
           setImmediate(() => WorkflowService.assignQuestionToSpecialist(question.question_id,questionData.user_id));
-        logger.info(`New question submitted To modarator: ${question.question_id}`);
+        logger.info(`New question submitted To Agri Specilist: ${question.question_id}`);
         }
         else{
          // console.log("the else block is executing====")
@@ -81,6 +79,8 @@ export default class QuestionService {
           }
           else if(questionData.status=="revised")
           {
+            question.reviewed_by_Moderators=[]
+          await question.save();
             await userRepo.updatePenality(question.user_id, 1)
             await userRepo.updateWorkload(question.user_id, 1);
             const convertUserid = mongoose.Types.ObjectId.createFromHexString(question.user_id)

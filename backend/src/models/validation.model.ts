@@ -2,6 +2,7 @@ import mongoose, { Schema } from 'mongoose';
 import { IValidation } from '../interfaces/validation.interface';
 import { ValidationStatus } from '../interfaces/enums';
 import { v4 as uuidv4 } from 'uuid';
+import { string } from 'joi';
 
 const validationSchema = new Schema<IValidation>({
   validation_id: { type: String, unique: true, required: true, default: () => `V_${uuidv4().slice(0, 8).toUpperCase()}` },
@@ -11,6 +12,7 @@ const validationSchema = new Schema<IValidation>({
   comments: { type: String, default: '' },
   validation_sequence: { type: Number, required: true },
   created_at: { type: Date, default: Date.now },
+  related_answer_id:{type:String}
 });
 
 export default mongoose.model<IValidation>('Validation', validationSchema);

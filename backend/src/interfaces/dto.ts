@@ -49,7 +49,9 @@ export interface QuestionCreateDto {
   comments?:string,
   peer_validation_id?:string,
   status?:string,
-  reviewed_by_Moderators?:Types.ObjectId[]
+  reviewed_by_Moderators?:Types.ObjectId[],
+  notification_id:string,
+  
 }
 
 export interface QuestionResponseDto {
@@ -72,12 +74,18 @@ export interface AnswerCreateDto {
   sources: { name: string; link: string }[];
   status:string;
   questionObjId:string;
+  userId: string;
+  notification_id:string,
+  peer_validation_id:string
 }
 
 export interface ValidationCreateDto {
   answer_id: string;
   validation_status: ValidationStatus;
   comments?: string;
+  notification_id?:string;
+  peer_validation_id?:string;
+  userId:string
 }
 
 export interface PeerValidateCreateDto {
@@ -85,8 +93,9 @@ export interface PeerValidateCreateDto {
   status: PeerStatus;
   comments?: string;
   revised_answer_text?: string;
-  notification_id?:string
-
+  notification_id?:string;
+  peer_validation_id?:string
+  userId: string;
 }
 
 export interface GoldenFAQCreateDto {

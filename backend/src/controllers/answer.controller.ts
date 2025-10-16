@@ -16,6 +16,8 @@ const createSchema = Joi.object({
   RejectedUser:Joi.string().optional(),
   status:Joi.string().optional(),
   questionObjId:Joi.string().optional(),
+  peer_validation_id:Joi.string().optional(),
+  notification_id:Joi.string().optional()
 
 });
 

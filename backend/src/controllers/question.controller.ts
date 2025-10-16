@@ -30,8 +30,8 @@ const createSchema = Joi.object({
   status:Joi.string().optional(),
   question_id:Joi.string().optional(),
   comments:Joi.string().optional(),
-  peer_validation_id:Joi.string().optional()
-
+  peer_validation_id:Joi.string().optional(),
+  notification_id:Joi.string().optional()
   
 });
 
