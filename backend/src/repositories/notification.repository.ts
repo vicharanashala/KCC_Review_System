@@ -59,7 +59,7 @@ export default class NotificationRepository {
     let query: FilterQuery<INotification> = 
     { user_id: userId,
       $or: [
-        { is_task_submitted: true },
+        { is_task_submitted: false },
         { is_task_submitted: { $exists: false } }
       ]
      };
