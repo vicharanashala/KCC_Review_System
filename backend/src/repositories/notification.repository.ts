@@ -1,4 +1,6 @@
 import Notification from "../models/notification.model";
+import Question from "../models/question.model";
+import Answer from "../models/answer.model";
 import { INotification } from "../interfaces/notification.interface";
 import { NotificationType } from "../interfaces/enums";
 import { FilterQuery } from "mongoose";
@@ -56,23 +58,92 @@ export default class NotificationRepository {
     search?: string
   ): Promise<{ notifications: INotification[]; total: number }> {
     
-    let query: FilterQuery<INotification> = 
-    { user_id: userId,
+    const userObjectId = new mongoose.Types.ObjectId(userId);
+  
+    let query: any = {
+      user_id: userObjectId,
       $or: [
         { is_task_submitted: false },
         { is_task_submitted: { $exists: false } }
       ]
-     };
-     const [notifications, total] = await Promise.all([
-      Notification.find(query)
-        .skip(skip)
-        .limit(limit)
-        .sort({ created_at: -1 })  // optional, newest first
-        .lean(),
-      Notification.countDocuments(query)
-    ]);
-    return { notifications, total }
+    };
+  
+    // 🔍 If search term is given — search questions first, then their related answers
+    if (search && search.trim() !== "") {
+      interface QuestionDoc {
+        _id: mongoose.Types.ObjectId;
+        question_id: string;
+      }
+  
+      interface AnswerDoc {
+        answer_id: string;
+        question_id: mongoose.Types.ObjectId; 
+      }
+  
+      // Step 1: find matching questions
+      const matchingQuestions = await Question.find(
+        {
+          $or: [
+            { original_query_text: { $regex: search, $options: "i" } },
+            { question_id: { $regex: search, $options: "i" } }
+          ]
+        },
+        { _id: 1, question_id: 1 }
+      ).lean() as QuestionDoc[];
+  
+      // Step 2: collect question_ids and _ids
+      const questionIds: string[] = matchingQuestions
+  .map((q) => q.question_id)
+  .filter(Boolean); // remove possible undefined
+
+const questionObjectIds: mongoose.Types.ObjectId[] = matchingQuestions
+  .map((q) => q._id)
+  .filter((id): id is mongoose.Types.ObjectId => !!id); 
+  
+      // Step 3: find related answers using those question _ids
+      const relatedAnswers = await Answer.find(
+        { question_id: { $in: questionObjectIds } },
+        { answer_id: 1,question_id: 1 }
+      ).lean() as AnswerDoc[];
+  
+      const answerIds: string[] = relatedAnswers.map((a) => a.answer_id);
+  
+      // Step 4: combine both sets of ids
+      const entityIds = [...questionIds, ...answerIds];
+  
+      if (entityIds.length > 0) {
+        query = {
+          ...query,
+          related_entity_id: { $in: entityIds }
+        };
+      } else {
+        // no questions or answers found — return empty
+        return { notifications: [], total: 0 };
+      }
+    }
+  
+   
+    const total = await Notification.countDocuments(query);
+    if (skip >= total) skip = 0;
+  
+    // 📦 Fetch notifications
+    const notifications = await Notification.find(query)
+      .sort({ created_at: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+  
+    if (notifications.length === 0) {
+      return { notifications: [], total };
+    }
+  
+    return { notifications, total };
   }
+  
+  
+  
+ 
+  
   async findNotificationWithNotificationId(
     notification_id:string,
     type?: NotificationType

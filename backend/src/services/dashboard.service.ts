@@ -62,171 +62,186 @@ export default class DashboardService {
       const {notifications,total} = await notificationRepo.findNotificationWithUserId(currentUserId,skip,limit,search);
   //  console.log("the notifications coming===",notifications)
       if(notifications)
-      await Promise.all(
-        notifications.map(async(notif)=>{
+     {
+      const taskResults = await Promise.all(
+        notifications.map(async (notif) => {
           if (!notif.related_entity_id) return null;
-          
-          if(notif.type==='question_validation'|| notif.type==='question_rejected')
-          {
-            const peervalidationObj=await peerValidation.findByUserAndPeerValidation(currentUserId,notif.related_entity_id)
+      
+          let task: any = null;
+      
+          // Question validations or rejections
+          if (notif.type === 'question_validation' || notif.type === 'question_rejected') {
+            const peervalidationObj = await peerValidation.findByUserAndPeerValidation(
+              currentUserId,
+              notif.related_entity_id
+            );
             const questionObj = await questionRepo.findByQuestionId(notif.related_entity_id);
-
-           if(questionObj)
-            {
-              tasks.push({
+      
+            if (questionObj) {
+              task = {
                 type: notif.type,
-              question_id: questionObj.question_id, 
-            question_text:questionObj.original_query_text,
-            consecutive_approvals:questionObj.question_approval,
-            created_at: notif.created_at,
-             comments:peervalidationObj?.comments,
-             question_type:questionObj.query_type||'',
-             season:questionObj.season||'',
-             state:questionObj.state,
-             sector:questionObj.sector,
-             crop:questionObj.crop,
-             district:questionObj.district,
-             kccAns:questionObj.KccAns,
-             peer_validation_id:peervalidationObj?.peer_validation_id ||'',
-             notification_id:notif.notification_id
-               
-              });
+                question_id: questionObj.question_id,
+                question_text: questionObj.original_query_text,
+                consecutive_approvals: questionObj.question_approval,
+                created_at: notif.created_at,
+                comments: peervalidationObj?.comments,
+                question_type: questionObj.query_type || '',
+                season: questionObj.season || '',
+                state: questionObj.state,
+                sector: questionObj.sector,
+                crop: questionObj.crop,
+                district: questionObj.district,
+                kccAns: questionObj.KccAns,
+                peer_validation_id: peervalidationObj?.peer_validation_id || '',
+                notification_id: notif.notification_id
+              };
             }
           }
-
-         
-          else if(notif.type==='question_assigned'){// creating-answer
-            const peervalidationObj=await peerValidation.findByUserAndPeerValidation(currentUserId,notif.related_entity_id)
+      
+          // Question assigned (creating answer)
+          else if (notif.type === 'question_assigned') {
+            const peervalidationObj = await peerValidation.findByUserAndPeerValidation(
+              currentUserId,
+              notif.related_entity_id
+            );
             const questionObj = await questionRepo.findByQuestionId(notif.related_entity_id);
-
-            if(questionObj)
-            {
-           tasks.push({
-              type: 'create_answer',
-              question_id: questionObj.question_id,
-              question_text: questionObj.original_query_text,
-              status: questionObj.status,
-              valid_count: questionObj.valid_count,
-              created_at: questionObj.created_at,
-              KccAns:questionObj.KccAns,
-              question_type:questionObj.query_type||'N/A',
-            season:questionObj.season||'N/A',
-            state:questionObj.state||'N/A',
-            sector:questionObj.sector||'N/A',
-            crop:questionObj.crop||'N/A',
-            district:questionObj.district||'N/A',
-            notification_id:notif.notification_id,
-            peer_validation_id:peervalidationObj?.peer_validation_id ||'',
-            comments:peervalidationObj?.comments
-            });
+      
+            if (questionObj) {
+              task = {
+                type: 'create_answer',
+                question_id: questionObj.question_id,
+                question_text: questionObj.original_query_text,
+                status: questionObj.status,
+                valid_count: questionObj.valid_count,
+                created_at: questionObj.created_at,
+                KccAns: questionObj.KccAns,
+                question_type: questionObj.query_type || 'N/A',
+                season: questionObj.season || 'N/A',
+                state: questionObj.state || 'N/A',
+                sector: questionObj.sector || 'N/A',
+                crop: questionObj.crop || 'N/A',
+                district: questionObj.district || 'N/A',
+                notification_id: notif.notification_id,
+                peer_validation_id: peervalidationObj?.peer_validation_id || '',
+                comments: peervalidationObj?.comments
+              };
+            }
           }
-          }
-          else if(notif.type==='peer_review_request')
-          {
-            const peervalidationObj=await peerValidation.findByUserAndAnswerPeerValidation(currentUserId,notif.related_entity_id)
+      
+          // Peer review request
+          else if (notif.type === 'peer_review_request') {
+            const peervalidationObj = await peerValidation.findByUserAndAnswerPeerValidation(
+              currentUserId,
+              notif.related_entity_id
+            );
             const peerAnswer = await answerRepo.findByAnswerId(notif.related_entity_id as string);
-            if (peerAnswer && peerAnswer.question_id && !(peerAnswer.question_id instanceof Types.ObjectId))
-             {
-              const q = peerAnswer.question_id as IQuestion;
-              tasks.push({
+      
+            if (peerAnswer && peerAnswer.question_id && !(peerAnswer.question_id instanceof Types.ObjectId)) {
+              const questionObj = peerAnswer.question_id as IQuestion;
+              task = {
                 type: 'peer_review',
                 answer_id: peerAnswer.answer_id,
-                question_id: q.question_id,
-                question_text:
-                  q.original_query_text ,
-                answer_preview:
-                  peerAnswer.answer_text,
-                consecutive_approvals: q.consecutive_peer_approvals,
+                question_id: questionObj.question_id,
+                question_text: questionObj.original_query_text,
+                answer_preview: peerAnswer.answer_text,
+                consecutive_approvals: questionObj.consecutive_peer_approvals,
                 created_at: notif.created_at,
-                 sources:peerAnswer.sources,
-                 KccAns:q.KccAns,
-                 question_type:q.query_type||'N/A',
-                  season:q.season||'N/A',
-                  state:q.state||'N/A',
-                  sector:q.sector||'N/A',
-                  crop:q.crop||'N/A',
-                  district:q.district||'N/A',
-                  notification_id:notif.notification_id,
-                  peer_validation_id:peervalidationObj?.peer_validation_id ||'PV_2E',
-                       
-              });
+                sources: peerAnswer.sources,
+                KccAns: questionObj.KccAns,
+                question_type: questionObj.query_type || 'N/A',
+                season: questionObj.season || 'N/A',
+                state: questionObj.state || 'N/A',
+                sector: questionObj.sector || 'N/A',
+                crop: questionObj.crop || 'N/A',
+                district: questionObj.district || 'N/A',
+                notification_id: notif.notification_id,
+                peer_validation_id: peervalidationObj?.peer_validation_id || 'PV_2E'
+              };
             }
-
           }
-          else if(notif.type=="validation_request")
-          {
-            const peervalidationObj=await validation.findByUserAndAnswerValidation(currentUserId,notif.related_entity_id)
+      
+          // Validation request
+          else if (notif.type === 'validation_request') {
+            const validationObj = await validation.findByUserAndAnswerValidation(
+              currentUserId,
+              notif.related_entity_id
+            );
             const peerAnswer = await answerRepo.findByAnswerId(notif.related_entity_id as string);
-            if (peerAnswer && peerAnswer.question_id && !(peerAnswer.question_id instanceof Types.ObjectId))
-             {
-              const q = peerAnswer.question_id as IQuestion;
-              tasks.push({
+      
+            if (peerAnswer && peerAnswer.question_id && !(peerAnswer.question_id instanceof Types.ObjectId)) {
+              const questionObj = peerAnswer.question_id as IQuestion;
+              task = {
                 type: 'validate_answer',
                 answer_id: peerAnswer.answer_id,
-                question_id: q.question_id,
-                question_text:
-                  q.original_query_text ,
-                answer_preview:
-                  peerAnswer.answer_text,
-                consecutive_approvals: q.consecutive_peer_approvals,
-                created_at: notif.created_at,
-                 sources:peerAnswer.sources,
-                 KccAns:q.KccAns,
-                 question_type:q.query_type||'N/A',
-                  season:q.season||'N/A',
-                  state:q.state||'N/A',
-                  sector:q.sector||'N/A',
-                  crop:q.crop||'N/A',
-                  district:q.district||'N/A',
-                  notification_id:notif.notification_id,
-                  peer_validation_id:peervalidationObj?.validation_id ||'PV_2E',
-                       
-              });
-            }
-
-          }
-          else if(notif.type=="revision_needed"){
-            const peervalidationObj=await peerValidation.findByUserAndAnswerPeerValidation(currentUserId,notif.related_entity_id)
-            const peerAnswer = await answerRepo.findByAnswerId(notif.related_entity_id as string);
-            if (peerAnswer && peerAnswer.question_id && !(peerAnswer.question_id instanceof Types.ObjectId))
-             {
-              const questionObj = peerAnswer.question_id as IQuestion;
-              tasks.push({
-                type: "Reject",
                 question_id: questionObj.question_id,
-                question_text:
-                  questionObj.original_query_text ,
-                status: "Rejected",
+                question_text: questionObj.original_query_text,
+                answer_preview: peerAnswer.answer_text,
+                consecutive_approvals: questionObj.consecutive_peer_approvals,
+                created_at: notif.created_at,
+                sources: peerAnswer.sources,
+                KccAns: questionObj.KccAns,
+                question_type: questionObj.query_type || 'N/A',
+                season: questionObj.season || 'N/A',
+                state: questionObj.state || 'N/A',
+                sector: questionObj.sector || 'N/A',
+                crop: questionObj.crop || 'N/A',
+                district: questionObj.district || 'N/A',
+                notification_id: notif.notification_id,
+                peer_validation_id: validationObj?.validation_id || 'PV_2E'
+              };
+            }
+          }
+      
+          // Revision needed
+          else if (notif.type === 'revision_needed') {
+            const peervalidationObj = await peerValidation.findByUserAndAnswerPeerValidation(
+              currentUserId,
+              notif.related_entity_id
+            );
+            const peerAnswer = await answerRepo.findByAnswerId(notif.related_entity_id as string);
+      
+            if (peerAnswer && peerAnswer.question_id && !(peerAnswer.question_id instanceof Types.ObjectId)) {
+              const questionObj = peerAnswer.question_id as IQuestion;
+              task = {
+                type: 'Reject',
+                question_id: questionObj.question_id,
+                question_text: questionObj.original_query_text,
+                status: 'Rejected',
                 valid_count: 0,
                 created_at: questionObj.created_at,
-                answer_text:peerAnswer.answer_text,
+                answer_text: peerAnswer.answer_text,
                 sources: peerAnswer.sources,
                 RejectedUser: peervalidationObj?.reviewer_id,
-                questionObjId:questionObj._id,
-                KccAns:questionObj.KccAns,
-                comments:peervalidationObj?.comments,
-                question_type:questionObj.query_type||'N/A',
-              season:questionObj.season||'N/A',
-              state:questionObj.state||'N/A',
-              sector:questionObj.sector||'N/A',
-              crop:questionObj.crop||'N/A',
-              district:questionObj.district||'N/A',
-              notification_id:notif.notification_id,
-              peer_validation_id:peervalidationObj?.peer_validation_id||'PV_2E',
-              });
-
-             }
-
-           
-
+                questionObjId: questionObj._id,
+                KccAns: questionObj.KccAns,
+                comments: peervalidationObj?.comments,
+                question_type: questionObj.query_type || 'N/A',
+                season: questionObj.season || 'N/A',
+                state: questionObj.state || 'N/A',
+                sector: questionObj.sector || 'N/A',
+                crop: questionObj.crop || 'N/A',
+                district: questionObj.district || 'N/A',
+                notification_id: notif.notification_id,
+                peer_validation_id: peervalidationObj?.peer_validation_id || 'PV_2E'
+              };
+            }
           }
-
+      
+          return task;
         })
-      )
+      );
+      
+      // Filter out null tasks
+      const tasks = taskResults.filter(Boolean);
+      
+      // Sort tasks consistently by created_at (ascending)
+      tasks.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      return { tasks ,totalCount:total};
+     }
 
     
     
-    return { tasks ,totalCount:total};
+    
   }
   async getUserPerformance(currentUserId: string, currentRole: string): Promise<any> {
 

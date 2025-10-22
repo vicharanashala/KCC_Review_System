@@ -432,7 +432,7 @@ const AgriSpecialistDashboard = () => {
       const skip = page * rowsPerPage;
       const limit = rowsPerPage;
       const token = localStorage.getItem('access_token');
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/dashboard/my-tasks?skip=${skip}&limit=${limit}&search=${search}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/dashboard/my-tasks?skip=${skip}&limit=${limit}&search=${searchQuery}`, {
         headers: {
           Accept: 'application/json, text/plain, */*',
           Authorization: `Bearer ${token}`,
@@ -455,7 +455,7 @@ const AgriSpecialistDashboard = () => {
   };
   useEffect(() => {
     fetchMyTasks();
-  }, [page, rowsPerPage, search]);
+  }, [page, rowsPerPage, searchQuery]);
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
   };
