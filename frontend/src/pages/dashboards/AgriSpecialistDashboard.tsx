@@ -665,10 +665,10 @@ const AgriSpecialistDashboard = () => {
       title: "Question Approval Rate",
       value: questionPerformance
         ? `${questionPerformance.approvalRate || 0}%`
-        : "--",
+        : "0%",
       description: questionPerformance
         ? `Of ${questionPerformance.totalAssigned || 0} reviews`
-        : "Loading...",
+        : "",
       icon: <AssessmentIcon />,
       // path: `${getBasePath()}/performance?data=${encodeURIComponent(
       //   JSON.stringify(performanceData)

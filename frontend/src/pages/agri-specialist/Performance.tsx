@@ -40,12 +40,14 @@ export const Performance = () => {
   // Get query param "data"
   const query = new URLSearchParams(location.search);
   const performanceString = query.get('data');
-
+  console.log("performance string ",performanceString)
   // Parse JSON
   const performanceobj = performanceString ? JSON.parse(performanceString) : null;
+console.log('performance obj ',performanceobj)
    // console.log("the performane====*************",performance)
     const performance=performanceobj.performance
-    const questionPerformane=performanceobj.questionPerformance
+    console.log('performance ',performance)
+    const questionPerformane=performanceobj.questionPerformance || {}
 
     return (
         <Box sx={{ p: 3, maxWidth: 1200, mx: "auto" }}>
@@ -106,7 +108,7 @@ export const Performance = () => {
                 {[
                     {
                         title: "Total Reviews",
-                        value: performance.totalAssigned ||0,
+                        value: performance?.totalAssigned ||0,
                         progress: performance.milestoneProgress||0,
                         subtitle: `${ performance.milestoneProgress||0}% towards next milestone`,
                         icon: <BarChartIcon fontSize="small" sx={{ color: "#6b7280" }} />,

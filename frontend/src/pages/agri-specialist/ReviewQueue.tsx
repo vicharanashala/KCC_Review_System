@@ -225,7 +225,7 @@ export const ReviewQueue = () => {
       const response = await peerValidationApi.getPeerValidationHistory(
         task.question_id
       );
-      
+
       const history = response.peer_validation_history || [];
       console.log("the response coming=====", response);
 
@@ -268,52 +268,55 @@ export const ReviewQueue = () => {
               ? "1 day ago"
               : `${diffDays} days ago`;
 
-          // Status label and color
+         
           let statusLabel = "";
           let statusColor = "";
+
           switch (validation.status) {
             case "approved":
               statusLabel = "Approved";
               statusColor = "#00A63E";
               break;
-            case "answer_created":
-              if (validation.comments && validation.comments.length >= 1) {
-                statusLabel = "Answer Modified";
-                statusColor = "blue";
-              } else {
-                statusLabel = "Answer Created";
-                statusColor = "blue";
-              }
 
+            case "answer_created":
+              statusLabel = "Answer Modified";
+              statusColor = "blue";
               break;
+
             case "assigned_to_agrispecilist":
-              statusLabel = "Awaiting review from";
+              statusLabel = "Awaiting Review From";
               statusColor = "red";
               break;
+
             case "revised":
-              if (validation.comments && validation.comments.length >= 1) {
-                // ✅ Handle revised with comments separately
-                // statusLabel = "Awaiting review from";
-                statusLabel = "Revision Requested";
-                statusColor="#D08700"
-                // statusColor = "red"; 
-              } else {
-                statusLabel = "Revision Requested";
-                statusColor = "#D08700"; // amber
-              }
+              const nextValidation = peerValidations[idx + 1];
+              const revisionComment =
+                (nextValidation &&
+                  nextValidation.status === "answer_created" &&
+                  nextValidation.comments) ||
+                validation.comments ||
+                "";
+
+              statusLabel = "Revision Requested";
+              statusColor = "#D08700";
+              validation.comments = revisionComment; // override comment with the right one
               break;
+
             case "invalid":
               statusLabel = "Revision Requested By Moderator";
               statusColor = "#D08700";
               break;
+
             case "valid":
               statusLabel = "Approved By Moderator";
               statusColor = "#00A63E";
               break;
+
             case "validation_request":
-              statusLabel = "Awaiting review from";
+              statusLabel = "Awaiting Review From";
               statusColor = "red";
               break;
+
             default:
               statusLabel = "Revision Requested";
               statusColor = "#D08700";
@@ -382,28 +385,7 @@ export const ReviewQueue = () => {
       />
     </Box>
   );
-  // const MetaDataComponent = () => (
-  //     <Paper
-  //         sx={{
-  //             p: 3,
-  //              mb: 3,
-  //             borderRadius: 2,
-  //             boxShadow: "0px 2px 6px rgba(0,0,0,0.05)",
-  //              border: "1px solid #ddd",
-  //         }}
-  //     >
-  //         <Typography>
-  //             Meta Data
-  //         </Typography>
-  //       {renderField("sector", task?.sector)}
-  //   {renderField("season", task?.season)}
-  //   {renderField("specialization", task?.question_type)}
-  //   {renderField("state", task?.state)}
-  //   {renderField("crop", task?.crop)}
-  //   {renderField("region", task?.district)}
-
-  //      </Paper>
-  // )
+ 
 
   const MetaDataComponent = () => {
     const [isExpanded, setIsExpanded] = useState(false);
@@ -494,52 +476,6 @@ export const ReviewQueue = () => {
     );
   };
 
-  // const SourceComponent=()=>(
-  //     <Paper
-  //   sx={{
-  //     p: 3,
-  //     mb: 3,
-  //     borderRadius: 2,
-  //     boxShadow: "0px 2px 6px rgba(0,0,0,0.05)",
-  //     border: "1px solid #ddd",
-  //   }}
-  // >
-  //   <Typography  >
-  //     Sources {task.sources?.length ? `(${task.sources.length})` : ""}
-  //   </Typography>
-
-  //   {task.sources && task.sources.length > 0 ? (
-  //     task.sources.map((ele: any, index: number) =>
-  //       renderField(ele.name, ele.link)
-  //     )
-  //   ) : (
-  //     <Typography variant="body2" color="text.secondary">
-  //       No sources available
-  //     </Typography>
-  //   )}
-  // </Paper>
-  // )
-  /* const isValidURL = (url: string,id:number) => {
-
-                try {
-                    const urlPattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/i;
-                    if (!urlPattern.test(url.trim())) {
-                        return false;
-                    }
-                    
-                    const urlToTest = url.startsWith('http://') || url.startsWith('https://') 
-                        ? url 
-                        : `https://${url}`;
-                    new URL(urlToTest);
-                    return true;
-                } catch {
-                    return false;
-                }
-           
-            
-       
-   
-    };*/
 
   const handleSubmitAnswer = async () => {
     //  console.log("the source List===",sources)
@@ -560,26 +496,7 @@ export const ReviewQueue = () => {
       showError("Please Enter All The Required Fields");
       return;
     }
-    /*  if(sources.length>1)
-        {
-            showError('Please Provide Source Name')
-            return;
-        }
-
-        if (!sourceLink.trim() && !isValidURL(sourceLink.trim())) {
-            setUrlError('Please enter a valid URL');
-            showError('Please enter a valid URL for the source');
-            return;
-        }*/
-    // console.log(sourceName,sourceLink)
-
-    // setSources( [{ name:'hello',link: 'link'}])
-
-    // sources: [{ name: sourceName,link: sourceLink }]
-    // sources: [{ sourceLink: sourceLink}]
-    //  setSources(sources)
-
-    // console.log(sources)
+    
     setIsSubmitting(true);
     try {
       const token = localStorage.getItem("access_token");
@@ -842,20 +759,48 @@ export const ReviewQueue = () => {
         return "#f5f5f5";
     }
   };
-  console.log("Version history ",versionHistory)
+  console.log("Version history ", versionHistory);
   const VersionHistoryComponent = () => (
     <Paper
-      sx={{
-        p: 3,
-        borderRadius: 2,
-        boxShadow: "0px 2px 6px rgba(0,0,0,0.05)",
-        border: "1px solid #ddd",
-        maxHeight: "calc(100vh - 10px)",
-        overflowY: "auto",
-        position: "sticky",
-        top: 20,
-        backgroundColor: "#fafafa",
-      }}
+    //   sx={{
+    //     p: 3,
+    //     borderRadius: 2,
+    //     boxShadow: "0px 2px 6px rgba(0,0,0,0.05)",
+    //     border: "1px solid #ddd",
+    //     maxHeight: "calc(100vh - 10px)",
+    //     overflowY: "auto",
+    //     position: "sticky",
+    //     top: 20,
+    //     backgroundColor: "#fafafa",
+    //   }}
+
+    sx={{
+      p: 3,
+      borderRadius: 2,
+      boxShadow: "0px 2px 6px rgba(0,0,0,0.05)",
+      border: "1px solid #ddd",
+      maxHeight: "calc(100vh - 10px)",
+      overflowY: "auto",
+      position: "sticky",
+      top: 20,
+      backgroundColor: "#fafafa",
+      // ✅ NEW: Increased width slightly for better content spacing
+      width: 450,
+      // ✅ NEW: Light white scrollbar styling
+      '&::-webkit-scrollbar': {
+        width: '6px',
+      },
+      '&::-webkit-scrollbar-track': {
+        backgroundColor: '#f1f1f1', // Light white-gray track
+      },
+      '&::-webkit-scrollbar-thumb': {
+        backgroundColor: '#c1c1c1', // Light white-gray thumb
+        borderRadius: '3px',
+      },
+      '&::-webkit-scrollbar-thumb:hover': {
+        backgroundColor: '#a8a8a8', // Slightly darker on hover for feedback
+      },
+    }}
     >
       <Typography
         variant="h6"
@@ -935,10 +880,16 @@ export const ReviewQueue = () => {
               </Box>
 
               {/* 🧠 Reviewer Feedbacks */}
-              {/* {version.reviewers.map((rev, rIndex) => {
+              {version.reviewers.map((rev, rIndex) => {
                 const color = rev.statusColor || "#9E9E9E";
+                const displayFeedback =
+                  rev.status === "answer_created"
+                    ? versionHistory.find(
+                        (v) => v.version === version.version + 1
+                      )?.feedback || version.feedback
+                    : version.feedback;
+                    const showTooltip = rev.status === "answer_created" || (rev.status === "revised" && rev.comments);
                 return (
-
                   <Box
                     key={rIndex}
                     sx={{
@@ -955,132 +906,31 @@ export const ReviewQueue = () => {
                       Reviewer:{" "}
                       <span style={{ color: "" }}>{rev.reviewer}</span>
                     </Typography>
-
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: color,
-                        fontWeight: 500,
-                        mb: 0.5,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 0.5,
-                      }}
+                    {/* here the change to  */}
+                    <Box
+                    sx={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between", 
+    mb: 0.5,
+    pr: 1, 
+  }}
                     >
-                      {rev.statusLabel} •{" "}
-                      <span style={{ color: "#555" }}>
-                        {new Date(rev.created_at).toLocaleString()}
-                      </span>
-                      {rev.comments && (
-                        <Tooltip
-                          title={
-                            <Box
-                              sx={{
-                                p: 1.5,
-                                maxWidth: 350,
-                                bgcolor: "background.paper",
-                                textAlign: "left",
-                              }}
-                            >
-                              
-                              <Typography
-                                variant="subtitle2"
-                                sx={{ mb: 0.5, fontWeight: 600, color: "#2f0be6ff" }}
-                              >
-                                Comments By the Rejected Reviewer:
-                              </Typography>
-                              <Typography
-                                variant="body2"
-                                sx={{ color: "#000000ff", lineHeight: 1.4 }}
-                              >
-                                {rev.comments}
-                              </Typography>
-                            </Box>
-                          }
-                          arrow
-                          placement="top"
-                          slotProps={{
-                            popper: {
-                              modifiers: [
-                                {
-                                  name: "offset",
-                                  options: {
-                                    offset: [0, 0], // arrow distance from icon
-                                  },
-                                },
-                              ],
-                            },
-                          }}
-                          componentsProps={{
-                            tooltip: {
-                              sx: {
-                                transformOrigin: "bottom center !important",
-                                "& .MuiTooltip-arrow": {
-                                  left: "50% !important",
-                                  transform: "translateX(-50%)",
-                                },
-                              },
-                            },
-                          }}
-                        >
-                          <Box
-                            component="span"
-                            sx={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              position: "relative",
-                            }}
-                          >
-                            <IconButton size="small" sx={{ p: 0.5, ml: 1 }}>
-                              <CommentIcon
-                                sx={{ fontSize: 16, color: color }}
-                              />
-                            </IconButton>
-                          </Box>
-                        </Tooltip>
-                      )}
-                    </Typography>
-                  </Box>
-                );
-              })} */}
-
-              {/* 🧠 Reviewer Feedbacks */}
-{version.reviewers.map((rev, rIndex) => {
-  const color = rev.statusColor || "#9E9E9E";
-  return (
-    <Box
-      key={rIndex}
-      sx={{
-        mt: 2.5,
-        pl: 2.5,
-        borderLeft: `4px solid ${color}`,
-        borderRadius: 1,
-      }}
-    >
-      <Typography
-        variant="body2"
-        sx={{ fontWeight: 600, color: "#0A0A0A", mb: 0.5 }}
-      >
-        Reviewer:{" "}
-        <span style={{ color: "" }}>{rev.reviewer}</span>
-      </Typography>
-
-      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-        <Typography
-          variant="body2"
-          sx={{
-            color: color,
-            fontWeight: 500,
-            mb: 0.5,
-          }}
-        >
-          {rev.statusLabel} •{" "}
-          <span style={{ color: "#555" }}>
-            {new Date(rev.created_at).toLocaleString()}
-          </span>
-        </Typography>
-        {rev.comments && (
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: color,
+                          fontWeight: 500,
+                          mb: 0.5,
+                        }}
+                      >
+                        {rev.statusLabel} •{" "}
+                        <span style={{ color: "#555" }}>
+                          {new Date(rev.created_at).toLocaleString()}
+                        </span>
+                      </Typography>
+                      
+                      {showTooltip && (
           <Tooltip
             title={
               <Box
@@ -1091,30 +941,37 @@ export const ReviewQueue = () => {
                   textAlign: "left",
                 }}
               >
-                {/* <Typography
-                  variant="subtitle2"
-                  sx={{ mb: 0.5, fontWeight: 600, color: "#333" }}
-                >
-                  Answer:
-                </Typography>
-                <Typography
-                  variant="body2"
-                  sx={{ mb: 1.5, color: "#444", lineHeight: 1.4 }}
-                >
-                  {version.feedback}
-                </Typography> */}
-                <Typography
-                  variant="subtitle2"
-                  sx={{ mb: 0.5, fontWeight: 600, color: "#0A0A0A" }}
-                >
-                  Comments From Previous Reviewer:
-                </Typography>
-                <Typography
-                  variant="body2"
-                  sx={{ color: "#555", lineHeight: 1.4 }}
-                >
-                  {rev.comments}
-                </Typography>
+                {rev.status === "answer_created" ? (
+                  <>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ mb: 0.5, fontWeight: 600, color: "#333" }}
+                    >
+                      Answer:
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ mb: 1.5, color: "#444", lineHeight: 1.4 }}
+                    >
+                      {displayFeedback}
+                    </Typography>
+                  </>
+                ) : rev.status === "revised" ? (
+                  <>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ mb: 0.5, fontWeight: 600, color: "#0A0A0A" }}
+                    >
+                      Comments:
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "#555", lineHeight: 1.4 }}
+                    >
+                      {rev.comments}
+                    </Typography>
+                  </>
+                ) : null}
               </Box>
             }
             arrow
@@ -1133,7 +990,7 @@ export const ReviewQueue = () => {
                   {
                     name: "offset",
                     options: {
-                      offset: [-10, 8], // Negative x to shift left, y for vertical
+                      offset: [-10, 8], 
                     },
                   },
                 ],
@@ -1143,7 +1000,7 @@ export const ReviewQueue = () => {
               tooltip: {
                 sx: {
                   '& .MuiTooltip-arrow': {
-                    left: '90% !important', // Shift arrow to right side of tooltip
+                    left: '90% !important', 
                     transform: 'translateX(-50%)',
                   },
                 },
@@ -1155,10 +1012,12 @@ export const ReviewQueue = () => {
             </IconButton>
           </Tooltip>
         )}
-      </Box>
-    </Box>
-  );
-})}
+                    </Box>
+
+                    
+                  </Box>
+                );
+              })}
             </Box>
           ))}
         </Box>
@@ -1232,7 +1091,7 @@ export const ReviewQueue = () => {
       )}
 
       {/* {!isLoadingVersionHistory && keyImprovements.length > 0 && ( */}
-      <Box>
+      {/* <Box>
         <Box
           sx={{
             p: 2.5,
@@ -1272,7 +1131,7 @@ export const ReviewQueue = () => {
             </Typography>
           ))}
         </Box>
-      </Box>
+      </Box> */}
       {/* )} */}
     </Paper>
   );
@@ -1857,12 +1716,12 @@ export const ReviewQueue = () => {
                               );
 
                               /*  if (!value.trim()) {
-                                        setUrlError('');
-                                    } else if (!isValidURL(value.trim(),sourceEle.id)) {
-                                        setUrlError('Please enter a valid URL');
-                                    } else {
-                                        setUrlError('');
-                                    }*/
+                                            setUrlError('');
+                                        } else if (!isValidURL(value.trim(),sourceEle.id)) {
+                                            setUrlError('Please enter a valid URL');
+                                        } else {
+                                            setUrlError('');
+                                        }*/
                             }}
                             fullWidth
                             variant="outlined"
