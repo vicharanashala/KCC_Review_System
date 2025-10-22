@@ -894,7 +894,7 @@ const handleSubmitQuestion=async()=>{
             )}
 
             {/* {!isLoadingVersionHistory && keyImprovements.length > 0 && ( */}
-                <Box>
+               {/* <Box>
                     
                     <Box
                         sx={{
@@ -1639,7 +1639,7 @@ const handleSubmitQuestion=async()=>{
                 </Box>
                
                
-                {task?.type === 'create_answer' &&  task?.comments.length<=1 ?'':  (
+                {task?.type === 'create_answer' &&  task?.comments?.length<=1 ?'':  (
                     <Box sx={{ width: 400, flexShrink: 0 }}>
                         <VersionHistoryComponent />
                     </Box>
