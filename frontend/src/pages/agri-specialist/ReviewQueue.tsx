@@ -2190,7 +2190,7 @@ export const ReviewQueue = () => {
               )}
             </Box>
 
-            {task?.type === "create_answer" && task?.comments.length <= 1 ? (
+            {task?.type === "create_answer" && task?.comments?.length <= 1 ? (
               ""
             ) : (
               <Box sx={{ width: 400, flexShrink: 0 }}>
