@@ -237,6 +237,8 @@ export default class PeerValidationService {
   }
 
   async getHistoryByAnswerId(answerId: string): Promise<any[]> {
-    return peerValidationRepo.findByAnswerId(answerId);
+   // return peerValidationRepo.findByAnswerId(answerId);
+   const questionId=answerId
+   return questionRepo.findByrelatedQuestionId(questionId)
   }
 }

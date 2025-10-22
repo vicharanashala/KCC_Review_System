@@ -116,7 +116,8 @@ export default class DashboardService {
             crop:questionObj.crop||'N/A',
             district:questionObj.district||'N/A',
             notification_id:notif.notification_id,
-            peer_validation_id:peervalidationObj?.peer_validation_id ||''
+            peer_validation_id:peervalidationObj?.peer_validation_id ||'',
+            comments:peervalidationObj?.comments
             });
           }
           }

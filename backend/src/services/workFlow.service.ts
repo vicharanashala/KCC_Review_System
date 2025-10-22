@@ -109,15 +109,15 @@ export default class WorkflowService {
    // console.log("available userList====",specialists,available)
 
     if (!available.length) {
-      logger.warning(`No available peer reviewers for answer ${answerId}, fallback to moderator`);
+      logger.info(`No available peer reviewers for answer ${answerId}, fallback to specilist for 2nd review`);
       question.status = QuestionStatus.PENDING_MODERATION;
       await question.save();
-      return await this.assignToModerator(answerId);
+      //return await this.assignToModerator(answerId);
     }
-
+ 
     const minWorkload = Math.min(...available.map((s: any) => s.workload_count));
     const candidates = available.filter((s: any) => s.workload_count === minWorkload);
-    const reviewer = candidates[0];
+    const reviewer = candidates[0] || specialists[0];
     if(!reviewer){
       throw new Error("Reviewer not found")
     }
@@ -206,7 +206,8 @@ export default class WorkflowService {
       // question.status = QuestionStatus.NEEDS_REVISION;
       question.status = QuestionStatus.PENDING_PEER_REVIEW;
       question.consecutive_peer_approvals=0
-      question.valid_count = 0;
+      question.valid_count = 0
+       question.reviewed_by_specialists=[]
       await question.save();
 
       await notificationRepo.create({

@@ -1216,10 +1216,7 @@ const AgriSpecialistDashboard = () => {
                      
                         Recent Activity: {new Date(task.created_at).toLocaleString()}
                         </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Approved on:{" "}
-                        {new Date(task.created_at).toLocaleString()}
-                      </Typography>
+                      
 
                       <Button
                         variant="contained"

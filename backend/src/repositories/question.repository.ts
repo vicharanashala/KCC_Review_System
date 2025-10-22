@@ -1,4 +1,5 @@
 import Question from '../models/question.model';
+import answerModel from '../models/answer.model';
 import { IQuestion } from '../interfaces/question.interface';
 import { QuestionStatus } from '../interfaces/enums';
 import { HydratedDocument } from 'mongoose';
@@ -223,4 +224,282 @@ export default class QuestionRepository {
     const result = await LlmQuestionModel.findByIdAndUpdate(id,{isDone:true})
     return result?._id
   }
+
+  async findByrelatedQuestionId(questionId: string): Promise<any[]> {
+    const question = await Question.findOne({ question_id: questionId }, { _id: 1, question_id: 1 });
+  
+    if (!question) {
+      throw new Error("Question not found");
+    }
+  
+    const result = await answerModel.aggregate([
+      // 1️⃣ Match answers for this question
+      { $match: { question_id: question._id } },
+  
+      // 2️⃣ Lookup peer validations (related_answer_id OR question_id string)
+      {
+        $lookup: {
+          from: "peervalidations",
+          let: { answerId: "$answer_id", },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $or: [
+                        { $eq: ["$related_answer_id", "$$answerId"] },
+                        
+                      ]
+                    },
+                   
+                  ]
+                }
+              }
+            },
+            {
+              $project: {
+                _id: 1,
+                peer_validation_id: 1,
+                reviewer_id: 1,
+                status: 1,
+                comments: 1,
+                question_id: 1,
+                related_answer_id: 1,
+                created_at: 1,
+                __v: 1
+              }
+            }
+          ],
+          as: "peer_validations"
+        }
+      },
+  
+      // 2.1️⃣ Lookup the "answer_created" peer_validation specifically
+      {
+        $lookup: {
+          from: "peervalidations",
+          let: { questionStringId: question.question_id },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$question_id", "$$questionStringId"] },
+                    { $eq: ["$status", "answer_created"] }
+                  ]
+                }
+              }
+            },
+            {
+              $lookup: {
+                from: "users",
+                localField: "reviewer_id",
+                foreignField: "_id",
+                as: "reviewer"
+              }
+            },
+            {
+              $addFields: {
+                reviewer_name: { $arrayElemAt: ["$reviewer.name", 0] },
+                reviewer_email: { $arrayElemAt: ["$reviewer.email", 0] }
+              }
+            },
+            { $project: { reviewer: 0 } }
+          ],
+          as: "answer_created_peer_validation"
+        }
+      },
+  
+      // 2.2️⃣ Merge the "answer_created" record into peer_validations
+      {
+        $addFields: {
+          peer_validations: {
+            $cond: {
+              if: { $eq: ["$version", 1] },
+              then: { $concatArrays: ["$answer_created_peer_validation", "$peer_validations"] },
+              else: "$peer_validations"
+            }
+          }
+        }
+      },
+  
+      // 3️⃣ Lookup users for peer validations
+      {
+        $lookup: {
+          from: "users",
+          localField: "peer_validations.reviewer_id",
+          foreignField: "_id",
+          as: "reviewers"
+        }
+      },
+  
+      // 4️⃣ Lookup validations
+      {
+        $lookup: {
+          from: "validations",
+          localField: "answer_id",
+          foreignField: "related_answer_id",
+          as: "validations"
+        }
+      },
+  
+      // 5️⃣ Lookup users for validations (moderators)
+      {
+        $lookup: {
+          from: "users",
+          localField: "validations.moderator_id",
+          foreignField: "_id",
+          as: "moderators"
+        }
+      },
+  
+      // 6️⃣ Map peer validations with reviewer_name
+      {
+        $addFields: {
+          peer_validations: {
+            $map: {
+              input: "$peer_validations",
+              as: "pv",
+              in: {
+                _id: "$$pv._id",
+                peer_validation_id: "$$pv.peer_validation_id",
+                status: "$$pv.status",
+                comments: "$$pv.comments",
+                question_id: "$$pv.question_id",
+                related_answer_id: "$$pv.related_answer_id",
+                created_at: "$$pv.created_at",
+                __v: "$$pv.__v",
+                reviewer_name: {
+                  $arrayElemAt: [
+                    {
+                      $map: {
+                        input: {
+                          $filter: {
+                            input: "$reviewers",
+                            as: "r",
+                            cond: { $eq: ["$$r._id", "$$pv.reviewer_id"] }
+                          }
+                        },
+                        as: "matched",
+                        in: "$$matched.name"
+                      }
+                    },
+                    0
+                  ]
+                },
+                reviewer_email: {
+                  $arrayElemAt: [
+                    {
+                      $map: {
+                        input: {
+                          $filter: {
+                            input: "$reviewers",
+                            as: "r",
+                            cond: { $eq: ["$$r._id", "$$pv.reviewer_id"] }
+                          }
+                        },
+                        as: "matched",
+                        in: "$$matched.email"
+                      }
+                    },
+                    0
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+  
+      // 7️⃣ Map validations with moderator_name and moderator_email
+      {
+        $addFields: {
+          validations: {
+            $map: {
+              input: "$validations",
+              as: "v",
+              in: {
+                _id: "$$v._id",
+                status: "$$v.validation_status",
+                comments: "$$v.comments",
+                created_at: "$$v.created_at",
+                reviewer_name: {
+                  $arrayElemAt: [
+                    {
+                      $map: {
+                        input: {
+                          $filter: {
+                            input: "$moderators",
+                            as: "m",
+                            cond: { $eq: ["$$m._id", "$$v.moderator_id"] }
+                          }
+                        },
+                        as: "matched",
+                        in: "$$matched.name"
+                      }
+                    },
+                    0
+                  ]
+                },
+                reviewer_email: {
+                  $arrayElemAt: [
+                    {
+                      $map: {
+                        input: {
+                          $filter: {
+                            input: "$moderators",
+                            as: "m",
+                            cond: { $eq: ["$$m._id", "$$v.moderator_id"] }
+                          }
+                        },
+                        as: "matched",
+                        in: "$$matched.email"
+                      }
+                    },
+                    0
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+  
+      // 8️⃣ Merge validations into peer_validations timeline
+      {
+        $addFields: {
+          peer_validations: { $concatArrays: ["$peer_validations", "$validations"] }
+        }
+      },
+  
+      // 9️⃣ Sort peer_validations by created_at ascending
+      {
+        $addFields: {
+          peer_validations: {
+            $sortArray: { input: "$peer_validations", sortBy: { created_at: 1 } }
+          }
+        }
+      },
+  
+      // 🔟 Final projection
+      {
+        $project: {
+          _id: 0,
+          answer_id: 1,
+          version: 1,
+          answer_text: 1,
+          peer_validations: 1
+        }
+      },
+  
+      // 11️⃣ Sort answers by version ascending
+      { $sort: { version: 1 } }
+    ]);
+  
+    return result;
+  }
+  
+  
+  
 }

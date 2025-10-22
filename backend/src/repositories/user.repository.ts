@@ -232,7 +232,7 @@ const results= this.getAvailableUserList(currentUserObj,questionObj,UserRole.AGR
        },
       
      ]);
-    if(nearestUser)
+    if(nearestUser.length>=1)
     {
      
       return nearestUser

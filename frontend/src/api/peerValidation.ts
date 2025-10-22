@@ -10,7 +10,14 @@ export const setToastFunctions = (success: (message: string) => void, error: (me
   toastSuccess = success;
   toastError = error;
 };
-
+export interface PeerValidation {
+  _id?: string;           // Optional: MongoDB ObjectId as string
+  status: string;         // e.g., "approved", "revised", "answer_created"
+  created_at: string;     // ISO date string
+  reviewer_name: string;  // Reviewer's email or name
+  comments?: string;      // Optional comments
+  reviewer_email: string;
+}
 interface PeerValidationHistory {
   _id: string;
   peer_validation_id: string;
@@ -51,6 +58,11 @@ interface PeerValidationHistory {
   comments: string;
   created_at: string;
   __v: number;
+  version:number,
+  peer_validations:PeerValidation[];
+  answer_text: string;
+  validations:PeerValidation[]
+ 
 }
 
 interface PeerValidationHistoryResponse {

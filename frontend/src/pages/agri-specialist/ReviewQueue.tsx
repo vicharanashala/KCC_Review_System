@@ -33,18 +33,33 @@ interface AnswerData {
 }
 
 interface VersionHistory {
-    version: string;
-    status: 'current' | 'approved' | 'revision_requested' | 'initial_draft';
+    
+    status: 'current' | 'approved' | 'revision_requested' | 'initial_draft'|'Answer_Created'|'assigned_to_agrispecilist';
     timestamp: string;
     statusLabel?: string;
     statusColor?: string;
     timeAgo?: string;
     reviewer?: string;
-    feedback?: string;
+    
     changes?: string;
     issues?: string;
     description?: string;
 }
+interface PeerReviewer {
+    reviewer: string;
+    status: string;
+    statusLabel: string;
+    statusColor: string;
+    timeAgo: string;
+    comments: string;
+    created_at:string;
+  }
+  
+  interface VersionItem {
+    version: number;
+    feedback: string;
+    reviewers: PeerReviewer[];
+  }
 
 interface ReviewerInsights {
     approvals: number;
@@ -92,7 +107,7 @@ export const ReviewQueue = () => {
     // const [isLoadingHistory, setIsLoadingHistory] = useState(false);
     const { showSuccess, showError } = useToast();
     //console.log("sources===",sources)
-    const [versionHistory, setVersionHistory] = useState<VersionHistory[]>([]);
+    const [versionHistory, setVersionHistory] = useState<VersionItem[]>([]);
     const [reviewerInsights, setReviewerInsights] = useState<ReviewerInsights>({ approvals: 0, revisions: 0 });
     // const [keyImprovements, setKeyImprovements] = useState<KeyImprovement[]>([]);
     const [isLoadingVersionHistory, setIsLoadingVersionHistory] = useState(false);
@@ -187,72 +202,118 @@ export const ReviewQueue = () => {
     // };
 
     const fetchVersionHistory = async () => {
-        if (!task?.answer_id || task?.type === 'create_answer') {
-            return;
-        }
-
         setIsLoadingVersionHistory(true);
         try {
-            const response = await peerValidationApi.getPeerValidationHistory(task.answer_id);
-            const history = response.peer_validation_history || [];
-               // console.log("the response coming=====",response)
-            const transformedHistory: VersionHistory[] = [];
+          const response = await peerValidationApi.getPeerValidationHistory(task.question_id);
+          const history = response.peer_validation_history || [];
+          console.log("the response coming=====", response);
+         
+          const groupedVersions: VersionItem[] = [];
+          let approvals = 0;
+          let revisions = 0;
+      
+          history.forEach((versionData, index) => {
+            const versionNumber = versionData.version;
+            const answerText = versionData.answer_text || "No answer text available";
+            const peerValidationsList = versionData.peer_validations || [];
+            const validationsList=versionData.validations||[]
+            const peerValidations=[...peerValidationsList,...validationsList]
 
-            transformedHistory.push({
-                version: "v1 (Current)",
-                status: "current",
-                timestamp: `Awaiting your review • ${task.consecutive_approvals || 0} consecutive approvals`
+      
+            const versionItem: VersionItem = {
+                version: versionNumber,
+                feedback: answerText,
+                reviewers: [],
+              };
+      
+            peerValidations.forEach((validation, idx) => {
+               
+              // Count approvals/revisions
+              if (validation.status === "approved"||validation.status === "valid") approvals += 1;
+              if (validation.status === "revised"||validation.status === "invalid") revisions += 1;
+      
+              // Time formatting
+              const createdAt = new Date(validation.created_at);
+              const diffMs = Date.now() - createdAt.getTime();
+              const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+              const timeAgo =
+                diffDays === 0 ? "Today" : diffDays === 1 ? "1 day ago" : `${diffDays} days ago`;
+      
+              // Status label and color
+              let statusLabel = "";
+              let statusColor = "";
+              switch (validation.status) {
+                case "approved":
+                  statusLabel = "Approved";
+                  statusColor = "#00A63E";
+                  break;
+                case "answer_created":
+                    if (validation.comments && validation.comments.length >= 1) {
+                        statusLabel = "Answer Modified";
+                        statusColor = "blue";
+                    }
+                    else{
+                        statusLabel = "Answer Created";
+                        statusColor = "blue";
+                    }
+                 
+                  break;
+                case "assigned_to_agrispecilist":
+                  statusLabel = "Awaiting review from";
+                  statusColor = "red";
+                  break;
+                case "revised":
+                    if (validation.comments && validation.comments.length >= 1) {
+                      // ✅ Handle revised with comments separately
+                      statusLabel = "Awaiting review from";
+                      statusColor = "red"; // orange shade to distinguish
+                    } else {
+                      statusLabel = "Revision Requested";
+                      statusColor = "#D08700"; // amber
+                    }
+                    break;
+                case "invalid":
+                        statusLabel = "Revision Requested By Moderator";
+                        statusColor = "#D08700";
+                        break;
+                case "valid":
+                            statusLabel = "Approved By Moderator";
+                            statusColor = "#00A63E";
+                        break;
+                case "validation_request":
+                    statusLabel = "Awaiting review from";
+                    statusColor = "red";
+                    break;
+                default:
+                  statusLabel = "Revision Requested";
+                  statusColor = "#D08700";
+                  break;
+              }
+      
+              versionItem.reviewers.push({
+                reviewer: `${validation.reviewer_email||validation.reviewer_name  || "Unknown"} `,
+                status: validation.status,
+                statusLabel,
+                statusColor,
+                timeAgo,
+                comments: validation.comments || "",
+                created_at:validation.created_at
+              });
             });
-
-            history.forEach((validation, index) => {
-              //  console.log(validation,"validationvalidationvalidation")
-                const versionNumber = validation.answer_id.version;
-                const createdAt = new Date(validation.created_at);
-                const diffMs = Date.now() - createdAt.getTime();
-                const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-                const timeAgo = diffDays === 0
-                    ? "Today"
-                    : diffDays === 1
-                        ? "1 day ago"
-                        : `${diffDays} days ago`;
-
-                const statusLabel = validation.status === 'approved' ? 'Approved' : 'Revision Requested';
-                const statusColor = validation.status === 'approved' ? '#00A63E' : '#D08700';
-
-                transformedHistory.push({
-                    version: `v${versionNumber}`,
-                    status: validation.status === 'approved' ? 'approved' : 'revision_requested',
-                    timestamp: `${statusLabel} ${timeAgo}`,
-                    statusLabel: statusLabel,
-                    statusColor: statusColor,
-                    timeAgo: timeAgo,
-                    reviewer: `${validation.reviewer_id.name} (R${index + 1})`,
-                    feedback: validation.answer_id.answer_text,
-                    changes: validation.status === 'approved' ? 'Peer review completed' : validation.comments
-                });
-            });
-
-            setVersionHistory(transformedHistory);
-
-            const approvals = history.filter(v => v.status === 'approved').length;
-            const revisions = history.filter(v => v.status !== 'approved').length;
-            setReviewerInsights({ approvals, revisions });
-
-            // Generate key improvements based on feedback
-            // const improvements: KeyImprovement[] = [];
-            // history.forEach(validation => {
-            //     if (validation.comments) {
-            //         improvements.push({ text: validation.comments });
-            //     }
-            // });
-            // setKeyImprovements(improvements);
-
+      
+            groupedVersions.push(versionItem);
+          });
+      
+          // Update state once (important)
+          setVersionHistory(groupedVersions);
+          setReviewerInsights({ approvals, revisions });
         } catch (err) {
-            console.error('Error fetching version history:', err);
+          console.error("Error fetching version history:", err);
         } finally {
-            setIsLoadingVersionHistory(false);
+          setIsLoadingVersionHistory(false);
         }
-    };
+      };
+      
     const renderField = (label: string, value: string) => (
         <Box
       key={label}
@@ -322,7 +383,7 @@ export const ReviewQueue = () => {
         border: "1px solid #ddd",
       }}
     >
-      <Typography variant="h8" >
+      <Typography  >
         Sources {task.sources?.length ? `(${task.sources.length})` : ""}
       </Typography>
 
@@ -626,6 +687,10 @@ const handleSubmitQuestion=async()=>{
                 return '#F0B100';
             case 'initial_draft':
                 return '#99A1AF';
+            case 'Answer_Created':
+                return '#2B7FFF';
+            case 'assigned_to_agrispecilist':
+                return 'red';
             default:
                 return '#99A1AF';
         }
@@ -662,116 +727,129 @@ const handleSubmitQuestion=async()=>{
             <Typography variant="body2" sx={{ color: '#717182', mb: 3, fontSize: '14px' }}>
                 Complete evolution and reviewer feedback trail
             </Typography>
-
             {isLoadingVersionHistory ? (
-                <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-                    <CircularProgress size={24} />
-                </Box>
-            ) : versionHistory.length === 0 ? (
-                <Typography variant="body2" sx={{ color: '#666', textAlign: 'center', py: 2 }}>
-                    No version history available
+  <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
+    <CircularProgress size={24} />
+  </Box>
+) : versionHistory.length === 0 ? (
+  <Typography
+    variant="body2"
+    sx={{ color: "#666", textAlign: "center", py: 2 }}
+  >
+    No version history available
+  </Typography>
+) : (
+  <Box sx={{ position: "relative" }}>
+    {versionHistory.map((version, vIndex) => (
+      <Box key={vIndex} sx={{ mb: 5 }}>
+        {/* 🔹 Version Header */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
+          <Chip
+            label={`Version-${version.version}`}
+            size="small"
+            sx={{
+              backgroundColor: "#007BFF20",
+              color: "#007BFF",
+              fontWeight: 600,
+              fontSize: "13px",
+              height: "28px",
+              borderRadius: "14px",
+              px: 1.5,
+            }}
+          />
+        </Box>
+
+        {/* 🧩 Answer Preview */}
+        <Box
+          sx={{
+            mt: 2,
+            p: 2,
+            bgcolor: "#F9FAFB",
+            borderRadius: 1.5,
+            border: "1px solid #E0E0E0",
+          }}
+        >
+          <Typography
+            variant="subtitle2"
+            sx={{ mb: 1, fontWeight: 600, color: "#333" }}
+          >
+            Answer Preview:
+          </Typography>
+          <Typography
+            variant="body1"
+            sx={{
+              lineHeight: 1.6,
+              maxHeight: 150,
+              overflowY: "auto",
+              display: "block",
+              scrollbarWidth: "thin",
+              color: "#444",
+            }}
+          >
+            {version.feedback}
+          </Typography>
+        </Box>
+
+        {/* 🧠 Reviewer Feedbacks */}
+        {version.reviewers.map((rev, rIndex) => {
+          const color = rev.statusColor || "#9E9E9E";
+          return (
+            <Box
+              key={rIndex}
+              sx={{
+                mt: 2.5,
+                pl: 2.5,
+                borderLeft: `4px solid ${color}`,
+                borderRadius: 1,
+              }}
+            >
+              <Typography
+                variant="body2"
+                sx={{ fontWeight: 600, color: "#0A0A0A", mb: 0.5 }}
+              >
+                Reviewer:{" "}
+                <span style={{ color: "" }}>{rev.reviewer}</span>
+              </Typography>
+
+              <Typography
+                variant="body2"
+                sx={{
+                  color: color,
+                  fontWeight: 500,
+                  mb: 0.5,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.5,
+                }}
+              >
+                {rev.statusLabel} •{" "}
+                <span style={{ color: "#555" }}>{new Date(rev.created_at).toLocaleString()}</span>
+              </Typography>
+
+              {rev.comments && (
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: "#555",
+                    backgroundColor: `${color}10`,
+                    borderRadius: 1,
+                    border: `1px solid ${color}30`,
+                    p: 1,
+                    lineHeight: 1.5,
+                  }}
+                >
+                  Comments: {rev.comments}
                 </Typography>
-            ) : (
-                <Box sx={{ position: 'relative' }}>
-                    {versionHistory.map((version, index) => (
-                        <Box key={version.version} sx={{ position: 'relative', mb: 4 }}>
-                            <Box
-                                sx={{
-                                    position: 'absolute',
-                                    left: 0,
-                                    top: 0,
-                                    width: '4px',
-                                    height: index === versionHistory.length - 1 ? '80px' : '100%',
-                                    backgroundColor: getStatusColor(version.status),
-                                }}
-                            />
+              )}
+            </Box>
+          );
+        })}
+      </Box>
+    ))}
+  </Box>
+)}
 
-                            <Box sx={{ ml: 3 }}>
-                                <Box sx={{}}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-                                        <Chip
-                                            label={version.version}
-                                            size="small"
-                                            sx={{
-                                                backgroundColor: version.status === 'current' ? '#333' : '#e0e0e0',
-                                                color: version.status === 'current' ? '#fff' : '#333',
-                                                fontWeight: 500,
-                                                fontSize: '12px',
-                                                height: '26px',
-                                                borderRadius: '13px',
-                                                px: 1.5
-                                            }}
-                                        />
-                                        {version.status === 'current' && (
-                                            <Typography variant="caption" sx={{ color: '#666', fontSize: '12px' }}>
-                                                Active
-                                            </Typography>
-                                        )}
-                                    </Box>
 
-                                     <Typography variant="body2" sx={{ color: '#333', mb: 1.5, fontSize: '14px' }}>
-                                         {version.statusLabel && version.statusColor ? (
-                                             <>
-                                                 <span style={{ color: version.statusColor }}>
-                                                     {version.statusLabel}
-                                                 </span>
-                                                 {version.timeAgo && ` ${version.timeAgo}`}
-                                             </>
-                                         ) : (
-                                             version.timestamp
-                                         )}
-                                     </Typography>
-                                </Box>
-
-                                {version.reviewer && (
-                                    <Typography variant="body2" sx={{ fontWeight: 400, color: '#0A0A0A', mb: 1.5, fontSize: '14px' }}>
-                                        Reviewer: {version.reviewer}
-                                    </Typography>
-                                )}
-
-                                {version.feedback && (
-                                    <Box
-                                        sx={{
-                                            p: 1.5,
-                                            backgroundColor: getFeedbackBgColor(version.status),
-                                            borderRadius: 1.5,
-                                            mb: 1.5,
-                                            border: `1px solid ${getStatusColor(version.status)}30`
-                                        }}
-                                    >
-                                        <Typography variant="body2" sx={{ color: '#333', lineHeight: 1.6, fontSize: '14px' }}>
-                                            {version.feedback}
-                                        </Typography>
-                                    </Box>
-                                )}
-
-                                {version.changes && (
-                                    <Typography variant="body2" sx={{ color: '#666', mb: 1, fontSize: '14px' }}>
-                                        Changes: {version.changes}
-                                    </Typography>
-                                )}
-
-                                {version.issues && (
-                                    <Typography variant="body2" sx={{ color: '#666', mb: 1, fontSize: '14px' }}>
-                                        Issues: {version.issues}
-                                    </Typography>
-                                )}
-
-                                {version.description && (
-                                    <>
-                                        <Typography variant="body2" sx={{ fontWeight: 600, color: '#333', mb: 1, fontSize: '14px' }}>
-                                            Original Submission
-                                        </Typography>
-                                        <Typography variant="body2" sx={{ color: '#666', fontSize: '14px' }}>
-                                            {version.description}
-                                        </Typography>
-                                    </>
-                                )}
-                            </Box>
-                        </Box>
-                    ))}
-                </Box>
-            )}
 
             {!isLoadingVersionHistory && (
                 <Box sx={{ mt: 5, mb: 4 }}>
@@ -1303,7 +1381,7 @@ const handleSubmitQuestion=async()=>{
                             />
                     {sources.map((sourceEle,ind)=>{
                         return(
-                            <div>
+                            <div key={ind}>
                             <Box sx={{ display: 'flex', gap: 2, my: 2 }}>
                           
                             <TextField
@@ -1560,12 +1638,12 @@ const handleSubmitQuestion=async()=>{
                     )}
                 </Box>
                
-                <VersionHistoryComponent />
-                {/*task?.type !== 'create_answer' && user?.role === 'moderator'&& task?.type !== 'question_validation' && (
+               
+                {task?.type === 'create_answer' &&  task?.comments.length<=1 ?'':  (
                     <Box sx={{ width: 400, flexShrink: 0 }}>
                         <VersionHistoryComponent />
                     </Box>
-                )*/}
+                )}
                 </Box>
             </Box>
 }

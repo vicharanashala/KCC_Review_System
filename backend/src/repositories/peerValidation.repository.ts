@@ -4,7 +4,6 @@ import answerModel from '../models/answer.model';
 import mongoose from "mongoose";
 import { QuestionStatus } from "../interfaces/enums";
 import { FilterQuery ,Types} from "mongoose";
-import { string } from 'joi';
 interface ReviewerStats {
   _id: string;
   totalAssigned: number;
