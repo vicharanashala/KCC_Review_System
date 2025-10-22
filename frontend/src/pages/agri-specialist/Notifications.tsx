@@ -93,6 +93,10 @@ import {
       reloadNotifications()
       }
     } ,[taskAdded]);
+    const handleClick = (notificationId: string) => {
+      markAsRead(notificationId); // your existing function
+      navigate(user?.role === "moderator" ? "/moderator/dashboard" : "/agri-specialist/dashboard")    // navigate to dashboard
+    };
   
     return (
       <Box sx={{ p: 3, maxWidth: 900, mx: "auto" }}>
@@ -207,7 +211,7 @@ import {
                     cursor: "pointer",
                     "&:hover": { boxShadow: "0 2px 8px rgba(0,0,0,0.1)" },
                   }}
-                  onClick={() => markAsRead(n.notification_id)}
+                  onClick={() =>  handleClick(n.notification_id)}
                 >
                   <Box sx={{ mr: 2, mt: 0.5 }}>{getNotificationIcon(n.type)}</Box>
                   <Box sx={{ flex: 1 }}>
