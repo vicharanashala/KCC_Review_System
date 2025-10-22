@@ -631,7 +631,7 @@ const AgriSpecialistDashboard = () => {
       // description: 'Pending assignments',
       description: "",
       icon: <RateReviewIcon />,
-      path: `${getBasePath()}/review-queue`,
+      // path: `${getBasePath()}/review-queue`,
       secondaryTitle: "",
       secondaryValue: "",
       secondaryCaption: "",
@@ -642,9 +642,9 @@ const AgriSpecialistDashboard = () => {
       // description: performance ? `Of ${performance.totalAssigned || 0} reviews` : 'Loading...',
       description: "",
       icon: <AssessmentIcon />,
-      path: `${getBasePath()}/performance?data=${encodeURIComponent(
-        JSON.stringify(performanceData)
-      )}`,
+      // path: `${getBasePath()}/performance?data=${encodeURIComponent(
+      //   JSON.stringify(performanceData)
+      // )}`,
       secondaryTitle: "",
       secondaryValue: "",
       secondaryCaption: "",
@@ -654,7 +654,7 @@ const AgriSpecialistDashboard = () => {
       value: performanceScore ?? 0,
       description: ``,
       icon: <NotificationsIcon />,
-      path: `${getBasePath()}/notifications`,
+      // path: `${getBasePath()}/notifications`,
       secondaryTitle: "",
       secondaryValue: "",
       secondaryCaption: "",
@@ -670,9 +670,9 @@ const AgriSpecialistDashboard = () => {
         ? `Of ${questionPerformance.totalAssigned || 0} reviews`
         : "Loading...",
       icon: <AssessmentIcon />,
-      path: `${getBasePath()}/performance?data=${encodeURIComponent(
-        JSON.stringify(performanceData)
-      )}`,
+      // path: `${getBasePath()}/performance?data=${encodeURIComponent(
+      //   JSON.stringify(performanceData)
+      // )}`,
       secondaryTitle: "",
       secondaryValue: "",
       secondaryCaption: "",

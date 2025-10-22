@@ -52,6 +52,7 @@ export default class PeerValidationService {
     {
      // console.log("the peer validation status====",peerData)
       const result=  await peerValidationRepo.updatePeerValidationBypeerId(peerData.peer_validation_id,peerData.status)
+      
     // console.log("the result coming====",result)
       if(peerData.notification_id)
       {
