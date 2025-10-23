@@ -227,7 +227,7 @@ export const ReviewQueue = () => {
       );
 
       const history = response.peer_validation_history || [];
-      console.log("the response coming=====", response);
+      
 
       const groupedVersions: VersionItem[] = [];
       let approvals = 0;
@@ -251,10 +251,10 @@ export const ReviewQueue = () => {
           // Count approvals/revisions
           if (validation.status === "approved" || validation.status === "valid")
             approvals += 1;
-          if (
-            validation.status === "revised" ||
-            validation.status === "invalid"
-          )
+            if (
+              (validation.status === "revised"  && validation?.comments?.length == 0) ||
+              (validation.status === "invalid"&& validation?.comments?.length == 0)
+            )
             revisions += 1;
 
           // Time formatting
@@ -279,8 +279,17 @@ export const ReviewQueue = () => {
               break;
 
             case "answer_created":
-              statusLabel = "Answer Modified";
-              statusColor = "blue";
+              if(validation.comments&&validation.comments.length>=1)
+              {
+                statusLabel = "Answer Modified";
+                statusColor = "blue";
+              }
+              else{
+                statusLabel = "Answer Created";
+                statusColor = "blue";
+              }
+             
+             
               break;
 
             case "assigned_to_agrispecilist":
@@ -292,17 +301,35 @@ export const ReviewQueue = () => {
               const nextValidation = peerValidations[idx + 1];
               const revisionComment =
                 (nextValidation &&
-                  nextValidation.status === "answer_created" &&
+                  
                   nextValidation.comments) ||
                 validation.comments ||
                 "";
+                if(validation.comments&&validation.comments.length>=1)
+                {
+                  statusLabel = "Awaiting Review From";
+                  statusColor = "red";
+                  validation.comments=''
+                }
+                else{
+                  statusLabel = "Revision Requested";
+                  statusColor = "#D08700";
+                  validation.comments = revisionComment;
+                }
 
-              statusLabel = "Revision Requested";
-              statusColor = "#D08700";
-              validation.comments = revisionComment; // override comment with the right one
+                
+              // override comment with the right one
               break;
 
             case "invalid":
+              const nextValidation1 = peerValidations[idx + 1];
+              const revisionComment1 =
+                (nextValidation1 &&
+                  
+                  nextValidation1.comments) ||
+                validation.comments ||
+                "";
+              validation.comments = revisionComment1;
               statusLabel = "Revision Requested By Moderator";
               statusColor = "#D08700";
               break;
@@ -881,6 +908,7 @@ export const ReviewQueue = () => {
 
               {/* 🧠 Reviewer Feedbacks */}
               {version.reviewers.map((rev, rIndex) => {
+               
                 const color = rev.statusColor || "#9E9E9E";
                 const displayFeedback =
                   rev.status === "answer_created"
@@ -888,7 +916,7 @@ export const ReviewQueue = () => {
                         (v) => v.version === version.version + 1
                       )?.feedback || version.feedback
                     : version.feedback;
-                    const showTooltip = rev.status === "answer_created" || (rev.status === "revised" && rev.comments);
+                    const showTooltip = (rev.status === "answer_created" && rev.comments.length>=1) || (rev.status === "revised" && rev.comments)||(rev.status === "invalid" && rev.comments);
                 return (
                   <Box
                     key={rIndex}
@@ -956,7 +984,7 @@ export const ReviewQueue = () => {
                       {displayFeedback}
                     </Typography>
                   </>
-                ) : rev.status === "revised" ? (
+                ) : rev.status === "revised" ||rev.status === "invalid" ? (
                   <>
                     <Typography
                       variant="subtitle2"

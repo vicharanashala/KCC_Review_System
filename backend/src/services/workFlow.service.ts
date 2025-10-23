@@ -228,7 +228,12 @@ export default class WorkflowService {
         related_answer_id:answer.answer_id
       });
      // console.log("newperrr====",newPeerVal)
-     logger.info(`Answer sent back for revision ${ answer.specialist_id} `);
+     if ('email' in answer.specialist_id) {
+      logger.info(`Answer sent back for revision ${answer.specialist_id.email}`);
+    } else {
+      logger.info(`Answer sent back for revision (specialist ${answer.specialist_id.toString()})`);
+    }
+    // logger.info(`Answer sent back for revision ${ answer.specialist_id.name} `);
       logger.info(`Answer ${question.question_id} sent back for revision`);
      // setImmediate(() => this.assignToPeerReviewer(answer.answer_id))
     // }
