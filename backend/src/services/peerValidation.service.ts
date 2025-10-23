@@ -212,7 +212,7 @@ export default class PeerValidationService {
           const user = await userRepo.findById(
             question?.assigned_specialist_id.toString()
           );
-          logger.info(`Peer Review Submitted Successfully to---${user?.name} `);
+          logger.info(`Peer Review Submitted Successfully to---${user?.name}-${user?.email} `);
 
        // logger.info(`Peer revised answer ${answer.answer_id} to new version ${newAnswer.version}`);
        // }

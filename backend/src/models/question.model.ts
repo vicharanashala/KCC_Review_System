@@ -13,7 +13,7 @@ const questionSchema = new Schema<IQuestion>({
   query_type: { type: String },
   season: { type: String },
   sector: { type: String },
-  original_query_text: { type: String, required: true },
+  original_query_text: { type: String,unique: true, required: true },
   refined_query_text: { type: String },
   latitude: { type: String },
   longitude: { type: String },
