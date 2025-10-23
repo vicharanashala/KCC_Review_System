@@ -7,8 +7,26 @@ import LlmQuestionModel, { ILLMQuestion } from '../models/LlmQuestion.model';
 export type QuestionDocument = HydratedDocument<IQuestion>
 export default class QuestionRepository {
   async create(questionData: Partial<IQuestion>): Promise<IQuestion> {
-    return Question.create(questionData);
+    const existingQuestion = await Question.findOne({
+      original_query_text: { $regex: new RegExp(`^${questionData.original_query_text}$`, 'i') },
+    });
+  
+    if (existingQuestion) {
+     
+      throw new Error('Question with this original_query_text already exists');
+      
+    }
+  
+    try {
+      return await Question.create(questionData);
+    } catch (error: any) {
+      if (error.code === 11000) {
+        throw new Error('Question with this original_query_text already exists');
+      }
+      throw error;
+    }
   }
+  
 
   async createMany(questionDatas: Partial<IQuestion>[]): Promise<QuestionDocument[]> {
   return Question.insertMany(questionDatas as IQuestion[])

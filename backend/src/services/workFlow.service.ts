@@ -151,7 +151,7 @@ export default class WorkflowService {
    
     logger.info(`[DEBUG] assignToPeerReviewer called for ${answerId} from stack:`, new Error().stack);
 
-    logger.info(`Peer review assigned: answer ${answerId} to ${reviewer.name}`);
+    logger.info(`Peer review assigned: answer ${answerId} to ${reviewer.name} and email ${reviewer.email}`);
     return true;
   }
 

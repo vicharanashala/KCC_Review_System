@@ -348,9 +348,8 @@ const AgriSpecialistDashboard = () => {
           body: formData,
         }
       );
-
       if (!response.ok) {
-        throw new Error("Failed to create question");
+        throw new Error("Question with this text already exists");
       }
       const data = await response.json();
       // showSuccess('Question created successfully!');
