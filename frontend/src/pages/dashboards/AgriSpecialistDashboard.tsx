@@ -34,6 +34,7 @@ import { TextField } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { useNotifications } from "../../contexts/NotificationContext";
 import ViewLLMQuestionsModal from "../../components/ViewLLMQuestions";
+import { registerPushService } from '../../services/pushService';
 
 const DashboardCard = ({
   title,
@@ -236,7 +237,11 @@ const AgriSpecialistDashboard = () => {
   const { notifications, markAsRead, markAllAsRead, taskAdded } =
     useNotifications();
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-
+  useEffect(() => {
+    if (user?.id && 'serviceWorker' in navigator) {
+      registerPushService(user.id);
+    }
+  }, [user?.id]);
   useEffect(() => {
     if (rejectedQuestion && rejectedQuestion.length >= 1) {
       setQuestionText(rejectedQuestion[0].question_text);
