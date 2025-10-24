@@ -3,52 +3,12 @@ import NotificationService from "../services/notification.service";
 import Joi from "joi";
 import logger from "../utils/logger.utils";
 import { authenticateToken, AuthRequest } from "../middleware/auth.middleware";
-import webPush from '../utils/webPushConfig';
-import { Subscription } from '../models/Subscription';
 const notificationService = new NotificationService();
 
 const skipLimitSchema = Joi.object({
   skip: Joi.number().integer().default(0).optional(),
   limit: Joi.number().integer().default(50).optional(),
 });
-
-
-
-// Save subscription
-export const saveSubscription = async (req: Request, res: Response) => {
-  try {
-    console.log("reaching save Subscription ")
-    let { userId, subscription } = req.body;
-    userId = userId.toString()
-    await Subscription.findOneAndUpdate(
-      { userId },
-      { ...subscription },
-      { upsert: true, new: true }
-    );
-    res.status(201).json({ message: 'Subscription saved.' });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Error saving subscription.' });
-  }
-};
-
-// Send notification (called when new review is assigned)
-export const sendNotification = async (userId: string, message: string) => {
-  try {
-    const sub = await Subscription.findOne({ userId });
-    console.log("sub ",sub)
-    if (!sub) return console.log('No subscription found for user');
-
-    const payload = JSON.stringify({ title: 'New Task For You!!', body: message });
-
-    await webPush.sendNotification(sub, payload)
-    .then(() => console.log('Push sent successfully'))
-    .catch((err) => console.error('Push error:', err));
-  } catch (error) {
-    console.error('Error sending notification:', error);
-  }
-};
-
 
 export const getNotifications = [
   authenticateToken,

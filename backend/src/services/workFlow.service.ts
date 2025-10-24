@@ -8,7 +8,7 @@ import PeerValidationRepository from '../repositories/peerValidation.repository'
 import mongoose from "mongoose";
 import { QuestionStatus, NotificationType, ValidationStatus,PeerStatus } from '../interfaces/enums';
 import logger from '../utils/logger.utils';
-import { sendNotification } from '../controllers/notification.controller';
+// import { sendNotification } from '../controllers/notification.controller';
 const userRepo = new UserRepository();
 const questionRepo = new QuestionRepository();
 const answerRepo = new AnswerRepository();
@@ -84,7 +84,7 @@ export default class WorkflowService {
       peer_validation_id: `PV_${uuidv4().slice(0, 8).toUpperCase()}`,
     });
     console.log('specialist email ',specialist.email)
-    await sendNotification(specialist._id,'A new Question has been assigned to you. Please check your dashboard.')
+    // await sendNotification(specialist._id,'A new Question has been assigned to you. Please check your dashboard.')
     logger.info(`Question ${questionId} assigned to specialist ${specialist.name}`);
     return true;
   }
@@ -152,7 +152,7 @@ export default class WorkflowService {
     logger.info(`[DEBUG] assignToPeerReviewer called for ${answerId} from stack:`, new Error().stack);
 
     logger.info(`Peer review assigned: answer ${answerId} to ${reviewer.name}`);
-    await sendNotification(reviewer._id.toString(),'A new review has been assigned to you. Please check your dashboard.')
+    // await sendNotification(reviewer._id.toString(),'A new review has been assigned to you. Please check your dashboard.')
     return true;
   }
 
@@ -189,7 +189,7 @@ export default class WorkflowService {
     });
 
     logger.info(`Validation assigned: answer ${answerId} to moderator ${moderator.name}`);
-    await sendNotification(moderator._id,'A new Validation has been assigned to you. Please check your dashboard.')
+    // await sendNotification(moderator._id,'A new Validation has been assigned to you. Please check your dashboard.')
     return true;
   }
 
@@ -231,7 +231,7 @@ export default class WorkflowService {
       });
      // console.log("newperrr====",newPeerVal)
      logger.info(`Answer sent back for revision ${ answer.specialist_id} `);
-     await sendNotification(answer.specialist_id.toString(),'Your answer has been rejected. Please check your dashboard.')
+    //  await sendNotification(answer.specialist_id.toString(),'Your answer has been rejected. Please check your dashboard.')
       logger.info(`Answer ${question.question_id} sent back for revision`);
      // setImmediate(() => this.assignToPeerReviewer(answer.answer_id))
     // }
@@ -292,7 +292,7 @@ if(questionData.status=="revised")
   // console.log("the newPeervali=====",newPeerVal)
   const workload = await userRepo.updateWorkload(questionData.user_id, -1);
     logger.info(`Question ${questionId} assigned to original user ${userDetails?.email}`);
-    await sendNotification(userDetails?._id.toString(),'Your Question has been rejected. Please check your dashboard.')
+    // await sendNotification(userDetails?._id.toString(),'Your Question has been rejected. Please check your dashboard.')
 }
 else {
   
@@ -333,7 +333,7 @@ else {
     });
     //console.log("new peer validation created====",newPeerVal)
     logger.info(`Question ${questionId} assigned to Modirator ${specialist.name}`);
-    await sendNotification(specialist._id,'A new Question has been assigned to you. Please check your dashboard.')
+    // await sendNotification(specialist._id,'A new Question has been assigned to you. Please check your dashboard.')
   }
   
 
